@@ -1,0 +1,5 @@
+/.idea
+/*.iml
+**/bindata.go
+/out
+internal/ruckstack/builder/resources/new-project/example/out

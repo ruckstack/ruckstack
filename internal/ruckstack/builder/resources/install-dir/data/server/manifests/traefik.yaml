@@ -1,0 +1,17 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  chart: traefik
+  version: 1.77.1
+
+  set:
+    serviceType: "ClusterIP"
+    rbac.enabled: "false"
+    ssl.enabled: "false"
+    metrics.prometheus.enabled: "true"
+    dashboard.enabled: "false"
+  valuesContent: |-
+    externalTrafficPolicy: ""
