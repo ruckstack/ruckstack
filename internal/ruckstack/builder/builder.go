@@ -14,6 +14,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/user"
 	"path/filepath"
 	"regexp"
 	"time"
@@ -88,9 +89,13 @@ func Build(projectFile string, outDir string) {
 }
 
 func prepare(outDir string) *shared.BuildEnvironment {
+	usr, err := user.Current()
+
+	util.Check(err)
+
 	buildEnv := new(shared.BuildEnvironment)
 	buildEnv.WorkDir = outDir + string(filepath.Separator) + "work"
-	buildEnv.CacheDir = outDir + string(filepath.Separator) + "cache"
+	buildEnv.CacheDir = usr.HomeDir + string(filepath.Separator) + ".ruckstack" + string(filepath.Separator) + "cache"
 	return buildEnv
 }
 
