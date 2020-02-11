@@ -13,6 +13,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -62,8 +63,8 @@ func Build(projectFile string, outDir string) {
 	}
 
 	app.AddAssetDir("internal/ruckstack/builder/resources/install-dir", ".")
-	app.AddFile(downloadFile(fmt.Sprintf("https://github.com/rancher/k3s/releases/download/v%s/k3s", projectConfig.K3sVersion), buildEnv), "lib/k3s")
-	app.AddFile(downloadFile(fmt.Sprintf("https://github.com/rancher/k3s/releases/download/v%s/k3s-airgap-images-amd64.tar", projectConfig.K3sVersion), buildEnv), "data/agent/images/k3s.tar")
+	app.AddFile(downloadFile(fmt.Sprintf("https://github.com/rancher/k3s/releases/download/v%s/k3s", url.PathEscape(projectConfig.K3sVersion)), buildEnv), "lib/k3s")
+	app.AddFile(downloadFile(fmt.Sprintf("https://github.com/rancher/k3s/releases/download/v%s/k3s-airgap-images-amd64.tar", url.PathEscape(projectConfig.K3sVersion)), buildEnv), "data/agent/images/k3s.tar")
 
 	serverBinaryName := projectConfig.ServerBinaryName
 	if serverBinaryName == "" {

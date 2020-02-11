@@ -22,7 +22,7 @@ func Parse(projectPath string) (*ProjectConfig, error) {
 	projectConfigFile.NameMapper = ini.TitleUnderscore
 
 	projectConfig := &ProjectConfig{
-		K3sVersion: "1.0.1",
+		K3sVersion: "1.17.2+k3s1",
 	}
 
 	projectConfigFile.Section("ruckstack-project").MapTo(projectConfig)
