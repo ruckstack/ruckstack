@@ -26,10 +26,9 @@ type DockerfileServiceConfig struct {
 }
 
 type HelmServiceConfig struct {
-	Id      string `validate:"required"`
-	Type    string `validate:"required"`
-	Port    int    `validate:"required"`
-	BaseDir string `validate:"required" ini:"base_dir"`
+	Id   string `validate:"required"`
+	Type string `validate:"required"`
+	Port int    `validate:"required"`
 
 	Chart   string `validate:"required"`
 	Version string `validate:"required"`

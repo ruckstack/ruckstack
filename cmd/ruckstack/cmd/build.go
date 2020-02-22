@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/ruckstack/ruckstack/internal/ruckstack/builder"
+	"github.com/ruckstack/ruckstack/internal/ruckstack/helm"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/util"
 	"github.com/spf13/cobra"
 )
@@ -16,6 +17,8 @@ var buildCmd = &cobra.Command{
 	Short: "Builds project",
 	Long:  `Builds your Ruckstack project into an installable archive`,
 	Run: func(cmd *cobra.Command, args []string) {
+		helm.Setup()
+
 		builder.Build(project, out)
 	},
 }

@@ -24,7 +24,7 @@ func init() {
 	helmSearchCmd.Flags().StringVar(&chartName, "chart", "", "Chart to search (required)")
 	helmSearchCmd.Flags().StringVar(&chartRepo, "repo", "stable", "Chart repository to search. Defaults to 'stable'")
 
-	util.Check(helmSearchCmd.MarkFlagFilename("chart"))
+	util.Check(helmSearchCmd.MarkFlagRequired("chart"))
 
 	helmRootCmd.AddCommand(helmSearchCmd)
 

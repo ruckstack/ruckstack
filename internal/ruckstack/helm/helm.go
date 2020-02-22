@@ -3,54 +3,53 @@ package helm
 import (
 	"fmt"
 	"github.com/mitchellh/go-wordwrap"
+	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/shared"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/util"
-	"k8s.io/helm/pkg/downloader"
-	"k8s.io/helm/pkg/getter"
-	helm_env "k8s.io/helm/pkg/helm/environment"
-	"k8s.io/helm/pkg/helm/helmpath"
-	"k8s.io/helm/pkg/repo"
+	"helm.sh/helm/v3/pkg/cli"
+	"helm.sh/helm/v3/pkg/downloader"
+	"helm.sh/helm/v3/pkg/getter"
+	"helm.sh/helm/v3/pkg/helmpath"
+	"helm.sh/helm/v3/pkg/helmpath/xdg"
+	"helm.sh/helm/v3/pkg/repo"
+	"log"
 	"os"
 	"os/user"
 	"path/filepath"
 )
 
 var (
-	helmHome        helmpath.Home
+	helmHome        string
 	chartDownloader *downloader.ChartDownloader
 
 	reindexed bool = false
 )
 
 func Setup() {
-	helmHome := getHelmHome()
-	stat, err := os.Stat(helmHome.String())
-	if os.IsNotExist(err) {
-		err := os.MkdirAll(helmHome.String(), 0755)
-		util.Check(err)
-	} else {
-		if !stat.IsDir() {
-			panic(fmt.Sprintf("%s is not a directory", helmHome.String()))
-		}
-	}
+	helmHome = getHelmHome()
+	err := os.MkdirAll(helmHome, 0755)
+	util.Check(err)
 
-	stat, err = os.Stat(helmHome.RepositoryFile())
+	os.Setenv(xdg.CacheHomeEnvVar, filepath.Join(helmHome, "/cache"))
+	os.Setenv(xdg.ConfigHomeEnvVar, filepath.Join(helmHome, "/config"))
+	os.Setenv(xdg.DataHomeEnvVar, filepath.Join(helmHome, "/data"))
+
+	_, err = os.Stat(helmpath.ConfigPath("repositories.yaml"))
 	if os.IsNotExist(err) {
 		fmt.Println("Creating new helm metadata...")
 
-		err := os.MkdirAll(filepath.Dir(helmHome.RepositoryFile()), 0755)
+		err := os.MkdirAll(filepath.Dir(helmpath.ConfigPath("repositories.yaml")), 0755)
 		util.Check(err)
 
 		entry := repo.Entry{
-			Name:  "stable",
-			URL:   "https://kubernetes-charts.storage.googleapis.com",
-			Cache: helmHome.CacheIndex("stable"),
+			Name: "stable",
+			URL:  "https://kubernetes-charts.storage.googleapis.com",
 		}
 		util.Check(err)
 
-		repoFile := repo.NewRepoFile()
+		repoFile := repo.NewFile()
 		repoFile.Add(&entry)
 
-		err = repoFile.WriteFile(helmHome.RepositoryFile(), 0664)
+		err = repoFile.WriteFile(helmpath.ConfigPath("repositories.yaml"), 0664)
 
 		ReIndex()
 
@@ -58,12 +57,12 @@ func Setup() {
 	}
 }
 
-func getHelmHome() helmpath.Home {
+func getHelmHome() string {
 	if helmHome == "" {
 		usr, err := user.Current()
 		util.Check(err)
 
-		helmHome = helmpath.Home(usr.HomeDir + string(filepath.Separator) + ".ruckstack" + string(filepath.Separator) + "helm")
+		helmHome = filepath.Join(usr.HomeDir, ".ruckstack", "helm")
 
 	}
 
@@ -73,11 +72,12 @@ func getHelmHome() helmpath.Home {
 func getDownloader() *downloader.ChartDownloader {
 	if chartDownloader == nil {
 		chartDownloader = &downloader.ChartDownloader{
-			HelmHome: getHelmHome(),
-			Out:      os.Stdout,
+			Out: os.Stdout,
 			//Keyring:  f.keyring,
-			Verify:  downloader.VerifyNever,
-			Getters: getter.All(helm_env.EnvSettings{}),
+			Verify:           downloader.VerifyNever,
+			RepositoryConfig: helmpath.ConfigPath("repositories.yaml"),
+			RepositoryCache:  filepath.Join(helmHome, "cache", "helm", "repository"),
+			Getters:          getter.All(cli.New()),
 		}
 	}
 
@@ -91,20 +91,19 @@ func ReIndex() {
 
 	fmt.Println("Reindexing helm repositories...")
 
-	repoFile, err := repo.LoadRepositoriesFile(getHelmHome().RepositoryFile())
+	repoFile, err := repo.LoadFile(helmpath.ConfigPath("repositories.yaml"))
 	util.Check(err)
 
 	for _, repository := range repoFile.Repositories {
-		chartRepository, err := repo.NewChartRepository(repository, getter.All(helm_env.EnvSettings{}))
+		chartRepository, err := repo.NewChartRepository(repository, getter.All(cli.New()))
 		util.Check(err)
 
-		_, err = os.Stat(helmHome.Cache())
-		if os.IsNotExist(err) {
-			os.MkdirAll(helmHome.Cache(), 0755)
-		}
+		//_, err = os.Stat(helmHome.Cache())
+		//if os.IsNotExist(err) {
+		//	os.MkdirAll(helmHome.Cache(), 0755)
+		//}
 
-		// In this case, the cacheFile is always absolute. So passing empty string is safe
-		err = chartRepository.DownloadIndexFile("")
+		_, err = chartRepository.DownloadIndexFile()
 		//panic(fmt.Errorf("Looks like %q is not a valid chart repository or cannot be reached: %s", entry.URL, err.Error()))
 		util.Check(err)
 	}
@@ -114,15 +113,15 @@ func ReIndex() {
 }
 
 func Search(chartRepo string, chartName string) {
-	repositories, err := repo.LoadRepositoriesFile(getHelmHome().RepositoryFile())
+	repositories, err := repo.LoadFile(helmpath.ConfigPath("repositories.yaml"))
 	util.Check(err)
 
-	repository, found := repositories.Get(chartRepo)
-	if !found {
+	repository := repositories.Get(chartRepo)
+	if repository == nil {
 		panic(fmt.Sprintf("Unknown helm repository %s", chartRepo))
 	}
 
-	indexFile, err := repo.LoadIndexFile(repository.Cache)
+	indexFile, err := repo.LoadIndexFile(filepath.Join(helmHome, "cache", "helm", "repository", helmpath.CacheIndexFile(repository.Name)))
 	util.Check(err)
 
 	versions := indexFile.Entries[chartName]
@@ -130,7 +129,13 @@ func Search(chartRepo string, chartName string) {
 		panic(fmt.Sprintf("Unknown chart %s/%s", chartRepo, chartName))
 	}
 
-	lastestVersion := versions[0]
+	latestVersion := versions[0]
+
+	appVersion := latestVersion.AppVersion
+	if appVersion == "" {
+		appVersion = "n/a"
+	}
+
 	fmt.Printf(`
 Chart: %s/%s
 Latest Version: %s (App Version %s)
@@ -139,25 +144,43 @@ Latest Version: %s (App Version %s)
 %s
 `,
 		chartRepo,
-		lastestVersion.GetName(),
-		lastestVersion.GetVersion(),
-		lastestVersion.GetAppVersion(),
-		lastestVersion.GetHome(),
-		wordwrap.WrapString(lastestVersion.GetDescription(), 80))
+		latestVersion.Name,
+		latestVersion.Version,
+		appVersion,
+		latestVersion.Home,
+		wordwrap.WrapString(latestVersion.Description, 80))
 
 	fmt.Println("\nAll Available Versions:")
 
 	for _, version := range versions {
-		fmt.Printf("  %s (App Version %s)\n", version.GetVersion(), version.GetAppVersion())
+		appVersion := version.AppVersion
+		if appVersion == "" {
+			appVersion = "n/a"
+		}
+		fmt.Printf("  %s (App Version %s)\n", version.Version, appVersion)
 	}
 
 }
 
-func Download() {
+func DownloadChart(repo string, chart string, version string, buildEnv *shared.BuildEnvironment) string {
+	cacheDir := buildEnv.CacheDir + string(filepath.Separator) + "helm" + string(filepath.Separator) + repo
+	err := os.MkdirAll(cacheDir, 0755)
+	util.Check(err)
 
-	//to, verification, err := downloader.DownloadTo("stable/mariadb", "7.3.8", "/tmp/mariadb-helm")
-	//util.Check(err)
-	//log.Println(to)
-	//log.Println(verification.FileName)
+	savePath := cacheDir + string(filepath.Separator) + chart + "-" + version + ".tgz"
+	_, err = os.Stat(savePath)
+	if os.IsNotExist(err) {
+		log.Printf("Downloading chart %s...", filepath.Base(savePath))
 
+		_, _, err := getDownloader().DownloadTo(repo+"/"+chart, version, cacheDir)
+		util.Check(err)
+	} else {
+		log.Printf("%s already exists. Not re-downloading", savePath)
+	}
+
+	return savePath
 }
+
+//func GetImages(chartPath string) {
+//	loader.Load(chartPath)
+//}

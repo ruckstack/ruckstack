@@ -3,12 +3,14 @@ package helm
 import (
 	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/artifact"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/shared"
+	"github.com/ruckstack/ruckstack/internal/ruckstack/helm"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/project"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/util"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 )
 
 func AddService(serviceConfig *project.HelmServiceConfig, app *artifact.Artifact, projectConfig *project.ProjectConfig, buildEnv *shared.BuildEnvironment) {
@@ -17,6 +19,10 @@ func AddService(serviceConfig *project.HelmServiceConfig, app *artifact.Artifact
 	serviceBuildDir := buildEnv.WorkDir + "/" + serviceConfig.Id
 	err := os.MkdirAll(serviceBuildDir, 0755)
 	util.Check(err)
+
+	splitChart := strings.Split(serviceConfig.Chart, "/")
+	repo := splitChart[0]
+	chart := splitChart[1]
 
 	manifest := map[string]interface{}{
 		"apiVersion": "helm.cattle.io/v1",
@@ -40,4 +46,6 @@ func AddService(serviceConfig *project.HelmServiceConfig, app *artifact.Artifact
 
 	app.AddFile(manifestPath, "data/server/manifests/"+serviceConfig.Id+".yaml")
 
+	chartFile := helm.DownloadChart(repo, chart, serviceConfig.Version, buildEnv)
+	app.AddFile(chartFile, "data/server/static/charts/"+serviceConfig.Id+".tgz")
 }
