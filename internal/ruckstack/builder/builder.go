@@ -95,9 +95,10 @@ func prepare(outDir string) *shared.BuildEnvironment {
 	util.Check(err)
 
 	buildEnv := new(shared.BuildEnvironment)
-	buildEnv.WorkDir = outDir + string(filepath.Separator) + "work"
-	buildEnv.UserDataDir = usr.HomeDir + string(filepath.Separator) + ".ruckstack"
-	buildEnv.CacheDir = buildEnv.UserDataDir + string(filepath.Separator) + "cache"
+	buildEnv.WorkDir = filepath.Join(outDir, "work")
+	buildEnv.UserDataDir = filepath.Join(usr.HomeDir, ".ruckstack")
+	buildEnv.CacheDir = filepath.Join(buildEnv.UserDataDir, "cache")
+	buildEnv.TmpDir = filepath.Join(buildEnv.WorkDir, "tmp")
 	return buildEnv
 }
 

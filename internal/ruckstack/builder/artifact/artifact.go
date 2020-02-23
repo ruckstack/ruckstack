@@ -224,6 +224,21 @@ func (artifact *Artifact) AddAssetDir(assetBase string, targetBase string) {
 
 func (artifact *Artifact) IncludeDockerImage(tag string) {
 	artifact.dockerImages = append(artifact.dockerImages, tag)
+
+	dockerSaveCmd := exec.Command("docker", "image", "inspect", tag)
+	dockerSaveCmd.Stdout = log.Writer()
+	dockerSaveCmd.Stderr = log.Writer()
+	err := dockerSaveCmd.Run()
+	if err == nil {
+		log.Printf("Already have image %s", tag)
+	} else {
+		dockerSaveCmd := exec.Command("docker", "pull", tag)
+
+		dockerSaveCmd.Stdout = os.Stdout
+		dockerSaveCmd.Stderr = os.Stderr
+		err := dockerSaveCmd.Run()
+		util.Check(err)
+	}
 }
 
 func (artifact *Artifact) SaveDockerImages(buildEnv *shared.BuildEnvironment) {
