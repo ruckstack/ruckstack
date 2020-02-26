@@ -38,11 +38,12 @@ func AddService(serviceConfig *project.HelmServiceConfig, app *artifact.Artifact
 		"kind":       "HelmChart",
 		"metadata": map[string]interface{}{
 			"name":      serviceConfig.Id,
-			"namespace": "default",
+			"namespace": "kube-system",
 		},
 		"spec": map[string]interface{}{
-			"chart":   serviceConfig.Chart,
-			"version": serviceConfig.Version,
+			"chart":           serviceConfig.Chart,
+			"version":         serviceConfig.Version,
+			"targetNamespace": "default",
 		},
 	}
 

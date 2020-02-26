@@ -238,11 +238,13 @@ func writeManifest(serviceConfig *project.DockerfileServiceConfig, projectConfig
 		"apiVersion": "helm.cattle.io/v1",
 		"kind":       "HelmChart",
 		"metadata": map[string]interface{}{
-			"name": serviceConfig.Id,
+			"name":      serviceConfig.Id,
+			"namespace": "kube-system",
 		},
 		"spec": map[string]interface{}{
-			"chart":   fmt.Sprintf("https://%%{KUBERNETES_API}%%/static/charts/%s.tgz", serviceConfig.Id),
-			"version": serviceConfig.ServiceVersion,
+			"chart":           fmt.Sprintf("https://%%{KUBERNETES_API}%%/static/charts/%s.tgz", serviceConfig.Id),
+			"version":         serviceConfig.ServiceVersion,
+			"targetNamespace": "default",
 		},
 	}
 
