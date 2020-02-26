@@ -5,6 +5,7 @@ type ProjectConfig struct {
 	Name    string `validate:"required"`
 	Version string `validate:"required"`
 
+	HelmVersion      string `ini:"helm_version"`
 	K3sVersion       string `ini:"k3s_version"`
 	ServerBinaryName string `ini:"server_binary_name"`
 

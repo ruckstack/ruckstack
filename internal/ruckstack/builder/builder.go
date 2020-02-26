@@ -60,9 +60,18 @@ func Build(projectFile string, outDir string) {
 			AdminGroupReadable: true,
 			Executable:         true,
 		},
+		"lib/helm": {
+			AdminGroupReadable: true,
+			Executable:         true,
+		},
 	}
 
+	helmTarFile := downloadFile(fmt.Sprintf("https://get.helm.sh/helm-v%s-linux-amd64.tar.gz", url.PathEscape(projectConfig.HelmVersion)), buildEnv)
+
+	helmExec := util.ExtractFromGzip(helmTarFile, "linux-amd64/helm", buildEnv)
+
 	app.AddAssetDir("internal/ruckstack/builder/resources/install-dir", ".")
+	app.AddFile(helmExec, "lib/helm")
 	app.AddFile(downloadFile(fmt.Sprintf("https://github.com/rancher/k3s/releases/download/v%s/k3s", url.PathEscape(projectConfig.K3sVersion)), buildEnv), "lib/k3s")
 	app.AddFile(downloadFile(fmt.Sprintf("https://github.com/rancher/k3s/releases/download/v%s/k3s-airgap-images-amd64.tar", url.PathEscape(projectConfig.K3sVersion)), buildEnv), "data/agent/images/k3s.tar")
 
@@ -113,7 +122,7 @@ func downloadFile(url string, buildEnv *shared.BuildEnvironment) string {
 
 	cacheKey := regexp.MustCompile(`https?://.+?/`).ReplaceAllString(url, "")
 
-	savePath := buildEnv.CacheDir + string(filepath.Separator) + cacheKey
+	savePath := filepath.Join(buildEnv.CacheDir, cacheKey)
 
 	saveDir, _ := filepath.Split(savePath)
 	err := os.MkdirAll(saveDir, 0755)
