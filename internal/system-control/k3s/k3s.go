@@ -30,8 +30,10 @@ func Start() {
 		"--node-external-ip", util.GetLocalConfig().BindAddress,
 		"--default-local-storage-path", util.InstallDir()+"/data/local-storage",
 		"--data-dir", util.InstallDir()+"/data",
+		"--kubelet-arg", "root-dir="+util.InstallDir()+"/data/kubelet",
 		"--write-kubeconfig", kubecConfigFile,
 		"--write-kubeconfig-mode", "640")
+	k3sStartCommand.Env = append(k3sStartCommand.Env, "")
 	k3sStartCommand.Stdout = k3sLogs
 	k3sStartCommand.Stderr = k3sErrLogs
 	err = k3sStartCommand.Start()
