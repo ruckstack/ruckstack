@@ -17,10 +17,13 @@ func main() {
 
 	args := os.Args
 	if len(args) == 3 && args[1] == "--upgrade" {
-		executable, err := os.Executable()
-		util.Check(err)
+		installPackage := os.Getenv("RUCKSTACK_INSTALL_PACKAGE")
+		if installPackage == "" {
+			installPackage, err = os.Executable()
+			util.Check(err)
+		}
 
-		installer.Upgrade(executable, args[2])
+		installer.Upgrade(installPackage, args[2])
 
 		os.Exit(0)
 	}

@@ -2,15 +2,15 @@ package k3s
 
 import (
 	"github.com/ruckstack/ruckstack/internal/system-control/util"
-	"os"
+	"io"
 	"os/exec"
 )
 
-func ExecCtr(args ...string) {
+func ExecCtr(stdout io.Writer, stderr io.Writer, args ...string) {
 	command := exec.Command(util.InstallDir()+"/lib/k3s", append([]string{"ctr"}, args...)...)
 	command.Dir = util.InstallDir()
-	command.Stdout = os.Stdout
-	command.Stderr = os.Stderr
+	command.Stdout = stdout
+	command.Stderr = stderr
 	if err := command.Run(); err != nil {
 		panic(err)
 	}

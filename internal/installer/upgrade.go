@@ -7,11 +7,24 @@ import (
 	"github.com/ruckstack/ruckstack/internal/system-control/k3s"
 	"github.com/ruckstack/ruckstack/internal/system-control/util"
 	"gopkg.in/yaml.v2"
+	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
+	"strconv"
+	"syscall"
+	"time"
 )
 
 func Upgrade(upgradeFile string, targetDir string) {
+
+	upgradeLog, err := os.OpenFile(filepath.Join(targetDir, "logs", "upgrade-"+strconv.FormatInt(time.Now().Unix(), 10)+".log"), os.O_WRONLY|os.O_CREATE, 0644)
+	defer upgradeLog.Close()
+
+	log.SetOutput(upgradeLog)
+	log.Printf("Upgrading %s from %s", targetDir, upgradeFile)
+
+	util.Check(err)
 	util.SetInstallDir(targetDir)
 
 	zipReader, err := zip.OpenReader(upgradeFile)
@@ -39,22 +52,63 @@ func Upgrade(upgradeFile string, targetDir string) {
 		panic("Invalid upgrade file: no package config found")
 	}
 
-	fmt.Printf("Upgrading %s to %s...\n", packageConfig.Name, packageConfig.Version)
+	userMessage("Upgrading %s to version %s...\n\n", packageConfig.Name, packageConfig.Version)
 
+	serverShutdown := false
+	serverPidData, err := ioutil.ReadFile(filepath.Join(util.InstallDir(), "data", "server.pid"))
+	util.Check(err)
+
+	serverPid, err := strconv.Atoi(string(serverPidData))
+	util.Check(err)
+
+	serverProcess, err := os.FindProcess(serverPid)
+	err = serverProcess.Signal(syscall.Signal(0))
+	if err == nil {
+		log.Printf("Found running server on PID %d", serverPid)
+		userMessage("Shutting down server...")
+
+		err := serverProcess.Kill()
+		util.Check(err)
+
+		serverShutdown = true
+	} else {
+		log.Printf("No running server on PID %d", serverPid)
+	}
+
+	userMessage("Extracting files...")
 	err = extract(util.InstallDir(), zipReader)
 	util.Check(err)
 
-	fmt.Println()
-	imagesDir := util.InstallDir() + "/data/agent/images"
-	filepath.Walk(imagesDir, func(path string, info os.FileInfo, err error) error {
-		if info.IsDir() {
+	_, err = os.Stat("/run/k3s/containerd/containerd.sock")
+	if os.IsNotExist(err) {
+		log.Println("Containerd is not running. Not importing containers")
+	} else {
+		userMessage("\nImporting containers...")
+
+		imagesDir := util.InstallDir() + "/data/agent/images"
+		filepath.Walk(imagesDir, func(path string, info os.FileInfo, err error) error {
+			if info.IsDir() {
+				return nil
+			}
+
+			fmt.Print(".")
+			k3s.ExecCtr(log.Writer(), log.Writer(), "images", "import", path)
+
 			return nil
-		}
+		})
+	}
 
-		k3s.ExecCtr("images", "import", path)
+	userMessage("\n\nUpgrade complete\n")
 
-		return nil
-	})
+	if serverShutdown {
+		userMessage("Server was shut down as part of upgrade process and must be restarted")
+	} else {
+		userMessage("Server was NOT auto-started as part of the upgrade process")
+	}
+}
 
-	fmt.Println("\nUpgrade complete")
+func userMessage(message string, args ...interface{}) {
+	log.Printf(message, args...)
+	fmt.Printf(message, args...)
+
 }
