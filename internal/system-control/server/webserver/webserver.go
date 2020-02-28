@@ -64,7 +64,7 @@ func handleRequest(res http.ResponseWriter, req *http.Request) {
 
 	if strings.HasPrefix(req.URL.Path, "/ops/") {
 		serveOpsPage(res, req)
-	} else if monitor.SystemReady {
+	} else if monitor.ServerStatus.SystemReady {
 		proxyToKubernetes(res, req)
 	} else {
 		showSiteDownPage(res, req)
@@ -88,7 +88,7 @@ func proxyToKubernetes(res http.ResponseWriter, req *http.Request) {
 	//res.WriteHeader(200)
 	//res.Write([]byte("Tesitng server"))
 
-	internalUrl, err := url.Parse(fmt.Sprintf("http://%s%s", monitor.TraefikIp, req.URL.String()))
+	internalUrl, err := url.Parse(fmt.Sprintf("http://%s%s", monitor.ServerStatus.TraefikIp, req.URL.String()))
 	util.Check(err)
 	log.Println("Proxying to " + internalUrl.String())
 

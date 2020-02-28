@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"github.com/ruckstack/ruckstack/internal/system-control/k3s"
 	"github.com/ruckstack/ruckstack/internal/system-control/server/monitor"
 	"github.com/ruckstack/ruckstack/internal/system-control/server/webserver"
@@ -18,7 +19,16 @@ func Start() {
 	//serverReady = make(chan bool, 1)
 	//
 
-	err := ioutil.WriteFile(filepath.Join(util.InstallDir(), "data", "server.pid"), []byte(strconv.Itoa(os.Getpid())), 0644)
+	fmt.Printf("Starting %s version %s\n", util.GetPackageConfig().Name, util.GetPackageConfig().Version)
+
+	serverLog, err := os.OpenFile(filepath.Join(util.InstallDir(), "logs", "server.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	defer serverLog.Close()
+	log.SetOutput(serverLog)
+
+	fmt.Printf("    Server log: %s\n", serverLog.Name())
+	fmt.Printf("    K3S log: %s\n", filepath.Join(util.InstallDir(), "logs", "k3s.log"))
+
+	err = ioutil.WriteFile(filepath.Join(util.InstallDir(), "data", "server.pid"), []byte(strconv.Itoa(os.Getpid())), 0644)
 	util.Check(err)
 
 	sigs := make(chan os.Signal, 1)

@@ -1,21 +1,14 @@
 package monitor
 
 import (
+	"fmt"
 	core "k8s.io/api/core/v1"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/cache"
 	"log"
 )
 
-var ReadyNodeCount = 0
-
-var allNodes = make(map[string]*core.Node)
-var readyNodes = make(map[string]string)
-var unreadyNodes = make(map[string]string)
-
 func watchNodes() {
-	//KubeClientReady.WaitFor(true)
-
 	factory := informers.NewSharedInformerFactory(kubeClient, 0)
 	informer := factory.Core().V1().Nodes().Informer()
 	stopper := make(chan struct{})
@@ -23,19 +16,16 @@ func watchNodes() {
 
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(oldObj interface{}, newObj interface{}) {
-			oldNode := oldObj.(*core.Node)
 			newNode := newObj.(*core.Node)
-			log.Printf("Changed node %s %s", oldNode.Name, newNode.Name)
 
-			allNodes[fullName(newNode.ObjectMeta)] = newNode
+			log.Printf("Monitor detected updated node: %s", newNode.Name)
+
 			checkNode(newNode)
 		},
 
 		AddFunc: func(obj interface{}) {
 			node := obj.(*core.Node)
-			log.Printf("Added node %s", node.Name)
-
-			allNodes[fullName(node.ObjectMeta)] = node
+			log.Printf("Monitor detected added node: %s", node.Name)
 
 			checkNode(node)
 
@@ -43,36 +33,28 @@ func watchNodes() {
 
 		DeleteFunc: func(obj interface{}) {
 			node := obj.(*core.Node)
-			log.Printf("Deleted node %s", node.Name)
+			log.Printf("Monitor detected deleted node %s", node.Name)
 
-			fullName := fullName(node.ObjectMeta)
-			delete(allNodes, fullName)
-			delete(readyNodes, fullName)
-			delete(unreadyNodes, fullName)
-
-			ReadyNodeCount = len(readyNodes)
+			resolveProblem(nodeIsNotReadyKey(node), fmt.Sprintf("Node %s deleted", fullName(node.ObjectMeta)))
 		},
 	})
 	informer.Run(stopper)
 }
 
 func checkNode(node *core.Node) {
-	fullNodeName := fullName(node.ObjectMeta)
-
 	for _, condition := range node.Status.Conditions {
 		if condition.Type == "Ready" {
 			ready := condition.Status == "True"
 
-			log.Printf("Node %s ready: %t: %s", fullNodeName, ready, condition.Message)
 			if ready {
-				readyNodes[fullNodeName] = condition.Message
-				delete(unreadyNodes, fullNodeName)
+				resolveProblem(nodeIsNotReadyKey(node), fmt.Sprintf("Node %s is ready: %s", fullName(node.ObjectMeta), condition.Message))
 			} else {
-				unreadyNodes[fullNodeName] = condition.Message
-				delete(readyNodes, fullNodeName)
+				foundProblem(nodeIsNotReadyKey(node), condition.Message)
 			}
-
-			ReadyNodeCount = len(readyNodes)
 		}
 	}
+}
+
+func nodeIsNotReadyKey(node *core.Node) string {
+	return fmt.Sprintf("Node %s is not ready", fullName(node.ObjectMeta))
 }

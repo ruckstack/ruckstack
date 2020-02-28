@@ -1,31 +1,55 @@
 package monitor
 
 import (
+	"fmt"
+	"github.com/ruckstack/ruckstack/internal/system-control/util"
+	"io/ioutil"
 	"log"
+	"path/filepath"
+	"sort"
 	"time"
 )
 
-var SystemReady = false
-
 func watchOverall() {
+	monitorFile := filepath.Join(util.InstallDir(), "logs", "monitor.status")
+
+	//start with saying it's not healthy
+	log.Println("HEALTH: System is not healthy (starting up)")
+
 	for true {
-		log.Println("Checking overall health..")
+		monitorStatus := fmt.Sprintf("Monitor status at %s\n", time.Now().Format(time.RubyDate))
+		monitorStatus += "---------------------------------------------\n"
 
-		if KubeClientReady &&
-			ReadyNodeCount > 0 &&
-			DaemonSetsReady &&
-			DeploymentsReady &&
-			TraefikIp != "" {
+		if len(knownProblems) == 0 {
+			monitorStatus += "No known problems\n"
 
-			log.Printf("Healthy")
-			SystemReady = true
+			if !ServerStatus.SystemReady {
+				log.Println("HEALTH: System is healthy")
+			}
+			ServerStatus.SystemReady = true
 		} else {
-			log.Printf("Unhealthy")
-			SystemReady = false
+			monitorStatus += "UNHEALTHY -- Known problems:\n"
+
+			// sort keys
+			var keys []string
+			for k := range knownProblems {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys)
+
+			for _, key := range keys {
+				monitorStatus += fmt.Sprintf("%s: %s\n", key, knownProblems[key])
+			}
+
+			if ServerStatus.SystemReady {
+				log.Println("HEALTH: System is not healthy")
+			}
+			ServerStatus.SystemReady = false
 		}
-		log.Println("Checking overall health..DONE")
+
+		err := ioutil.WriteFile(monitorFile, []byte(monitorStatus), 0644)
+		util.Check(err)
 
 		time.Sleep(10 * time.Second)
-
 	}
 }

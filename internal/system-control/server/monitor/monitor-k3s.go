@@ -1,22 +1,23 @@
 package monitor
 
 import (
-	"log"
+	"fmt"
 	"time"
 )
 
-var KubeClientReady = false
-
 func watchKubernetes() {
+	CANNOT_CONNECT := "Cannot connect to local kubernetes"
+
+	resolveProblem("Monitors not started", "Monitors are starting up")
+	foundProblem(CANNOT_CONNECT, "System starting")
+
 	for true {
 		serverVersion, err := kubeClient.ServerVersion()
 		if err == nil {
-			log.Printf("Connected to Kubernetes version %s", serverVersion)
-			KubeClientReady = true
+			resolveProblem(CANNOT_CONNECT, fmt.Sprintf("Connected to local kubernetes version %s", serverVersion.String()))
 
 		} else {
-			log.Printf("Error connecting to kubernetes: %s", err)
-			KubeClientReady = false
+			foundProblem(CANNOT_CONNECT, err.Error())
 		}
 
 		time.Sleep(10 * time.Second)

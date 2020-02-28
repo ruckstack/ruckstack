@@ -11,7 +11,7 @@ import (
 func KubeClient() *kubernetes.Clientset {
 
 	if !ConfigExists() {
-		panic(fmt.Sprintf("%s does not exist"))
+		panic(fmt.Sprintf("%s does not exist", KubeconfigFile()))
 	}
 
 	config, err := clientcmd.BuildConfigFromFlags("", KubeconfigFile())

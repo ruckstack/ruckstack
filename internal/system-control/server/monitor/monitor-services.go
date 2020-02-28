@@ -1,18 +1,18 @@
 package monitor
 
 import (
+	"fmt"
 	core "k8s.io/api/core/v1"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/cache"
 	"log"
 )
 
-var allServices = make(map[string]*core.Service)
-var TraefikIp string
+var (
+	TRAEFIK_NOT_LISTENING = "Traefik is not listening on an IP address"
+)
 
 func watchServices() {
-	//KubeClientReady.WaitFor(true)
-
 	factory := informers.NewSharedInformerFactory(kubeClient, 0)
 	informer := factory.Core().V1().Services().Informer()
 	stopper := make(chan struct{})
@@ -20,30 +20,24 @@ func watchServices() {
 
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(oldObj interface{}, newObj interface{}) {
-			oldService := oldObj.(*core.Service)
 			newService := newObj.(*core.Service)
-			log.Printf("Changed service %s %s", oldService.Name, newService.Name)
+			log.Printf("Monitor detected updated service %s", fullName(newService.ObjectMeta))
 
-			allServices[fullName(newService.ObjectMeta)] = newService
 			checkService(newService)
 		},
 
 		AddFunc: func(obj interface{}) {
 			service := obj.(*core.Service)
-			log.Printf("Added service %s", service.Name)
+			log.Printf("Monitor detected added service %s", fullName(service.ObjectMeta))
 
-			allServices[fullName(service.ObjectMeta)] = service
 			checkService(service)
 		},
 
 		DeleteFunc: func(obj interface{}) {
 			service := obj.(*core.Service)
-			fullName := fullName(service.ObjectMeta)
-			log.Printf("Deleted Service %s", fullName)
+			log.Printf("Monitor detected deleted service %s", fullName(service.ObjectMeta))
 
-			delete(allServices, fullName)
-			//delete(readyDeployments, fullName)
-			//delete(unreadyDeployments, fullName)
+			checkService(service)
 		},
 	})
 	informer.Run(stopper)
@@ -53,19 +47,13 @@ func watchServices() {
 func checkService(service *core.Service) {
 	fullName := fullName(service.ObjectMeta)
 
-	log.Printf("Checking Service %s", fullName)
-
 	if fullName == "kube-system.traefik" {
-		TraefikIp = service.Spec.ClusterIP
+		ServerStatus.TraefikIp = service.Spec.ClusterIP
+
+		if ServerStatus.TraefikIp == "" {
+			foundProblem(TRAEFIK_NOT_LISTENING, "")
+		} else {
+			resolveProblem(TRAEFIK_NOT_LISTENING, fmt.Sprintf("Traefik is listening on %s", ServerStatus.TraefikIp))
+		}
 	}
-
-	//numberReady := service.Status.AvailableReplicas
-	//if numberReady == 0 {
-	//	unreadyDeployments[fullName] = numberReady
-	//} else {
-	//	readyDeployments[fullName] = numberReady
-	//}
-	//
-	//DeploymentsReady = len(unreadyDeployments) == 0
-
 }

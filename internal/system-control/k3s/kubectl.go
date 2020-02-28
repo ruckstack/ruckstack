@@ -11,7 +11,6 @@ func ExecKubectl(args ...string) {
 	command.Dir = util.InstallDir()
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
-	if err := command.Run(); err != nil {
-		panic(err)
-	}
+	_ = command.Run()
+
 }

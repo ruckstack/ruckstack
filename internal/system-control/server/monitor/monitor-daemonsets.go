@@ -1,20 +1,14 @@
 package monitor
 
 import (
+	"fmt"
 	apps "k8s.io/api/apps/v1"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/cache"
 	"log"
 )
 
-var DaemonSetsReady = false
-var allDaemonSets = make(map[string]*apps.DaemonSet)
-var readyDaemonSets = make(map[string]int32)
-var unreadyDaemonSets = make(map[string]int32)
-
 func watchDaemonSets() {
-	//KubeClientReady.WaitFor(true)
-
 	factory := informers.NewSharedInformerFactory(kubeClient, 0)
 	informer := factory.Apps().V1().DaemonSets().Informer()
 	stopper := make(chan struct{})
@@ -22,30 +16,25 @@ func watchDaemonSets() {
 
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(oldObj interface{}, newObj interface{}) {
-			oldDaemon := oldObj.(*apps.DaemonSet)
 			newDaemon := newObj.(*apps.DaemonSet)
-			log.Printf("Changed daemonset %s %s", oldDaemon.Name, newDaemon.Name)
+			log.Printf("Monitor detected updated daemonset %s", fullName(newDaemon.ObjectMeta))
 
-			allDaemonSets[fullName(newDaemon.ObjectMeta)] = newDaemon
 			checkDaemon(newDaemon)
 		},
 
 		AddFunc: func(obj interface{}) {
 			daemon := obj.(*apps.DaemonSet)
-			log.Printf("Added daemonSet %s", daemon.Name)
+			log.Printf("Monitor detected added daemonset %s", fullName(daemon.ObjectMeta))
 
-			allDaemonSets[fullName(daemon.ObjectMeta)] = daemon
 			checkDaemon(daemon)
 		},
 
 		DeleteFunc: func(obj interface{}) {
 			daemon := obj.(*apps.DaemonSet)
-			fullName := fullName(daemon.ObjectMeta)
-			log.Printf("Deleted DaemonSet %s", fullName)
+			log.Printf("Monitor detected deleted daemonset %s", fullName(daemon.ObjectMeta))
 
-			delete(allDaemonSets, fullName)
-			delete(readyDaemonSets, fullName)
-			delete(unreadyDaemonSets, fullName)
+			resolveProblem(daemonIsNotReadyKey(daemon), fmt.Sprintf("Daemonset %s deleted", fullName(daemon.ObjectMeta)))
+
 		},
 	})
 
@@ -54,19 +43,14 @@ func watchDaemonSets() {
 }
 
 func checkDaemon(daemon *apps.DaemonSet) {
-	fullName := fullName(daemon.ObjectMeta)
-
-	log.Printf("Checking DaemonSet %s", fullName)
-
 	numberReady := daemon.Status.NumberReady
 	if numberReady == 0 {
-		unreadyDaemonSets[fullName] = numberReady
-		delete(readyDaemonSets, fullName)
+		foundProblem(daemonIsNotReadyKey(daemon), "No instances ready")
 	} else {
-		readyDaemonSets[fullName] = numberReady
-		delete(unreadyDaemonSets, fullName)
+		resolveProblem(daemonIsNotReadyKey(daemon), fmt.Sprintf("Daemonset %s has at least one instance ready", fullName(daemon.ObjectMeta)))
 	}
+}
 
-	DaemonSetsReady = len(unreadyDaemonSets) == 0
-
+func daemonIsNotReadyKey(daemon *apps.DaemonSet) string {
+	return fmt.Sprintf("Daemonset %s is not ready", fullName(daemon.ObjectMeta))
 }
