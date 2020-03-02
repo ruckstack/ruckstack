@@ -16,7 +16,6 @@ var (
 )
 
 var ServerStatus = struct {
-	TraefikIp   string
 	SystemReady bool
 }{}
 

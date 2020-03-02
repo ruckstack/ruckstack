@@ -18,6 +18,8 @@ func watchServices() {
 	stopper := make(chan struct{})
 	defer close(stopper)
 
+	foundProblem(TRAEFIK_NOT_LISTENING, "System starting")
+
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(oldObj interface{}, newObj interface{}) {
 			newService := newObj.(*core.Service)
@@ -48,12 +50,10 @@ func checkService(service *core.Service) {
 	fullName := fullName(service.ObjectMeta)
 
 	if fullName == "kube-system.traefik" {
-		ServerStatus.TraefikIp = service.Spec.ClusterIP
-
-		if ServerStatus.TraefikIp == "" {
+		if service.Spec.ClusterIP == "" {
 			foundProblem(TRAEFIK_NOT_LISTENING, "")
 		} else {
-			resolveProblem(TRAEFIK_NOT_LISTENING, fmt.Sprintf("Traefik is listening on %s", ServerStatus.TraefikIp))
+			resolveProblem(TRAEFIK_NOT_LISTENING, fmt.Sprintf("Traefik is listening on %s", service.Spec.ClusterIP))
 		}
 	}
 }

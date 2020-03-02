@@ -65,7 +65,7 @@ func Upgrade(upgradeFile string, targetDir string) {
 	err = serverProcess.Signal(syscall.Signal(0))
 	if err == nil {
 		log.Printf("Found running server on PID %d", serverPid)
-		userMessage("Shutting down server...")
+		userMessage("Shutting down server...\n")
 
 		err := serverProcess.Kill()
 		util.Check(err)
@@ -101,9 +101,9 @@ func Upgrade(upgradeFile string, targetDir string) {
 	userMessage("\n\nUpgrade complete\n")
 
 	if serverShutdown {
-		userMessage("Server was shut down as part of upgrade process and must be restarted")
+		userMessage("Server was shut down as part of upgrade process and must be restarted\n")
 	} else {
-		userMessage("Server was NOT auto-started as part of the upgrade process")
+		userMessage("Server was NOT auto-started as part of the upgrade process\n")
 	}
 }
 

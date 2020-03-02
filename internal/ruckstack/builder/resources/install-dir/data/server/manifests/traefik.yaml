@@ -4,14 +4,14 @@ metadata:
   name: traefik
   namespace: kube-system
 spec:
-  chart: traefik
-  version: 1.77.1
+  chart: https://%{KUBERNETES_API}%/static/charts/traefik-1.81.0.tgz
 
   set:
     serviceType: "ClusterIP"
-    rbac.enabled: "false"
+    rbac.enabled: "true"
     ssl.enabled: "false"
-    metrics.prometheus.enabled: "true"
+    metrics.prometheus.enabled: "false"
     dashboard.enabled: "false"
+    kubernetes.ingressEndpoint.useDefaultPublishedService: "true"
   valuesContent: |-
     externalTrafficPolicy: ""

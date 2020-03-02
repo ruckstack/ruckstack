@@ -7,10 +7,15 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
+	"errors"
 	"fmt"
+	"github.com/ruckstack/ruckstack/internal/system-control/kubeclient"
 	"github.com/ruckstack/ruckstack/internal/system-control/server/monitor"
 	"github.com/ruckstack/ruckstack/internal/system-control/util"
 	"io"
+	core "k8s.io/api/core/v1"
+	"k8s.io/client-go/informers"
+	"k8s.io/client-go/tools/cache"
 	"log"
 	"math/big"
 	"net/http"
@@ -20,6 +25,8 @@ import (
 	"strings"
 	"time"
 )
+
+var reverseProxy *httputil.ReverseProxy
 
 func StartWebserver() {
 	generateKeys()
@@ -41,39 +48,96 @@ func StartWebserver() {
 		util.Check(err)
 	}()
 
-	log.Println("Starting webserver...complete")
+	go watchTraefikService()
 
-	//traefikService, err := KubeClient().CoreV1().Services("kube-system").Get("traefik", metav1.GetOptions{})
-	//Check(err)
-	//
-	//for _, port := range traefikService.Spec.Ports {
-	//	switch port.Name {
-	//	case "http":
-	//		httpNodePort = port.NodePort
-	//	case "https":
-	//		httpsNodePort = port.NodePort
-	//	}
-	//}
-	//
-	//log.Printf("Http port %d", httpNodePort)
-	//log.Printf("Https port %d", httpsNodePort)
+	log.Println("Starting webserver...complete")
+}
+
+var traefikIp string
+
+func watchTraefikService() {
+	kubeClient := kubeclient.KubeClient()
+
+	factory := informers.NewSharedInformerFactory(kubeClient, 0)
+	informer := factory.Core().V1().Services().Informer()
+	stopper := make(chan struct{})
+	defer close(stopper)
+
+	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		UpdateFunc: func(oldObj interface{}, newObj interface{}) {
+			newService := newObj.(*core.Service)
+
+			checkTraefikService(newService)
+		},
+
+		AddFunc: func(obj interface{}) {
+			checkTraefikService(obj.(*core.Service))
+
+		},
+
+		DeleteFunc: func(obj interface{}) {
+			delService := obj.(*core.Service)
+
+			if delService.ObjectMeta.Namespace == "kube-system" && delService.ObjectMeta.Name == "traefik" {
+				traefikIp = ""
+				reverseProxy = nil
+				log.Printf("Traefik service removed")
+			}
+		},
+	})
+	informer.Run(stopper)
+
+}
+
+func checkTraefikService(newService *core.Service) {
+	if newService.ObjectMeta.Namespace == "kube-system" && newService.ObjectMeta.Name == "traefik" {
+		if traefikIp != newService.Spec.ClusterIP {
+			traefikIp = newService.Spec.ClusterIP
+
+			log.Printf("Traefik IP is now %s. Configuring proxy...", traefikIp)
+
+			internalUrl, err := url.Parse(fmt.Sprintf("http://%s", traefikIp))
+			util.Check(err)
+
+			reverseProxy = httputil.NewSingleHostReverseProxy(internalUrl)
+			reverseProxy.ErrorHandler = func(response http.ResponseWriter, request *http.Request, err error) {
+				if err.Error() == "Gateway Error" {
+					showSiteDownPage(response)
+				}
+			}
+
+			reverseProxy.ModifyResponse = func(response *http.Response) error {
+				if response.StatusCode == 502 || response.StatusCode == 503 || response.StatusCode == 504 {
+					return errors.New("Gateway Error")
+				}
+				return nil
+			}
+
+		}
+	}
 }
 
 func handleRequest(res http.ResponseWriter, req *http.Request) {
-	log.Printf("handle request %s %s", req.Method, req.URL.String())
-
 	if strings.HasPrefix(req.URL.Path, "/ops/") {
 		serveOpsPage(res, req)
-	} else if monitor.ServerStatus.SystemReady {
+	} else if reverseProxy != nil && monitor.ServerStatus.SystemReady {
 		proxyToKubernetes(res, req)
 	} else {
-		showSiteDownPage(res, req)
+		showSiteDownPage(res)
 	}
 
 }
 
 func serveOpsPage(res http.ResponseWriter, req *http.Request) {
-	siteDownFile, err := os.Open(util.InstallDir() + "/data/web" + req.URL.Path)
+	if strings.HasPrefix(req.URL.Path, "/ops/http") {
+
+	} else {
+		serveLocalFile(res, req.URL.Path)
+	}
+}
+
+func serveLocalFile(res http.ResponseWriter, url string) {
+	siteDownFile, err := os.Open(util.InstallDir() + "/data/web" + url)
 	if err == nil {
 		defer siteDownFile.Close()
 
@@ -84,16 +148,11 @@ func serveOpsPage(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
+func showSiteDownPage(res http.ResponseWriter) {
+	serveLocalFile(res, "/site-down.html")
+}
+
 func proxyToKubernetes(res http.ResponseWriter, req *http.Request) {
-	//res.WriteHeader(200)
-	//res.Write([]byte("Tesitng server"))
-
-	internalUrl, err := url.Parse(fmt.Sprintf("http://%s%s", monitor.ServerStatus.TraefikIp, req.URL.String()))
-	util.Check(err)
-	log.Println("Proxying to " + internalUrl.String())
-
-	reverseProxy := httputil.NewSingleHostReverseProxy(internalUrl)
-
 	reverseProxy.ServeHTTP(res, req)
 }
 

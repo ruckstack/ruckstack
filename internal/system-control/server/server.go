@@ -21,7 +21,11 @@ func Start() {
 
 	fmt.Printf("Starting %s version %s\n", util.GetPackageConfig().Name, util.GetPackageConfig().Version)
 
+	err := os.MkdirAll(filepath.Join(util.InstallDir(), "logs"), 0755)
+	util.Check(err)
 	serverLog, err := os.OpenFile(filepath.Join(util.InstallDir(), "logs", "server.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	util.Check(err)
+
 	defer serverLog.Close()
 	log.SetOutput(serverLog)
 
