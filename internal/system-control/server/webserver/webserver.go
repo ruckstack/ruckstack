@@ -56,6 +56,12 @@ func StartWebserver() {
 var traefikIp string
 
 func watchTraefikService() {
+	for !kubeclient.ConfigExists() {
+		log.Printf("Webserver waiting for %s", kubeclient.KubeconfigFile())
+
+		time.Sleep(10 * time.Second)
+	}
+
 	kubeClient := kubeclient.KubeClient()
 
 	factory := informers.NewSharedInformerFactory(kubeClient, 0)
