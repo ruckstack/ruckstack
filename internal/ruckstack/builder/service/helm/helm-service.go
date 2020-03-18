@@ -41,8 +41,7 @@ func AddService(serviceConfig *project.HelmServiceConfig, app *artifact.Artifact
 			"namespace": "kube-system",
 		},
 		"spec": map[string]interface{}{
-			"chart":           serviceConfig.Chart,
-			"version":         serviceConfig.Version,
+			"chart":           "https://%{KUBERNETES_API}%/static/charts/" + serviceConfig.Id + ".tgz",
 			"targetNamespace": "default",
 		},
 	}
