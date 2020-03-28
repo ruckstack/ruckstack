@@ -3,6 +3,8 @@ package installer
 import (
 	"archive/zip"
 	"bufio"
+	"bytes"
+	"encoding/base64"
 	"fmt"
 	"github.com/ruckstack/ruckstack/internal"
 	"github.com/ruckstack/ruckstack/internal/system-control/files"
@@ -14,6 +16,8 @@ import (
 	"os/user"
 	"path"
 	"path/filepath"
+	"strings"
+	"time"
 )
 
 func Install(packageConfig *internal.PackageConfig, installerArgs *InstallerArgs, zipReader *zip.ReadCloser) {
@@ -27,11 +31,16 @@ func Install(packageConfig *internal.PackageConfig, installerArgs *InstallerArgs
 	ui := bufio.NewScanner(os.Stdin)
 
 	installPath := getInstallPath(ui, packageConfig, installerArgs)
+	joinToken := getJoinToken(ui, packageConfig, installerArgs)
 	bindAddress := getBindAddress(ui, installerArgs)
 	adminGroup := getAdminGroup(ui, installerArgs)
 
 	localConfig.AdminGroup = adminGroup.Name
 	localConfig.BindAddress = bindAddress
+	if joinToken != nil {
+		localConfig.Join.Server = joinToken.Server
+		localConfig.Join.Token = joinToken.Token
+	}
 
 	util.SetPackageConfig(packageConfig)
 	util.SetSystemConfig(systemConfig)
@@ -108,13 +117,84 @@ func getInstallPath(ui *bufio.Scanner, packageConfig *internal.PackageConfig, in
 		if !stat.IsDir() {
 			fmt.Println(absInstallPath + " is not a directory")
 			return getInstallPath(ui, nil, nil)
-		} else {
-			fmt.Printf(absInstallPath+" already exists\n\nTo upgrade, run `%s/bin/%s upgrade --file %s`\n", absInstallPath, packageConfig.SystemControlName, installPath)
-			os.Exit(1)
 		}
 	}
 
+	stat, err = os.Stat(filepath.Join(absInstallPath, ".package.config"))
+	if os.IsNotExist(err) {
+		//that is what we want
+	} else {
+		fmt.Printf(absInstallPath+" already exists\n\nTo upgrade, run `%s/bin/%s upgrade --file %s`\n", absInstallPath, packageConfig.SystemControlName, installPath)
+		os.Exit(1)
+	}
+
 	return absInstallPath
+}
+
+func getJoinToken(ui *bufio.Scanner, packageConfig *internal.PackageConfig, installerArgs *InstallerArgs) *AddNodeToken {
+	addNodeToken := &AddNodeToken{}
+
+	var joinToken string
+	if installerArgs != nil {
+		joinToken = installerArgs.JoinToken
+	}
+
+	var joinCluster bool
+	if joinToken == "" {
+		gotValidResponse := false
+
+		for !gotValidResponse {
+			fmt.Print("Join an existing cluster? [y|n] ")
+			ui.Scan()
+			joinResponse := strings.ToLower(ui.Text())
+
+			if joinResponse == "y" {
+				gotValidResponse = true
+				joinCluster = true
+			} else if joinResponse == "n" {
+				gotValidResponse = true
+				joinCluster = false
+			}
+		}
+	}
+
+	for joinCluster && joinToken == "" {
+		fmt.Printf("Run `%s cluster add-node` on another machine in the cluster and enter the token here:\n", packageConfig.SystemControlName)
+
+		ui.Scan()
+		joinToken = strings.TrimSpace(ui.Text())
+
+		joinTokenYaml, err := base64.StdEncoding.DecodeString(joinToken)
+		if err != nil {
+			fmt.Printf("Error parsing token\n\n")
+			joinToken = ""
+			continue
+		}
+
+		tokenDecoder := yaml.NewDecoder(bytes.NewReader(joinTokenYaml))
+		err = tokenDecoder.Decode(addNodeToken)
+
+		if err != nil {
+			fmt.Printf("Error reading token\n\n")
+			joinToken = ""
+			continue
+		}
+
+		timeout := time.Second
+		for _, serverPortAndProtocol := range []string{"tcp/6443", "udp/8472"} {
+			splitInfo := strings.Split(serverPortAndProtocol, "/")
+			conn, err := net.DialTimeout(splitInfo[0], net.JoinHostPort(addNodeToken.Server, splitInfo[1]), timeout)
+			if err != nil {
+				fmt.Printf("Cannot connect to server -- %s\n", err.Error())
+
+				util.Check(err)
+			}
+			conn.Close()
+		}
+	}
+
+	return addNodeToken
+
 }
 
 func getBindAddress(ui *bufio.Scanner, installerArgs *InstallerArgs) string {
@@ -212,4 +292,6 @@ type InstallerArgs struct {
 	InstallPath string
 	AdminGroup  string
 	BindAddress string
+	JoinServer  string
+	JoinToken   string
 }

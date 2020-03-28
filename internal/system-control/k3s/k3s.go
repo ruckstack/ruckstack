@@ -22,15 +22,36 @@ func Start() {
 	defer k3sLogs.Close()
 
 	kubecConfigFile := kubeclient.KubeconfigFile()
-	k3sStartCommand = exec.Command(util.InstallDir()+"/lib/k3s", "server",
-		"--bind-address", util.GetLocalConfig().BindAddress,
-		"--node-external-ip", util.GetLocalConfig().BindAddress,
-		"--default-local-storage-path", util.InstallDir()+"/data/local-storage",
-		"--data-dir", util.InstallDir()+"/data",
-		"--no-deploy", "traefik",
-		"--kubelet-arg", "root-dir="+util.InstallDir()+"/data/kubelet",
-		"--write-kubeconfig", kubecConfigFile,
-		"--write-kubeconfig-mode", "640")
+	localConfig := util.GetLocalConfig()
+
+	k3sCommand := "server"
+	if localConfig.Join.Server != "" {
+		log.Printf("Joining server %s", localConfig.Join.Server)
+		k3sCommand = "agent"
+	}
+
+	k3sArgs := []string{
+		k3sCommand,
+		"--node-external-ip", localConfig.BindAddress,
+		"--data-dir", util.InstallDir() + "/data",
+		"--kubelet-arg", "root-dir=" + util.InstallDir() + "/data/kubelet",
+	}
+
+	if localConfig.Join.Server == "" {
+		k3sArgs = append(k3sArgs,
+			"--bind-address", localConfig.BindAddress,
+			"--no-deploy", "traefik",
+			"--default-local-storage-path", util.InstallDir()+"/data/local-storage",
+			"--write-kubeconfig", kubecConfigFile,
+			"--write-kubeconfig-mode", "640",
+		)
+	} else {
+		k3sArgs = append(k3sArgs,
+			"--server", "https://"+localConfig.Join.Server+":6443",
+			"--token", localConfig.Join.Token,
+		)
+	}
+	k3sStartCommand = exec.Command(util.InstallDir()+"/lib/k3s", k3sArgs...)
 	k3sStartCommand.Stdout = k3sLogs
 	k3sStartCommand.Stderr = k3sLogs
 	err = k3sStartCommand.Start()

@@ -16,7 +16,11 @@ type SystemConfig struct {
 
 type LocalConfig struct {
 	AdminGroup  string `yaml:"adminGroup"`
-	BindAddress string `yaml:"bindAddressps"`
+	BindAddress string `yaml:"bindAddress"`
+	Join        struct {
+		Server string `yaml:"server"`
+		Token  string `yaml:"token"`
+	} `yaml:"join"`
 }
 
 type InstalledFileConfig struct {
