@@ -1,10 +1,12 @@
 package k3s
 
 import (
+	"fmt"
 	"github.com/ruckstack/ruckstack/internal/system-control/files"
 	"github.com/ruckstack/ruckstack/internal/system-control/kubeclient"
 	"github.com/ruckstack/ruckstack/internal/system-control/util"
 	"log"
+	"net"
 	"os"
 	"os/exec"
 	"time"
@@ -24,6 +26,33 @@ func Start() {
 	kubecConfigFile := kubeclient.KubeconfigFile()
 	localConfig := util.GetLocalConfig()
 
+	ifaces, err := net.Interfaces()
+	util.Check(err)
+
+	var bindAddressIface string
+	for _, iface := range ifaces {
+		addrs, err := iface.Addrs()
+		util.Check(err)
+
+		for _, addr := range addrs {
+			var ip net.IP
+			switch v := addr.(type) {
+			case *net.IPNet:
+				ip = v.IP
+			case *net.IPAddr:
+				ip = v.IP
+			}
+
+			if ip.To4().String() == localConfig.BindAddress {
+				bindAddressIface = iface.Name
+			}
+		}
+	}
+
+	if bindAddressIface == "" {
+		panic(fmt.Sprint("Cannot find network interface with IP %s", localConfig.BindAddress))
+	}
+
 	k3sCommand := "server"
 	if localConfig.Join.Server != "" {
 		log.Printf("Joining server %s", localConfig.Join.Server)
@@ -35,6 +64,8 @@ func Start() {
 		"--node-external-ip", localConfig.BindAddress,
 		"--data-dir", util.InstallDir() + "/data",
 		"--kubelet-arg", "root-dir=" + util.InstallDir() + "/data/kubelet",
+		//"--flannel-conf", util.InstallDir() + "/config/flannel.env",
+		"--flannel-iface", bindAddressIface,
 	}
 
 	if localConfig.Join.Server == "" {
@@ -49,6 +80,7 @@ func Start() {
 		k3sArgs = append(k3sArgs,
 			"--server", "https://"+localConfig.Join.Server+":6443",
 			"--token", localConfig.Join.Token,
+			"--node-ip", localConfig.BindAddress,
 		)
 	}
 	k3sStartCommand = exec.Command(util.InstallDir()+"/lib/k3s", k3sArgs...)

@@ -11,6 +11,7 @@ import (
 	"github.com/ruckstack/ruckstack/internal/system-control/util"
 	"gopkg.in/yaml.v2"
 	"io"
+	"io/ioutil"
 	"net"
 	"os"
 	"os/user"
@@ -40,6 +41,8 @@ func Install(packageConfig *internal.PackageConfig, installerArgs *InstallerArgs
 	if joinToken != nil {
 		localConfig.Join.Server = joinToken.Server
 		localConfig.Join.Token = joinToken.Token
+
+		util.Check(ioutil.WriteFile(util.InstallDir()+"/config/kubeconfig.yaml", []byte(joinToken.KubeConfig), 0640))
 	}
 
 	util.SetPackageConfig(packageConfig)
@@ -159,7 +162,7 @@ func getJoinToken(ui *bufio.Scanner, packageConfig *internal.PackageConfig, inst
 	}
 
 	for joinCluster && joinToken == "" {
-		fmt.Printf("Run `%s cluster add-node` on another machine in the cluster and enter the token here:\n", packageConfig.SystemControlName)
+		fmt.Printf("Run `%s cluster add-node` on the primary machine in the cluster and enter the token here:\n", packageConfig.SystemControlName)
 
 		ui.Scan()
 		joinToken = strings.TrimSpace(ui.Text())

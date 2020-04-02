@@ -13,18 +13,22 @@ import (
 )
 
 func AddNode() {
-	content, err := ioutil.ReadFile(filepath.Join(util.InstallDir(), "/data/server/token"))
+
+	localConfig := util.GetLocalConfig()
+	if localConfig.Join.Server != "" {
+		panic("Must run this command from the primary machine in your cluster")
+	}
+
+	tokenFileContent, err := ioutil.ReadFile(filepath.Join(util.InstallDir(), "/data/server/token"))
+	util.Check(err)
+
+	kubeConfigFileContent, err := ioutil.ReadFile(filepath.Join(util.InstallDir(), "/config/kubeconfig.yaml"))
 	util.Check(err)
 
 	token := new(installer.AddNodeToken)
-	token.Token = strings.TrimSpace(string(content))
-
-	localConfig := util.GetLocalConfig()
-	if localConfig.Join.Server == "" {
-		token.Server = localConfig.BindAddress
-	} else {
-		token.Server = localConfig.Join.Server
-	}
+	token.Token = strings.TrimSpace(string(tokenFileContent))
+	token.Server = localConfig.BindAddress
+	token.KubeConfig = strings.TrimSpace(string(kubeConfigFileContent))
 
 	var yamlToken bytes.Buffer
 
