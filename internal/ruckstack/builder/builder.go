@@ -33,7 +33,7 @@ func Build(projectFile string, outDir string) {
 
 	//saveDockerImages(dockerImages, "app.tar", artifactWriter)
 
-	appFilename := projectConfig.Id + "_" + projectConfig.Version + ".run"
+	appFilename := projectConfig.Id + "_" + projectConfig.Version + ".installer"
 
 	app := artifact.NewArtifact(appFilename, outDir)
 
