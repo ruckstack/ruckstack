@@ -41,8 +41,6 @@ func Install(packageConfig *internal.PackageConfig, installerArgs *InstallerArgs
 	if joinToken != nil {
 		localConfig.Join.Server = joinToken.Server
 		localConfig.Join.Token = joinToken.Token
-
-		util.Check(ioutil.WriteFile(util.InstallDir()+"/config/kubeconfig.yaml", []byte(joinToken.KubeConfig), 0640))
 	}
 
 	util.SetPackageConfig(packageConfig)
@@ -57,6 +55,10 @@ func Install(packageConfig *internal.PackageConfig, installerArgs *InstallerArgs
 	}
 
 	util.Check(os.MkdirAll(installPath+"/config", 0755))
+
+	if joinToken != nil {
+		util.Check(ioutil.WriteFile(filepath.Join(installPath, "config/kubeconfig.yaml"), []byte(joinToken.KubeConfig), 0640))
+	}
 
 	systemConfigFile, err := os.OpenFile(installPath+"/config/system.config", os.O_CREATE|os.O_RDWR, 0644)
 	systemConfigEncoder := yaml.NewEncoder(systemConfigFile)
@@ -156,7 +158,7 @@ func getJoinToken(ui *bufio.Scanner, packageConfig *internal.PackageConfig, inst
 				joinCluster = true
 			} else if joinResponse == "n" {
 				gotValidResponse = true
-				joinCluster = false
+				return nil
 			}
 		}
 	}

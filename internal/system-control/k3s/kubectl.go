@@ -10,6 +10,7 @@ import (
 
 func ExecKubectl(args ...string) {
 	command := exec.Command(util.InstallDir()+"/lib/k3s", append([]string{"kubectl"}, args...)...)
+	command.Env = os.Environ()
 	command.Env = append(command.Env,
 		fmt.Sprintf("KUBECONFIG=%s", kubeclient.KubeconfigFile()),
 	)
