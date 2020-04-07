@@ -42,16 +42,27 @@ func watchNodes() {
 }
 
 func checkNode(node *core.Node) {
+	readyCount := 0
+	totalCount := 0
 	for _, condition := range node.Status.Conditions {
+		totalCount++
 		if condition.Type == "Ready" {
 			ready := condition.Status == "True"
 
 			if ready {
-				resolveProblem(nodeIsNotReadyKey(node), fmt.Sprintf("Node %s is ready: %s", fullName(node.ObjectMeta), condition.Message))
+				readyCount++
+				resolveWarning(nodeIsNotReadyKey(node), fmt.Sprintf("Node %s is ready: %s", fullName(node.ObjectMeta), condition.Message))
 			} else {
-				foundProblem(nodeIsNotReadyKey(node), condition.Message)
+				foundWarning(nodeIsNotReadyKey(node), condition.Message)
 			}
 		}
+	}
+
+	noNodesReadyKey := "No nodes ready"
+	if readyCount == 0 {
+		foundProblem(noNodesReadyKey, fmt.Sprintf("%d of %d nodes are available", readyCount, totalCount))
+	} else {
+		resolveProblem(noNodesReadyKey, fmt.Sprintf("%d of %d nodes are available", readyCount, totalCount))
 	}
 }
 

@@ -20,8 +20,26 @@ func watchOverall() {
 		monitorStatus := fmt.Sprintf("Monitor status at %s\n", time.Now().Format(time.RubyDate))
 		monitorStatus += "---------------------------------------------\n"
 
+		monitorStatus += "\nWARNINGS:\n"
+		if len(knownWarnings) == 0 {
+			monitorStatus += "No warnings\n"
+		} else {
+			// sort keys
+			var keys []string
+			for k := range knownWarnings {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys)
+
+			for _, key := range keys {
+				monitorStatus += fmt.Sprintf("%s: %s\n", key, knownWarnings[key])
+			}
+		}
+		monitorStatus += "No known problems\n"
+
+		monitorStatus += "\nERRORS:\n"
 		if len(knownProblems) == 0 {
-			monitorStatus += "No known problems\n"
+			monitorStatus += "No known errors\n"
 
 			if !ServerStatus.SystemReady {
 				log.Println("HEALTH: System is healthy")

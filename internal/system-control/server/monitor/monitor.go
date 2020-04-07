@@ -13,6 +13,9 @@ var kubeClient *kubernetes.Clientset
 var (
 	knownProblems = map[string]string{}
 	seenProblems  = map[string]bool{}
+
+	knownWarnings = map[string]string{}
+	seenWarnings  = map[string]bool{}
 )
 
 var ServerStatus = struct {
@@ -74,6 +77,34 @@ func resolveProblem(problemKey string, resolvedMessage string) {
 		if !seenProblems[problemKey] {
 			log.Println("RESOLVED: " + resolvedMessage)
 			seenProblems[problemKey] = true
+		}
+	}
+}
+
+func foundWarning(warningKey string, description string) {
+	seenWarnings[warningKey] = true
+
+	existingDesc, warningExists := knownWarnings[warningKey]
+	if !warningExists || existingDesc != description {
+		message := warningKey
+		if description != "" {
+			message += " -- " + description
+		}
+		log.Println("WARNING: " + message)
+	}
+
+	knownWarnings[warningKey] = description
+}
+
+func resolveWarning(warningKey string, resolvedMessage string) {
+	_, warningExists := knownWarnings[warningKey]
+	if warningExists {
+		delete(knownWarnings, warningKey)
+		log.Println("RESOLVED: " + resolvedMessage)
+	} else {
+		if !seenWarnings[warningKey] {
+			log.Println("RESOLVED: " + resolvedMessage)
+			seenWarnings[warningKey] = true
 		}
 	}
 }
