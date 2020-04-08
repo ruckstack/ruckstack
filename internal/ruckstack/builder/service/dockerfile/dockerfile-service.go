@@ -41,15 +41,22 @@ func AddService(serviceConfig *project.DockerfileServiceConfig, app *artifact.Ar
 	app.AddFile(writeManifest(serviceConfig, projectConfig, buildConfig), "data/server/manifests/"+serviceConfig.Id+".yaml")
 
 	dockerTag := projectConfig.Id + "/" + serviceConfig.Id + ":" + serviceConfig.ServiceVersion
-	dockerBuildCmd := exec.Command("docker", "build", "-t", dockerTag, ".")
+	buildContainer(dockerTag, serviceConfig, err)
+
+	app.IncludeDockerImage(dockerTag)
+
+}
+
+func buildContainer(dockerTag string, serviceConfig *project.DockerfileServiceConfig, err error) {
+	dockerBuildCmd := exec.Command("docker", "build",
+		"-t", dockerTag,
+		"--label", "ruckstack.built=true",
+		".")
 	dockerBuildCmd.Dir = serviceConfig.BaseDir
 	dockerBuildCmd.Stdout = os.Stdout
 	dockerBuildCmd.Stderr = os.Stderr
 	err = dockerBuildCmd.Run()
 	util.Check(err)
-
-	app.IncludeDockerImage(dockerTag)
-
 }
 
 func writeChart(serviceConfig *project.DockerfileServiceConfig, projectConfig *project.ProjectConfig, config *shared.BuildEnvironment, serviceBuildDir string) {

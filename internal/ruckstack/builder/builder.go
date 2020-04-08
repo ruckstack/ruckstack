@@ -93,6 +93,7 @@ func Build(projectFile string, outDir string) {
 	}
 
 	app.SaveDockerImages(buildEnv)
+	app.ClearDockerImages(buildEnv)
 
 	app.Build(projectConfig, buildEnv)
 

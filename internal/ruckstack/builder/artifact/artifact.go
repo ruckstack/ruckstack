@@ -252,6 +252,25 @@ func (artifact *Artifact) SaveDockerImages(buildEnv *shared.BuildEnvironment) {
 	artifact.AddFile(appImagePath, "data/agent/images/images.tar")
 }
 
+func (artifact *Artifact) ClearDockerImages(env *shared.BuildEnvironment) {
+	log.Printf("Cleaning up containers...")
+
+	output, err := exec.Command("docker", "image", "ls",
+		"--format", "'{{.Repository}}:{{.Tag}}'",
+		"--filter", "label=ruckstack.built=true").Output()
+	util.Check(err)
+
+	for _, builtTag := range strings.Split(strings.TrimSpace(string(output)), "\n") {
+		builtTag = strings.Trim(builtTag, "'")
+		log.Printf("Removing %s", builtTag)
+		output, err := exec.Command("docker", "image", "rm", builtTag).Output()
+		log.Println(string(output))
+		util.Check(err)
+
+	}
+
+}
+
 //func pullDockerImages(dockerImages []string) {
 //	for _, image := range dockerImages {
 //		dockerSaveCmd := exec.Command("docker", "pull", image)
