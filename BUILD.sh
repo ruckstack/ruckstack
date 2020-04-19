@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ##Ideally this comes from $(out/linux/bin/ruckstack --version)
-VERSION=0.7.0
+VERSION=0.8.0
 
 build() {
   echo "Building ruckstack ${VERSION}..."
