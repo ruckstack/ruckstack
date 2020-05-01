@@ -4,6 +4,7 @@ import (
 	"github.com/ruckstack/ruckstack/internal"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/util"
 	"gopkg.in/yaml.v2"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -110,4 +111,8 @@ func ExecBash(bashCommand string) {
 	if err := command.Run(); err != nil {
 		panic(err)
 	}
+}
+
+func GetAbsoluteName(object meta.Object) string {
+	return object.GetNamespace() + "/" + object.GetName()
 }

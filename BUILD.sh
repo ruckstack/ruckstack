@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 ##Ideally this comes from $(out/linux/bin/ruckstack --version)
 VERSION=0.8.0
 

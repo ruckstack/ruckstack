@@ -3,7 +3,7 @@ go: "1.13"
 
 go_import_path: github.com/ruckstack/ruckstack
 
-install: go get -u github.com/shuLhan/go-bindata/...
+install: go get -u github.com/jteeuwen/go-bindata
 script: ./BUILD.sh
 
 #TODO: No uploading of artifacts so far

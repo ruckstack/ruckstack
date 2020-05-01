@@ -10,9 +10,8 @@ var clusterAddNodeCmd = &cobra.Command{
 	Annotations: map[string]string{
 		ANNOTATION_REQUIRES_ROOT: "true",
 	},
-	Short:              "Adds a node to the cluster",
-	Long:               `Used during installation of additional server nodes`,
-	DisableFlagParsing: true,
+	Short: "Adds a node to the cluster",
+	Long:  `Used during installation of additional server nodes`,
 	Run: func(cmd *cobra.Command, args []string) {
 		cluster.AddNode()
 	},
