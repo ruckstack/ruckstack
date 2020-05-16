@@ -6,12 +6,9 @@ import (
 	"github.com/ruckstack/ruckstack/internal/system-control/util"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"math"
-	"strings"
-	"time"
 )
 
-func ShowServiceLogs(systemService bool, serviceName string, watch bool, since string, node string) {
+func ShowJobLogs(systemJob bool, jobName string, watch bool) {
 	client := kubeclient.KubeClient()
 
 	logOptions := &core.PodLogOptions{
@@ -20,16 +17,7 @@ func ShowServiceLogs(systemService bool, serviceName string, watch bool, since s
 
 	fmt.Print("Logs for")
 
-	fmt.Printf(" service %s", serviceName)
-	if strings.ToLower(since) != "all" {
-		duration, err := time.ParseDuration(since)
-		util.Check(err)
-
-		sinceSeconds := int64(math.Abs(duration.Seconds()))
-		logOptions.SinceSeconds = &sinceSeconds
-
-		fmt.Printf(" since %s", time.Now().Add(time.Duration(-1*sinceSeconds)*time.Second).Format(time.RFC822))
-	}
+	fmt.Printf(" job %s", jobName)
 
 	if watch {
 		fmt.Println(" (ctrl-c to exit)...")
@@ -39,7 +27,7 @@ func ShowServiceLogs(systemService bool, serviceName string, watch bool, since s
 	fmt.Println("-----------------------------------------")
 
 	namespace := "default"
-	if systemService {
+	if systemJob {
 		namespace = "kube-system"
 	}
 	pods, err := client.CoreV1().Pods(namespace).List(meta.ListOptions{})
@@ -47,11 +35,9 @@ func ShowServiceLogs(systemService bool, serviceName string, watch bool, since s
 
 	foundPod := false
 	for _, pod := range pods.Items {
-		if node != "all" && pod.Spec.NodeName != node {
-			continue
-		}
+
 		for _, owner := range pod.OwnerReferences {
-			if owner.Name == serviceName {
+			if owner.Name == jobName {
 				foundPod = true
 
 				outputLogs(namespace, pod.Name, true, logOptions, client)
@@ -60,10 +46,8 @@ func ShowServiceLogs(systemService bool, serviceName string, watch bool, since s
 	}
 
 	if !foundPod {
-		fmt.Printf("No containers found for service %s", serviceName)
-		if node != "all" {
-			fmt.Printf(" on node %s", node)
-		}
+		fmt.Printf("No containers found for job %s", jobName)
+
 		fmt.Println("")
 	}
 }

@@ -13,10 +13,10 @@ import (
 	"time"
 )
 
-func ShowContainerLogs(systemContainer bool, containerId string, follow bool, previous bool, since string) {
+func ShowContainerLogs(systemContainer bool, containerId string, watch bool, previous bool, since string) {
 	if previous {
-		//cannot follow previous container logs
-		follow = false
+		//cannot watch previous container logs
+		watch = false
 	}
 
 	namespace := "default"
@@ -27,7 +27,7 @@ func ShowContainerLogs(systemContainer bool, containerId string, follow bool, pr
 	client := kubeclient.KubeClient()
 
 	logOptions := &core.PodLogOptions{
-		Follow: follow,
+		Follow: watch,
 	}
 
 	fmt.Print("Logs for")
@@ -48,7 +48,7 @@ func ShowContainerLogs(systemContainer bool, containerId string, follow bool, pr
 		fmt.Printf(" since %s", time.Now().Add(time.Duration(-1*sinceSeconds)*time.Second).Format(time.RFC822))
 	}
 
-	if follow {
+	if watch {
 		fmt.Println(" (ctrl-c to exit)...")
 	} else {
 		fmt.Println("")
