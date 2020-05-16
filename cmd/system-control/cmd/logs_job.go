@@ -19,7 +19,7 @@ var systemJobs bool
 
 func init() {
 
-	logsJobCmd.Flags().BoolVar(&systemJobs, "system-job", false, "Set this flag if the job is a system job")
+	logsJobCmd.Flags().BoolVar(&systemJobs, "system", false, "Set this flag if the job is a system job")
 	logsJobCmd.Flags().BoolVar(&watchLogs, "watch", false, "Continue to output log messages")
 
 	logsCmd.AddCommand(logsJobCmd)

@@ -22,7 +22,7 @@ var logsContainerCmd = &cobra.Command{
 }
 
 func init() {
-	logsContainerCmd.Flags().BoolVar(&systemService, "system-container", false, "Set this flag if the container is for a system service")
+	logsContainerCmd.Flags().BoolVar(&systemService, "system", false, "Set this flag if the container is for a system service")
 	logsContainerCmd.Flags().BoolVar(&previousLogs, "previous", false, "Output logs from the previously ran instance")
 	logsContainerCmd.Flags().BoolVar(&watchLogs, "watch", false, "Continue to output log messages")
 	logsContainerCmd.Flags().StringVar(&logsSince, "since", "24h", "Oldest logs to show. Specify as a number and unit, such as 15m or 3h. Defaults to 24h. To list all logs, specify 'all'")

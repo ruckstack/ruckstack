@@ -17,7 +17,7 @@ var restartServiceCmd = &cobra.Command{
 }
 
 func init() {
-	restartServiceCmd.Flags().BoolVar(&systemService, "system-service", false, "Set this flag if the service is a system service")
+	restartServiceCmd.Flags().BoolVar(&systemService, "system", false, "Set this flag if the service is a system service")
 
 	restartCmd.AddCommand(restartServiceCmd)
 }

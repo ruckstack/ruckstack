@@ -18,7 +18,7 @@ var statusJobsCmd = &cobra.Command{
 
 func init() {
 
-	statusJobsCmd.Flags().BoolVar(&includeSystemJobs, "include-system-jobs", false, "Include system-level jobs in output")
+	statusJobsCmd.Flags().BoolVar(&includeSystemJobs, "include-system", false, "Include system-level jobs in output")
 	statusJobsCmd.Flags().BoolVar(&watchJobs, "watch", false, "Continue watching for changes to the jobs")
 
 	statusCmd.AddCommand(statusJobsCmd)

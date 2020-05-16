@@ -17,7 +17,7 @@ var restartContainerCmd = &cobra.Command{
 }
 
 func init() {
-	restartContainerCmd.Flags().BoolVar(&systemContainer, "system-container", false, "Set this flag if the container is a system container")
+	restartContainerCmd.Flags().BoolVar(&systemContainer, "system", false, "Set this flag if the container is a system container")
 
 	restartCmd.AddCommand(restartContainerCmd)
 }
