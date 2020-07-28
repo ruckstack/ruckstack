@@ -4,3 +4,5 @@
 /out
 internal/ruckstack/builder/resources/new-project/example/out
 TODO.txt
+**/__debug_bin
+/workspace

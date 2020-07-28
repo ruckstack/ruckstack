@@ -2,8 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
+
+	"github.com/spf13/cobra"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
@@ -16,7 +17,7 @@ var rootCmd = &cobra.Command{
 	Use:     "ruckstack",
 	Short:   "Ruckstack CLI",
 	Long:    `Ruckstack CLI`,
-	Version: "0.8.0",
+	Version: "0.8.1",
 }
 
 func init() {

@@ -4,7 +4,7 @@ if "%OS%" == "Windows_NT" setlocal
 setlocal enabledelayedexpansion
 
 REM ##Ideally this comes from $(out/linux/bin/ruckstack --version)
-set VERSION=0.8.0
+set VERSION=0.8.1
 
 echo "Building ruckstack %VERSION%..."
 

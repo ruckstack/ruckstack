@@ -6,10 +6,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"github.com/ruckstack/ruckstack/internal"
-	"github.com/ruckstack/ruckstack/internal/system-control/files"
-	"github.com/ruckstack/ruckstack/internal/system-control/util"
-	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
 	"net"
@@ -19,6 +15,11 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/ruckstack/ruckstack/internal"
+	"github.com/ruckstack/ruckstack/internal/system-control/files"
+	"github.com/ruckstack/ruckstack/internal/system-control/util"
+	"gopkg.in/yaml.v2"
 )
 
 func Install(packageConfig *internal.PackageConfig, installerArgs *InstallerArgs, zipReader *zip.ReadCloser) {
@@ -114,6 +115,12 @@ func getInstallPath(ui *bufio.Scanner, packageConfig *internal.PackageConfig, in
 	}
 
 	absInstallPath, err := filepath.Abs(installPath)
+
+	if len(absInstallPath) > 50 {
+		//if install path is too long, socket paths get longer than the 107 chars linux supports
+		fmt.Println(absInstallPath + " is too deeply nested. Choose a different directory.")
+		return getInstallPath(ui, nil, nil)
+	}
 
 	stat, err := os.Stat(absInstallPath)
 	if os.IsNotExist(err) {

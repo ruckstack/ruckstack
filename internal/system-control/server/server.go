@@ -2,10 +2,6 @@ package server
 
 import (
 	"fmt"
-	"github.com/ruckstack/ruckstack/internal/system-control/k3s"
-	"github.com/ruckstack/ruckstack/internal/system-control/server/monitor"
-	"github.com/ruckstack/ruckstack/internal/system-control/server/webserver"
-	"github.com/ruckstack/ruckstack/internal/system-control/util"
 	"io/ioutil"
 	"log"
 	"os"
@@ -13,6 +9,11 @@ import (
 	"path/filepath"
 	"strconv"
 	"syscall"
+
+	"github.com/ruckstack/ruckstack/internal/system-control/k3s"
+	"github.com/ruckstack/ruckstack/internal/system-control/server/monitor"
+	"github.com/ruckstack/ruckstack/internal/system-control/server/webserver"
+	"github.com/ruckstack/ruckstack/internal/system-control/util"
 )
 
 func Start() {

@@ -2,15 +2,17 @@ package status
 
 import (
 	"fmt"
+	"sort"
+	"sync"
+
 	"github.com/ruckstack/ruckstack/internal/system-control/kubeclient"
 	"github.com/ruckstack/ruckstack/internal/system-control/util"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
-	"sort"
-	"sync"
 )
 
 type serviceInfo struct {
@@ -21,7 +23,7 @@ type serviceInfo struct {
 	pods       []string
 }
 
-var kubeClient = kubeclient.KubeClient()
+var kubeClient *kubernetes.Client
 var lastPodStatus = map[string]string{}
 var ownerTree = map[string]*meta.OwnerReference{}
 var allServices = map[string]*serviceInfo{}

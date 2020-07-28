@@ -1,14 +1,23 @@
 package kubeclient
 
 import (
+	"flag"
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/ruckstack/ruckstack/internal/system-control/util"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-	"os"
+	"k8s.io/klog"
 )
 
 func KubeClient() *kubernetes.Clientset {
+
+	klogFlags := flag.NewFlagSet("klog", flag.ExitOnError)
+	klogFlags.Set("logtostderr", "false")
+	klogFlags.Set("log_file", filepath.Join(util.InstallDir(), "logs", "k3s-client.log"))
+	klog.InitFlags(klogFlags)
 
 	if !ConfigExists() {
 		panic(fmt.Sprintf("%s does not exist", KubeconfigFile()))
