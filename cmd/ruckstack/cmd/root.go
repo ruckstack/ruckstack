@@ -17,7 +17,7 @@ var rootCmd = &cobra.Command{
 	Use:     "ruckstack",
 	Short:   "Ruckstack CLI",
 	Long:    `Ruckstack CLI`,
-	Version: "0.8.1",
+	Version: "0.8.2",
 }
 
 func init() {
