@@ -16,6 +16,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -222,7 +223,7 @@ func buildChart(serviceConfig *project.DockerfileServiceConfig, projectConfig *p
 		defer file.Close()
 
 		header := &tar.Header{
-			Name:    serviceConfig.Id + "/" + relativePath,
+			Name:    serviceConfig.Id + "/" + strings.ReplaceAll(relativePath, "\\", "/"),
 			Size:    info.Size(),
 			ModTime: info.ModTime(),
 			Mode:    0644,
