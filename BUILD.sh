@@ -3,7 +3,7 @@
 set -e
 
 ##Ideally this comes from $(out/linux/bin/ruckstack --version)
-VERSION=0.8.2
+VERSION=0.8.3
 
 build() {
   echo "Building ruckstack ${VERSION}..."
