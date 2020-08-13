@@ -32,7 +32,7 @@ jobs:
         go get -u github.com/shuLhan/go-bindata/...
 
     - name: Build
-      run: ~/go/src/github.com/ruckstack/ruckstack/BUILD.sh
+      run: ~/work/ruckstack/ruckstack/BUILD.sh
       
 #    - name: Test
 #      run: go test -v .
