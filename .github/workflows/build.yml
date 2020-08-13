@@ -36,3 +36,10 @@ jobs:
       
 #    - name: Test
 #      run: go test -v .
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ruckstack-builders
+        path: |
+          ~/work/ruckstack/ruckstack/out/*.zip
+          ~/work/ruckstack/ruckstack/out/*.tgz
