@@ -41,5 +41,5 @@ jobs:
       with:
         name: my-artifact
         path: |
-          ~/work/ruckstack/ruckstack/*.zip
-          ~/work/ruckstack/ruckstack/*.tgz           
+          ~/work/ruckstack/ruckstack/out/*.zip
+          ~/work/ruckstack/ruckstack/out/*.tgz           
