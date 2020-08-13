@@ -23,7 +23,7 @@ type serviceInfo struct {
 	pods       []string
 }
 
-var kubeClient *kubernetes.Client
+var kubeClient *kubernetes.Clientset
 var lastPodStatus = map[string]string{}
 var ownerTree = map[string]*meta.OwnerReference{}
 var allServices = map[string]*serviceInfo{}
