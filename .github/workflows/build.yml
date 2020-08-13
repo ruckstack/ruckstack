@@ -39,7 +39,10 @@ jobs:
 
     - uses: actions/upload-artifact@v2
       with:
-        name: my-artifact
-        path: |
-          ~/work/ruckstack/ruckstack/out/*.zip
-          ~/work/ruckstack/ruckstack/out/*.tgz           
+        name: ruckstack-builder.zip
+        path: ~/work/ruckstack/ruckstack/out/*.zip
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ruckstack-builder.tgz
+        path: ~/work/ruckstack/ruckstack/out/*.tgz
