@@ -371,7 +371,7 @@ func getDaemonSetStatus(daemonSet *apps.DaemonSet) string {
 	if daemonSet.Status.NumberReady == 0 {
 		returnMessage += "UNAVAILABLE. No containers are ready"
 	} else if daemonSet.Status.NumberUnavailable > 0 {
-		returnMessage += fmt.Sprint("DEGRADED. Not running on %d nodes", daemonSet.Status.NumberUnavailable)
+		returnMessage += fmt.Sprintf("DEGRADED. Not running on %d nodes", daemonSet.Status.NumberUnavailable)
 	} else {
 		returnMessage += "HEALTHY"
 	}

@@ -1,18 +1,21 @@
 package main
 
 import (
-	"github.com/ruckstack/ruckstack/cmd/installer/cmd"
+	"fmt"
+	"github.com/ruckstack/ruckstack/cmd/installer/commands"
 	"github.com/ruckstack/ruckstack/internal/installer"
-	"github.com/ruckstack/ruckstack/internal/system-control/util"
 	"os"
 	"os/user"
 )
 
 func main() {
 	currentUser, err := user.Current()
-	util.Check(err)
+	if err != nil {
+		mainFailed("Error getting user:", err)
+	}
+
 	if currentUser.Username != "root" {
-		panic("This installer must be ran as root")
+		mainFailed("This installer must be ran as root")
 	}
 
 	args := os.Args
@@ -20,7 +23,9 @@ func main() {
 		installPackage := os.Getenv("RUCKSTACK_INSTALL_PACKAGE")
 		if installPackage == "" {
 			installPackage, err = os.Executable()
-			util.Check(err)
+			if err != nil {
+				mainFailed(err)
+			}
 		}
 
 		installer.Upgrade(installPackage, args[2])
@@ -28,5 +33,14 @@ func main() {
 		os.Exit(0)
 	}
 
-	cmd.Execute()
+	err = commands.Execute(os.Args[1:])
+
+	if err != nil {
+		mainFailed(err)
+	}
+}
+
+func mainFailed(messages ...interface{}) {
+	fmt.Println(messages)
+	os.Exit(-1)
 }

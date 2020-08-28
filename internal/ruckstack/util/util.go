@@ -19,6 +19,14 @@ func Check(err error) {
 	}
 }
 
+func ExpectNoError(err error) {
+	if err != nil {
+		fmt.Printf("Unexpected error %s", err)
+		//panic(err)
+		os.Exit(15)
+	}
+}
+
 func CheckWithMessage(err error, message string, messageParams ...interface{}) {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, message, messageParams...)

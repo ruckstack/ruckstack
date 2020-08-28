@@ -50,7 +50,7 @@ func Start() {
 	}
 
 	if bindAddressIface == "" {
-		panic(fmt.Sprint("Cannot find network interface with IP %s", localConfig.BindAddress))
+		panic(fmt.Sprintf("Cannot find network interface with IP %s", localConfig.BindAddress))
 	}
 
 	k3sCommand := "server"

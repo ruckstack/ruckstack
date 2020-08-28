@@ -9,10 +9,10 @@ build() {
   echo "Building ruckstack ${VERSION}..."
 
   echo "Compiling system-control..."
-  (export GOOS=linux && go build -o out/system-control cmd/system-control/system-control.go)
+  (export GOOS=linux && go build -o out/system-control cmd/system-control/main.go)
 
   echo "Compiling installer..."
-  (export GOOS=linux && go build -o out/installer cmd/installer/installer.go)
+  (export GOOS=linux && go build -o out/installer cmd/installer/main.go)
 
   echo "Collecting ruckstack resources..."
   (go-bindata -o internal/ruckstack/builder/resources/bindata/bindata.go -pkg bindata \
@@ -23,8 +23,8 @@ build() {
   )
 
   echo "Compiling ruckstack..."
-  (export GOOS=windows && go build -o out/dist/win/bin/ruckstack.exe cmd/ruckstack/ruckstack.go)
-  (export GOOS=linux && go build -o out/dist/linux/ruckstack/bin/ruckstack cmd/ruckstack/ruckstack.go)
+  (export GOOS=windows && go build -o out/dist/win/bin/ruckstack.exe cmd/ruckstack/main.go)
+  (export GOOS=linux && go build -o out/dist/linux/ruckstack/bin/ruckstack cmd/ruckstack/main.go)
 
   echo "Creating windows distribution..."
   cp ./LICENSE out/dist/win

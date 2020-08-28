@@ -2,6 +2,7 @@
 /*.iml
 **/bindata.go
 /out
+/tmp
 internal/ruckstack/builder/resources/new-project/example/out
 TODO.txt
 **/__debug_bin

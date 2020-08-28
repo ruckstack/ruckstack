@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"github.com/ruckstack/ruckstack/internal"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/util"
 	"gopkg.in/yaml.v2"
@@ -95,6 +96,14 @@ func GetLocalConfig() *internal.LocalConfig {
 
 func SetLocalConfig(passedLocalConfig *internal.LocalConfig) {
 	localConfig = passedLocalConfig
+}
+
+func ExpectNoError(err error) {
+	if err != nil {
+		fmt.Printf("Unexpected error %s", err)
+		//panic(err)
+		os.Exit(15)
+	}
 }
 
 func Check(err error) {

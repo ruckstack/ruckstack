@@ -1,4 +1,4 @@
-package cmd
+package commands
 
 import (
 	"github.com/ruckstack/ruckstack/internal/system-control/upgrade"
@@ -6,21 +6,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var upgradeCmd = &cobra.Command{
-	Use: "upgrade",
-	Annotations: map[string]string{
-		ANNOTATION_REQUIRES_ROOT: "true",
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		upgrade.Upgrade(file)
-	},
-}
-
-var file string
-
 func init() {
+	var file string
 	packageConfig := util.GetPackageConfig()
-	upgradeCmd.Short = "Upgrades " + packageConfig.Name
+
+	var upgradeCmd = &cobra.Command{
+		Use:   "upgrade",
+		Short: "Upgrades " + packageConfig.Name,
+		Annotations: map[string]string{
+			REQUIRES_ROOT: "true",
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			upgrade.Upgrade(file)
+			return nil
+		},
+	}
 
 	upgradeCmd.Flags().StringVar(&file, "file", "", "Path to upgrade file (required)")
 	util.Check(upgradeCmd.MarkFlagFilename("file"))
