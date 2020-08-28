@@ -10,11 +10,11 @@ echo "Building ruckstack %VERSION%..."
 
 echo "Compiling system-control..."
 set GOOS=linux
-go build -o out/system-control cmd/system-control/system-control.go
+go build -o out/system-control cmd/system-control/main.go
 
 echo "Compiling installer..."
 set GOOS=linux
-go build -o out/installer cmd/installer/installer.go
+go build -o out/installer cmd/installer/main.go
 
 echo "Collecting ruckstack resources..."
 go-bindata -o internal/ruckstack/builder/resources/bindata/bindata.go -pkg bindata ^
@@ -26,9 +26,9 @@ go-bindata -o internal/ruckstack/builder/resources/bindata/bindata.go -pkg binda
 
 echo "Compiling ruckstack..."
 set GOOS=windows
-go build -o out/dist/win/bin/ruckstack.exe cmd/ruckstack/ruckstack.go
+go build -o out/dist/win/bin/ruckstack.exe cmd/ruckstack/main.go
 
 set GOOS=linux
-go build -o out/dist/linux/ruckstack/bin/ruckstack cmd/ruckstack/ruckstack.go
+go build -o out/dist/linux/ruckstack/bin/ruckstack cmd/ruckstack/main.go
 
 echo "Done"
