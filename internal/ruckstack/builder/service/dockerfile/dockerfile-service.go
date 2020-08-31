@@ -5,8 +5,8 @@ import (
 	"compress/gzip"
 	"crypto/md5"
 	"fmt"
-	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/artifact"
-	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/shared"
+	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/global"
+	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/installer"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/project"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/util"
 	"gopkg.in/yaml.v2"
@@ -20,26 +20,26 @@ import (
 	"time"
 )
 
-func AddService(serviceConfig *project.DockerfileServiceConfig, app *artifact.Artifact, projectConfig *project.ProjectConfig, buildConfig *shared.BuildEnvironment) {
+func AddService(serviceConfig *project.DockerfileServiceConfig, app *installer.Installer, projectConfig *project.ProjectConfig) {
 	log.Println("Service type: dockerfile")
 
 	if serviceConfig.ServiceVersion == "" {
 		serviceConfig.ServiceVersion = fmt.Sprintf("%x", md5.Sum([]byte(time.Now().String())))[0:6]
 	}
 
-	serviceWorkDir := buildConfig.WorkDir + "/" + serviceConfig.Id + "/chart"
+	serviceWorkDir := global.BuildEnvironment.WorkDir + "/" + serviceConfig.Id + "/chart"
 	err := os.MkdirAll(serviceWorkDir+"/templates", 0755)
 	util.Check(err)
 
-	writeChart(serviceConfig, projectConfig, buildConfig, serviceWorkDir)
-	writeDaemonSet(serviceConfig, projectConfig, buildConfig, serviceWorkDir)
-	writeService(serviceConfig, projectConfig, buildConfig, serviceWorkDir)
+	writeChart(serviceConfig, projectConfig, serviceWorkDir)
+	writeDaemonSet(serviceConfig, projectConfig, serviceWorkDir)
+	writeService(serviceConfig, projectConfig, serviceWorkDir)
 	if serviceConfig.UrlPath != "" {
-		writeIngress(serviceConfig, projectConfig, buildConfig, serviceWorkDir)
+		writeIngress(serviceConfig, projectConfig, serviceWorkDir)
 	}
 
-	app.AddFile(buildChart(serviceConfig, projectConfig, buildConfig, serviceWorkDir), "data/server/static/charts/"+serviceConfig.Id+".tgz")
-	app.AddFile(writeManifest(serviceConfig, projectConfig, buildConfig), "data/server/manifests/"+serviceConfig.Id+".yaml")
+	app.AddFile(buildChart(serviceConfig, projectConfig, serviceWorkDir), "data/server/static/charts/"+serviceConfig.Id+".tgz")
+	app.AddFile(writeManifest(serviceConfig, projectConfig), "data/server/manifests/"+serviceConfig.Id+".yaml")
 
 	dockerTag := projectConfig.Id + "/" + serviceConfig.Id + ":" + serviceConfig.ServiceVersion
 	buildContainer(dockerTag, serviceConfig, err)
@@ -60,7 +60,7 @@ func buildContainer(dockerTag string, serviceConfig *project.DockerfileServiceCo
 	util.Check(err)
 }
 
-func writeChart(serviceConfig *project.DockerfileServiceConfig, projectConfig *project.ProjectConfig, config *shared.BuildEnvironment, serviceBuildDir string) {
+func writeChart(serviceConfig *project.DockerfileServiceConfig, projectConfig *project.ProjectConfig, serviceBuildDir string) {
 	chart := map[string]interface{}{
 		"apiVersion": "v1",
 		"name":       serviceConfig.Id,
@@ -75,7 +75,7 @@ func writeChart(serviceConfig *project.DockerfileServiceConfig, projectConfig *p
 	util.Check(err)
 }
 
-func writeDaemonSet(serviceConfig *project.DockerfileServiceConfig, projectConfig *project.ProjectConfig, config *shared.BuildEnvironment, serviceBuildDir string) {
+func writeDaemonSet(serviceConfig *project.DockerfileServiceConfig, projectConfig *project.ProjectConfig, serviceBuildDir string) {
 	daemonSet := map[string]interface{}{
 		"apiVersion": "apps/v1",
 		"kind":       "DaemonSet",
@@ -119,7 +119,7 @@ func writeDaemonSet(serviceConfig *project.DockerfileServiceConfig, projectConfi
 	util.Check(err)
 }
 
-func writeService(serviceConfig *project.DockerfileServiceConfig, projectConfig *project.ProjectConfig, config *shared.BuildEnvironment, serviceBuildDir string) {
+func writeService(serviceConfig *project.DockerfileServiceConfig, projectConfig *project.ProjectConfig, serviceBuildDir string) {
 	service := map[string]interface{}{
 		"apiVersion": "v1",
 		"kind":       "Service",
@@ -149,7 +149,7 @@ func writeService(serviceConfig *project.DockerfileServiceConfig, projectConfig 
 	util.Check(err)
 }
 
-func writeIngress(serviceConfig *project.DockerfileServiceConfig, projectConfig *project.ProjectConfig, config *shared.BuildEnvironment, serviceBuildDir string) {
+func writeIngress(serviceConfig *project.DockerfileServiceConfig, projectConfig *project.ProjectConfig, serviceBuildDir string) {
 	annotations := map[string]string{}
 	if serviceConfig.PathPrefixStrip {
 		annotations["traefik.frontend.rule.type"] = "PathPrefixStrip"
@@ -197,8 +197,8 @@ func writeIngress(serviceConfig *project.DockerfileServiceConfig, projectConfig 
 	util.Check(err)
 }
 
-func buildChart(serviceConfig *project.DockerfileServiceConfig, projectConfig *project.ProjectConfig, buildConfig *shared.BuildEnvironment, serviceBuildDir string) string {
-	chartFilePath := buildConfig.WorkDir + "/" + serviceConfig.Id + "/" + serviceConfig.Id + ".tgz"
+func buildChart(serviceConfig *project.DockerfileServiceConfig, projectConfig *project.ProjectConfig, serviceBuildDir string) string {
+	chartFilePath := global.BuildEnvironment.WorkDir + "/" + serviceConfig.Id + "/" + serviceConfig.Id + ".tgz"
 	chartFile, err := os.Create(chartFilePath)
 	util.Check(err)
 
@@ -241,7 +241,7 @@ func buildChart(serviceConfig *project.DockerfileServiceConfig, projectConfig *p
 	return chartFilePath
 }
 
-func writeManifest(serviceConfig *project.DockerfileServiceConfig, projectConfig *project.ProjectConfig, buildConfig *shared.BuildEnvironment) string {
+func writeManifest(serviceConfig *project.DockerfileServiceConfig, projectConfig *project.ProjectConfig) string {
 	manifest := map[string]interface{}{
 		"apiVersion": "helm.cattle.io/v1",
 		"kind":       "HelmChart",
@@ -259,7 +259,7 @@ func writeManifest(serviceConfig *project.DockerfileServiceConfig, projectConfig
 	out, err := yaml.Marshal(manifest)
 	util.Check(err)
 
-	outputPath := buildConfig.WorkDir + "/" + serviceConfig.Id + ".yaml"
+	outputPath := global.BuildEnvironment.WorkDir + "/" + serviceConfig.Id + ".yaml"
 	err = ioutil.WriteFile(outputPath, out, 0644)
 	util.Check(err)
 

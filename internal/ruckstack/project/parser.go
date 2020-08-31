@@ -60,6 +60,10 @@ func Parse(projectPath string) (*ProjectConfig, error) {
 		return nil, fmt.Errorf("No services are defined in %s", projectPath)
 	}
 
+	if projectConfig.ServerBinaryName == "" {
+		projectConfig.ServerBinaryName = projectConfig.Id
+	}
+
 	return projectConfig, nil
 
 }

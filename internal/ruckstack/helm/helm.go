@@ -3,7 +3,7 @@ package helm
 import (
 	"fmt"
 	"github.com/mitchellh/go-wordwrap"
-	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/shared"
+	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/global"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/util"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/downloader"
@@ -162,8 +162,8 @@ Latest Version: %s (App Version %s)
 
 }
 
-func DownloadChart(repo string, chart string, version string, buildEnv *shared.BuildEnvironment) string {
-	cacheDir := buildEnv.CacheDir + string(filepath.Separator) + "helm" + string(filepath.Separator) + repo
+func DownloadChart(repo string, chart string, version string) string {
+	cacheDir := global.BuildEnvironment.CacheDir + string(filepath.Separator) + "helm" + string(filepath.Separator) + repo
 	err := os.MkdirAll(cacheDir, 0755)
 	util.Check(err)
 

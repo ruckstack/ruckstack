@@ -19,9 +19,7 @@ func init() {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			helm.Setup()
 
-			builder.Build(project, out)
-
-			return nil
+			return builder.Build(project, out)
 		},
 	}
 

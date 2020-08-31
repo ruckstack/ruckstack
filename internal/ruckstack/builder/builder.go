@@ -2,159 +2,94 @@ package builder
 
 import (
 	"fmt"
-	"github.com/ruckstack/ruckstack/internal"
-	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/artifact"
+	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/global"
+	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/installer"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/service/dockerfile"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/service/helm"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/service/manifest"
-	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/shared"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/project"
-	"github.com/ruckstack/ruckstack/internal/ruckstack/util"
-	"io"
 	"log"
-	"net/http"
 	"net/url"
 	"os"
 	"os/user"
 	"path/filepath"
-	"regexp"
-	"time"
 )
 
-func Build(projectFile string, outDir string) {
+func Build(projectFile string, outDir string) error {
 
-	util.Check(os.MkdirAll(outDir, 0755))
-	buildEnv := prepare(outDir)
-
-	clean(buildEnv)
+	if err := prepareBuildEnvironment(outDir); err != nil {
+		return err
+	}
 
 	projectConfig, err := project.Parse(projectFile)
-	util.CheckWithMessage(err, "Error parsing project file %s", projectFile)
-
-	//saveDockerImages(dockerImages, "app.tar", artifactWriter)
-
-	appFilename := projectConfig.Id + "_" + projectConfig.Version + ".installer"
-
-	app := artifact.NewArtifact(appFilename, outDir)
-
-	app.PackageConfig.Id = projectConfig.Id
-	app.PackageConfig.Name = projectConfig.Name
-	app.PackageConfig.Version = projectConfig.Version
-	app.PackageConfig.BuildTime = time.Now().Unix()
-
-	app.PackageConfig.FilePermissions = map[string]internal.InstalledFileConfig{
-		".package.config": {
-			AdminGroupReadable: true,
-		},
-		"config/*": {
-			AdminGroupReadable: true,
-		},
-		"bin/*": {
-			AdminGroupReadable: true,
-			Executable:         true,
-		},
-		"lib/*": {
-			AdminGroupReadable: true,
-		},
-		"lib/k3s": {
-			AdminGroupReadable: true,
-			Executable:         true,
-		},
-		"lib/helm": {
-			AdminGroupReadable: true,
-			Executable:         true,
-		},
+	if err != nil {
+		return fmt.Errorf("error parsing project file %s: %s", projectFile, err)
 	}
 
-	helmTarFile := downloadFile(fmt.Sprintf("https://get.helm.sh/helm-v%s-linux-amd64.tar.gz", url.PathEscape(projectConfig.HelmVersion)), buildEnv)
-
-	helmExec := util.ExtractFromGzip(helmTarFile, "linux-amd64/helm", buildEnv)
-
-	app.AddAssetDir("internal/ruckstack/builder/resources/install-dir", ".")
-	app.AddFile(helmExec, "lib/helm")
-	app.AddFile(downloadFile(fmt.Sprintf("https://github.com/rancher/k3s/releases/download/v%s/k3s", url.PathEscape(projectConfig.K3sVersion)), buildEnv), "lib/k3s")
-	app.AddFile(downloadFile(fmt.Sprintf("https://github.com/rancher/k3s/releases/download/v%s/k3s-airgap-images-amd64.tar", url.PathEscape(projectConfig.K3sVersion)), buildEnv), "data/agent/images/k3s.tar")
-
-	serverBinaryName := projectConfig.ServerBinaryName
-	if serverBinaryName == "" {
-		serverBinaryName = projectConfig.Id
+	installFile, err := installer.NewInstaller(projectConfig)
+	if err != nil {
+		return nil
 	}
-	app.AddAsset("out/system-control", "bin/"+serverBinaryName)
-	app.PackageConfig.SystemControlName = serverBinaryName
+
+	//add standard files to the installer
+	if err := installFile.AddAssetDir("internal/ruckstack/builder/resources/install-dir", "."); err != nil {
+		return err
+	}
+	if err := installFile.AddDownloadedNestedFile(fmt.Sprintf("https://get.helm.sh/helm-v%s-linux-amd64.tar.gz", url.PathEscape(projectConfig.HelmVersion)), "linux-amd64/helm", "lib/helm"); err != nil {
+		return err
+	}
+	if err := installFile.AddDownloadedFile(fmt.Sprintf("https://github.com/rancher/k3s/releases/download/v%s/k3s", url.PathEscape(projectConfig.K3sVersion)), "lib/k3s"); err != nil {
+		return err
+	}
+	if err := installFile.AddDownloadedFile(fmt.Sprintf("https://github.com/rancher/k3s/releases/download/v%s/k3s-airgap-images-amd64.tar", url.PathEscape(projectConfig.K3sVersion)), "data/agent/images/k3s.tar"); err != nil {
+		return err
+	}
+	if err := installFile.AddAsset("out/system-control", "bin/"+projectConfig.ServerBinaryName); err != nil {
+		return err
+	}
+	installFile.PackageConfig.SystemControlName = projectConfig.ServerBinaryName
 
 	for _, service := range projectConfig.DockerfileServices {
-		dockerfile.AddService(service, app, projectConfig, buildEnv)
+		dockerfile.AddService(service, installFile, projectConfig)
 	}
 	for _, service := range projectConfig.HelmServices {
-		helm.AddService(service, app, projectConfig, buildEnv)
+		helm.AddService(service, installFile, projectConfig)
 	}
 	for _, service := range projectConfig.ManifestServices {
-		manifest.AddService(service, app, projectConfig, buildEnv)
+		manifest.AddService(service, installFile, projectConfig)
 	}
 
-	app.SaveDockerImages(buildEnv)
-	app.ClearDockerImages(buildEnv)
+	installFile.SaveDockerImages()
+	installFile.ClearDockerImages()
 
-	app.Build(projectConfig, buildEnv)
+	installFile.Build(projectConfig)
 
+	return nil
 }
 
-func prepare(outDir string) *shared.BuildEnvironment {
+/**
+Configures the global BuildEnvironment data and creates/cleans directories as needed.
+*/
+func prepareBuildEnvironment(outDir string) error {
 	usr, err := user.Current()
-
-	util.Check(err)
-
-	buildEnv := new(shared.BuildEnvironment)
-	buildEnv.WorkDir = filepath.Join(outDir, "work")
-	buildEnv.UserDataDir = filepath.Join(usr.HomeDir, ".ruckstack")
-	buildEnv.CacheDir = filepath.Join(buildEnv.UserDataDir, "cache")
-	buildEnv.TmpDir = filepath.Join(buildEnv.WorkDir, "tmp")
-	return buildEnv
-}
-
-func clean(buildEnv *shared.BuildEnvironment) {
-	log.Printf("Cleaning work directory %s...", buildEnv.WorkDir)
-	//clean work dir
-	err := os.RemoveAll(buildEnv.WorkDir)
-	util.Check(err)
-}
-
-func downloadFile(url string, buildEnv *shared.BuildEnvironment) string {
-
-	cacheKey := regexp.MustCompile(`https?://.+?/`).ReplaceAllString(url, "")
-
-	savePath := filepath.Join(buildEnv.CacheDir, cacheKey)
-
-	saveDir, _ := filepath.Split(savePath)
-	err := os.MkdirAll(saveDir, 0755)
-	util.Check(err)
-
-	_, err = os.Stat(savePath)
-	if err == nil {
-		log.Println(savePath + " already exists. Not re-downloading")
-		return savePath
-	}
-
-	log.Println("Downloading " + url + "...")
-	// Get the data
-	resp, err := http.Get(url)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	if resp.StatusCode != 200 {
-		panic(fmt.Sprintf("Cannot download %s: %s", url, resp.Status))
-	}
-	defer resp.Body.Close()
+	global.BuildEnvironment.OutDir = outDir
+	global.BuildEnvironment.WorkDir = filepath.Join(outDir, "work")
+	global.BuildEnvironment.CacheDir = filepath.Join(usr.HomeDir, ".ruckstack", "cache")
 
-	// Create the file
-	out, err := os.Create(savePath)
-	if err != nil {
-		panic(err)
+	log.Printf("Cleaning out directory %s...", global.BuildEnvironment.OutDir)
+	if err := os.RemoveAll(global.BuildEnvironment.WorkDir); err != nil {
+		return err
 	}
-	defer out.Close()
 
-	// Write the body to file
-	_, err = io.Copy(out, resp.Body)
-	return savePath
+	for _, dir := range []string{global.BuildEnvironment.WorkDir, global.BuildEnvironment.CacheDir} {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

@@ -1,14 +1,13 @@
 package manifest
 
 import (
-	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/artifact"
-	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/shared"
+	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/installer"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/project"
 	"log"
 	"path/filepath"
 )
 
-func AddService(serviceConfig *project.ManifestServiceConfig, app *artifact.Artifact, projectConfig *project.ProjectConfig, buildEnv *shared.BuildEnvironment) {
+func AddService(serviceConfig *project.ManifestServiceConfig, app *installer.Installer, projectConfig *project.ProjectConfig) {
 	log.Println("Service type: manifest")
 
 	fullManifestPath := filepath.Join(filepath.Dir(serviceConfig.BaseDir), serviceConfig.Manifest)

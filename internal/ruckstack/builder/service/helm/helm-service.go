@@ -2,8 +2,8 @@ package helm
 
 import (
 	"fmt"
-	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/artifact"
-	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/shared"
+	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/global"
+	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/installer"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/helm"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/project"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/util"
@@ -22,10 +22,10 @@ import (
 	"strings"
 )
 
-func AddService(serviceConfig *project.HelmServiceConfig, app *artifact.Artifact, projectConfig *project.ProjectConfig, buildEnv *shared.BuildEnvironment) {
+func AddService(serviceConfig *project.HelmServiceConfig, app *installer.Installer, projectConfig *project.ProjectConfig) {
 	log.Println("Service type: helm")
 
-	serviceBuildDir := filepath.Join(buildEnv.WorkDir, serviceConfig.Id)
+	serviceBuildDir := filepath.Join(global.BuildEnvironment.WorkDir, serviceConfig.Id)
 	err := os.MkdirAll(serviceBuildDir, 0755)
 	util.Check(err)
 
@@ -55,7 +55,7 @@ func AddService(serviceConfig *project.HelmServiceConfig, app *artifact.Artifact
 
 	app.AddFile(manifestPath, "data/server/manifests/"+serviceConfig.Id+".yaml")
 
-	chartFile := helm.DownloadChart(repo, chart, serviceConfig.Version, buildEnv)
+	chartFile := helm.DownloadChart(repo, chart, serviceConfig.Version)
 	app.AddFile(chartFile, "data/server/static/charts/"+serviceConfig.Id+".tgz")
 
 	loadedChart, err := loader.Load(chartFile)
@@ -65,7 +65,7 @@ func AddService(serviceConfig *project.HelmServiceConfig, app *artifact.Artifact
 
 }
 
-func saveDockerImages(loadedChart *chart.Chart, app *artifact.Artifact) {
+func saveDockerImages(loadedChart *chart.Chart, app *installer.Installer) {
 	options := chartutil.ReleaseOptions{
 		Name:      "testRelease",
 		Namespace: "default",
