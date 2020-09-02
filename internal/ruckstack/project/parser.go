@@ -13,7 +13,7 @@ import (
 func Parse(projectPath string) (*ProjectConfig, error) {
 	projectConfigFile, err := ini.InsensitiveLoad(projectPath)
 	if os.IsNotExist(err) {
-		panic(fmt.Sprintf("Project file %s not found", projectPath))
+		return nil, fmt.Errorf("project file %s not found", projectPath)
 	}
 	if err != nil {
 		return nil, err
@@ -35,7 +35,7 @@ func Parse(projectPath string) (*ProjectConfig, error) {
 
 	matched, _ := regexp.MatchString(`^[a-z0-9-_]+$`, projectConfig.Id)
 	if !matched {
-		panic("Project id must be lower case, alphanumeric, with no whitespace")
+		return nil, fmt.Errorf("project id must be lower case, alphanumeric, with no whitespace")
 	}
 
 	for _, service := range projectConfigFile.Section("services").Keys() {
@@ -70,7 +70,9 @@ func Parse(projectPath string) (*ProjectConfig, error) {
 
 func parseServiceFile(serviceConfigPath string, projectConfig *ProjectConfig) error {
 	serviceConfigFile, err := ini.InsensitiveLoad(serviceConfigPath)
-	util.Check(err)
+	if err != nil {
+		return nil
+	}
 	serviceConfigFile.NameMapper = ini.TitleUnderscore
 
 	serviceSection := serviceConfigFile.Section("service")
@@ -95,10 +97,11 @@ func parseServiceSection(defaultId string, serviceSection *ini.Section, projectC
 	switch serviceType := serviceSection.Key("type").Value(); serviceType {
 	case "dockerfile":
 		serviceConfig := &DockerfileServiceConfig{
-			Id:              defaultId,
 			Dockerfile:      "Dockerfile",
 			PathPrefixStrip: false,
 		}
+		serviceConfig.Id = defaultId
+
 		serviceSection.MapTo(serviceConfig)
 
 		err := util.Validate(serviceConfig)
@@ -115,9 +118,9 @@ func parseServiceSection(defaultId string, serviceSection *ini.Section, projectC
 
 		projectConfig.DockerfileServices = append(projectConfig.DockerfileServices, serviceConfig)
 	case "helm":
-		serviceConfig := &HelmServiceConfig{
-			Id: defaultId,
-		}
+		serviceConfig := &HelmServiceConfig{}
+		serviceConfig.Id = defaultId
+
 		serviceSection.MapTo(serviceConfig)
 
 		err := util.Validate(serviceConfig)
@@ -127,9 +130,9 @@ func parseServiceSection(defaultId string, serviceSection *ini.Section, projectC
 
 		projectConfig.HelmServices = append(projectConfig.HelmServices, serviceConfig)
 	case "manifest":
-		serviceConfig := &ManifestServiceConfig{
-			Id: defaultId,
-		}
+		serviceConfig := &ManifestServiceConfig{}
+		serviceConfig.Id = defaultId
+
 		serviceSection.MapTo(serviceConfig)
 
 		err := util.Validate(serviceConfig)
@@ -140,7 +143,7 @@ func parseServiceSection(defaultId string, serviceSection *ini.Section, projectC
 		projectConfig.ManifestServices = append(projectConfig.ManifestServices, serviceConfig)
 
 	default:
-		panic(fmt.Sprintf("Unknown service type: %s", serviceType))
+		return fmt.Errorf("unknown service type: %s", serviceType)
 	}
 
 	return nil

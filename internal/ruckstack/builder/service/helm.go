@@ -1,4 +1,4 @@
-package helm
+package service
 
 import (
 	"fmt"
@@ -6,7 +6,6 @@ import (
 	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/installer"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/helm"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/project"
-	"github.com/ruckstack/ruckstack/internal/ruckstack/util"
 	"gopkg.in/yaml.v2"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
@@ -22,60 +21,87 @@ import (
 	"strings"
 )
 
-func AddService(serviceConfig *project.HelmServiceConfig, app *installer.Installer, projectConfig *project.ProjectConfig) {
+type HelmService struct {
+	ServiceConfig  *project.HelmServiceConfig
+	ProjectConfig  *project.ProjectConfig
+	serviceWorkDir string
+}
+
+func (service *HelmService) Build(app *installer.Installer) error {
 	log.Println("Service type: helm")
 
-	serviceBuildDir := filepath.Join(global.BuildEnvironment.WorkDir, serviceConfig.Id)
-	err := os.MkdirAll(serviceBuildDir, 0755)
-	util.Check(err)
+	service.serviceWorkDir = filepath.Join(global.BuildEnvironment.WorkDir, service.ServiceConfig.Id)
+	if err := os.MkdirAll(service.serviceWorkDir, 0755); err != nil {
+		return err
+	}
 
-	splitChart := strings.Split(serviceConfig.Chart, "/")
+	splitChart := strings.Split(service.ServiceConfig.Chart, "/")
 	repo := splitChart[0]
-	chart := splitChart[1]
+	chartName := splitChart[1]
 
 	manifest := map[string]interface{}{
 		"apiVersion": "helm.cattle.io/v1",
 		"kind":       "HelmChart",
 		"metadata": map[string]interface{}{
-			"name":      serviceConfig.Id,
+			"name":      service.ServiceConfig.Id,
 			"namespace": "kube-system",
 		},
 		"spec": map[string]interface{}{
-			"chart":           "https://%{KUBERNETES_API}%/static/charts/" + serviceConfig.Id + ".tgz",
+			"chart":           "https://%{KUBERNETES_API}%/static/charts/" + service.ServiceConfig.Id + ".tgz",
 			"targetNamespace": "default",
 		},
 	}
 
 	out, err := yaml.Marshal(manifest)
-	util.Check(err)
+	if err != nil {
+		return err
+	}
 
-	manifestPath := filepath.Join(serviceBuildDir, "manifest.yaml")
-	err = ioutil.WriteFile(manifestPath, out, 0644)
-	util.Check(err)
+	manifestPath := filepath.Join(service.serviceWorkDir, "manifest.yaml")
+	if err := ioutil.WriteFile(manifestPath, out, 0644); err != nil {
+		return err
+	}
 
-	app.AddFile(manifestPath, "data/server/manifests/"+serviceConfig.Id+".yaml")
+	if err := app.AddFile(manifestPath, "data/server/manifests/"+service.ServiceConfig.Id+".yaml"); err != nil {
+		return err
+	}
 
-	chartFile := helm.DownloadChart(repo, chart, serviceConfig.Version)
-	app.AddFile(chartFile, "data/server/static/charts/"+serviceConfig.Id+".tgz")
+	chartFile, err := helm.DownloadChart(repo, chartName, service.ServiceConfig.Version)
+	if err != nil {
+		return err
+	}
+
+	if err := app.AddFile(chartFile, "data/server/static/charts/"+service.ServiceConfig.Id+".tgz"); err != nil {
+		return err
+	}
 
 	loadedChart, err := loader.Load(chartFile)
-	util.Check(err)
+	if err != nil {
+		return err
+	}
 
-	saveDockerImages(loadedChart, app)
-
+	return service.saveDockerImages(loadedChart, app)
 }
 
-func saveDockerImages(loadedChart *chart.Chart, app *installer.Installer) {
+func (service *HelmService) saveDockerImages(loadedChart *chart.Chart, app *installer.Installer) error {
 	options := chartutil.ReleaseOptions{
 		Name:      "testRelease",
 		Namespace: "default",
 	}
 
 	cvals, err := chartutil.CoalesceValues(loadedChart, map[string]interface{}{})
+	if err != nil {
+		return err
+	}
 	valuesToRender, err := chartutil.ToRenderValues(loadedChart, cvals, options, nil)
+	if err != nil {
+		return err
+	}
 
 	render, err := engine.Render(loadedChart, valuesToRender)
-	util.Check(err)
+	if err != nil {
+		return err
+	}
 
 	for filename, data := range render {
 		data = strings.TrimSpace(data)
@@ -110,10 +136,14 @@ func saveDockerImages(loadedChart *chart.Chart, app *installer.Installer) {
 			if podSpec != nil {
 				for _, container := range podSpec.Containers {
 					log.Printf("See ss image %s\n", container.Image)
-					app.IncludeDockerImage(container.Image)
+					if err := app.IncludeDockerImage(container.Image); err != nil {
+						return err
+					}
 				}
 			}
 
 		}
 	}
+
+	return nil
 }

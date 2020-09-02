@@ -3,7 +3,6 @@ package util
 import (
 	"fmt"
 	"github.com/ruckstack/ruckstack/internal"
-	"github.com/ruckstack/ruckstack/internal/ruckstack/util"
 	"gopkg.in/yaml.v2"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
@@ -60,38 +59,46 @@ func GetPackageConfig() *internal.PackageConfig {
 	return packageConfig
 }
 
-func GetSystemConfig() *internal.SystemConfig {
+func GetSystemConfig() (*internal.SystemConfig, error) {
 	if systemConfig != nil {
-		return systemConfig
+		return systemConfig, nil
 	}
 
 	file, err := os.Open(InstallDir() + "/config/system.config")
-	util.Check(err)
+	if err != nil {
+		return nil, err
+	}
+
 	decoder := yaml.NewDecoder(file)
 	systemConfig = new(internal.SystemConfig)
 	err = decoder.Decode(systemConfig)
-	Check(err)
+	if err != nil {
+		return nil, err
+	}
 
-	return systemConfig
+	return systemConfig, nil
 }
 
 func SetSystemConfig(passedSystemConfig *internal.SystemConfig) {
 	systemConfig = passedSystemConfig
 }
 
-func GetLocalConfig() *internal.LocalConfig {
+func GetLocalConfig() (*internal.LocalConfig, error) {
 	if localConfig != nil {
-		return localConfig
+		return localConfig, nil
 	}
 
 	file, err := os.Open(InstallDir() + "/config/local.config")
-	util.Check(err)
+	if err != nil {
+		return nil, err
+	}
+
 	decoder := yaml.NewDecoder(file)
 	localConfig = new(internal.LocalConfig)
 	err = decoder.Decode(localConfig)
 	Check(err)
 
-	return localConfig
+	return localConfig, nil
 }
 
 func SetLocalConfig(passedLocalConfig *internal.LocalConfig) {

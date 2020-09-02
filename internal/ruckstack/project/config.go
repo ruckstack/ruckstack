@@ -14,32 +14,34 @@ type ProjectConfig struct {
 	ManifestServices   []*ManifestServiceConfig
 }
 
+type BaseServiceConfig struct {
+	Id   string `validate:"required"`
+	Type string `validate:"required,oneof=dockerfile helm manifest"`
+	Port int    `validate:"required"`
+}
+
 type DockerfileServiceConfig struct {
-	Id      string `validate:"required"`
-	Type    string `validate:"required,oneof=dockerfile helm manifest"`
-	Port    int    `validate:"required"`
+	BaseServiceConfig
+
 	BaseDir string `validate:"required"`
 
 	Dockerfile      string `validate:"required"`
 	ServiceVersion  string `ini:"service_version"`
 	UrlPath         string `ini:"base_url"`
-	PathPrefixStrip bool   `ini:"path_prefix_strip""`
+	PathPrefixStrip bool   `ini:"path_prefix_strip"`
 }
 
 type HelmServiceConfig struct {
-	Id   string `validate:"required"`
-	Type string `validate:"required"`
-	Port int    `validate:"required"`
+	BaseServiceConfig
 
 	Chart   string `validate:"required"`
 	Version string `validate:"required"`
 }
 
 type ManifestServiceConfig struct {
-	Id      string `validate:"required"`
-	Type    string `validate:"required"`
-	Port    int    `validate:"required"`
-	BaseDir string `validate:"required" ini:"base_dir"`
+	BaseServiceConfig
 
+	Port     int    `validate:"required"`
+	BaseDir  string `validate:"required" ini:"base_dir"`
 	Manifest string `validate:"required"`
 }

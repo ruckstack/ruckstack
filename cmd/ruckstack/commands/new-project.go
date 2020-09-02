@@ -14,12 +14,12 @@ func init() {
 		Use:   "new-project",
 		Short: "Sets up a new project config in the current directory",
 		Long:  `Generates a starting setup for your Ruckstack project`,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			if newProjectType == "" {
 				newProjectType = "example"
 			}
 
-			newproject.NewProject(newProjectOut, newProjectType)
+			return newproject.NewProject(newProjectOut, newProjectType)
 		},
 	}
 

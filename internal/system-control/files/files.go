@@ -14,7 +14,10 @@ var adminGroupGid int
 
 func CheckFilePermissions(installPath string, filePath string) error {
 	packageConfig := util.GetPackageConfig()
-	localConfig := util.GetLocalConfig()
+	localConfig, err := util.GetLocalConfig()
+	if err != nil {
+		return err
+	}
 
 	fileStat, err := os.Stat(filepath.Join(installPath, filePath))
 	if err != nil {

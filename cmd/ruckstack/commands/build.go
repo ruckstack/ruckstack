@@ -17,7 +17,9 @@ func init() {
 		Long:  `Builds your Ruckstack project into an installable archive`,
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			helm.Setup()
+			if err := helm.Setup(); err != nil {
+				return err
+			}
 
 			return builder.Build(project, out)
 		},

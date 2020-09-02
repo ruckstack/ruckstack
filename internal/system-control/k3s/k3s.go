@@ -24,7 +24,8 @@ func Start() {
 	defer k3sLogs.Close()
 
 	kubecConfigFile := kubeclient.KubeconfigFile()
-	localConfig := util.GetLocalConfig()
+	localConfig, err := util.GetLocalConfig()
+	util.Check(err)
 
 	ifaces, err := net.Interfaces()
 	util.Check(err)

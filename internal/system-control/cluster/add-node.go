@@ -14,7 +14,8 @@ import (
 
 func AddNode() {
 
-	localConfig := util.GetLocalConfig()
+	localConfig, err := util.GetLocalConfig()
+	util.Check(err)
 	if localConfig.Join.Server != "" {
 		panic("Must run this command from the primary machine in your cluster")
 	}

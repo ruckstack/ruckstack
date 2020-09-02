@@ -3,14 +3,13 @@ package newproject
 import (
 	"fmt"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/resources"
-	"github.com/ruckstack/ruckstack/internal/ruckstack/util"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
-func NewProject(out string, projectType string) {
+func NewProject(out string, projectType string) error {
 	baseAssetPath := "internal/ruckstack/builder/resources/new-project/" + projectType
 
 	foundAsset := false
@@ -20,25 +19,31 @@ func NewProject(out string, projectType string) {
 
 			asset, err := resources.Asset(assetPath)
 
-			util.Check(os.MkdirAll(filepath.Dir(assetTargetPath), 0755))
+			if err := os.MkdirAll(filepath.Dir(assetTargetPath), 0755); err != nil {
+				return err
+			}
 
 			_, err = os.Stat(assetTargetPath)
 			if os.IsNotExist(err) {
 				err = ioutil.WriteFile(assetTargetPath, asset, 0644)
 			} else {
-				panic(fmt.Sprintf("%s already exists", assetTargetPath))
+				return fmt.Errorf("%s already exists", assetTargetPath)
 			}
-
-			util.Check(err)
+			if err != nil {
+				return err
+			}
 			foundAsset = true
 		}
 	}
 	if !foundAsset {
-		panic("Unknown type: " + projectType)
+		return fmt.Errorf("unknown type: " + projectType)
 	}
 
 	absOut, err := filepath.Abs(out)
-	util.Check(err)
+	if err != nil {
+		return err
+	}
+
 	fmt.Printf("Created %s project in %s\n", projectType, absOut)
 	fmt.Println("")
 	fmt.Printf("Open %s in your favorite text editor to see the generated project file\n", absOut+"/ruckstack.conf")
@@ -46,4 +51,6 @@ func NewProject(out string, projectType string) {
 	fmt.Println("")
 	fmt.Println("Happy Stacking!")
 	fmt.Println("")
+
+	return nil
 }

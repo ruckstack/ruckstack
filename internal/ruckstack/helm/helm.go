@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/mitchellh/go-wordwrap"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/global"
-	"github.com/ruckstack/ruckstack/internal/ruckstack/util"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/downloader"
 	"helm.sh/helm/v3/pkg/getter"
@@ -14,6 +13,7 @@ import (
 	"log"
 	"os"
 	"os/user"
+	"path"
 	"path/filepath"
 )
 
@@ -24,49 +24,68 @@ var (
 	reindexed bool = false
 )
 
-func Setup() {
-	helmHome = getHelmHome()
-	err := os.MkdirAll(helmHome, 0755)
-	util.Check(err)
+func Setup() error {
+	helmHome, err := getHelmHome()
+	if err != nil {
+		return err
+	}
 
-	os.Setenv(xdg.CacheHomeEnvVar, filepath.Join(helmHome, "/cache"))
-	os.Setenv(xdg.ConfigHomeEnvVar, filepath.Join(helmHome, "/config"))
-	os.Setenv(xdg.DataHomeEnvVar, filepath.Join(helmHome, "/data"))
+	if err := os.MkdirAll(helmHome, 0755); err != nil {
+		return err
+	}
+
+	if err := os.Setenv(xdg.CacheHomeEnvVar, path.Join(helmHome, "cache")); err != nil {
+		return err
+	}
+	if err := os.Setenv(xdg.ConfigHomeEnvVar, path.Join(helmHome, "config")); err != nil {
+		return err
+	}
+	if err := os.Setenv(xdg.DataHomeEnvVar, path.Join(helmHome, "data")); err != nil {
+		return err
+	}
 
 	_, err = os.Stat(helmpath.ConfigPath("repositories.yaml"))
 	if os.IsNotExist(err) {
 		fmt.Println("Creating new helm metadata...")
 
-		err := os.MkdirAll(filepath.Dir(helmpath.ConfigPath("repositories.yaml")), 0755)
-		util.Check(err)
+		if err := os.MkdirAll(filepath.Dir(helmpath.ConfigPath("repositories.yaml")), 0755); err != nil {
+			return err
+		}
 
 		entry := repo.Entry{
 			Name: "stable",
 			URL:  "https://kubernetes-charts.storage.googleapis.com",
 		}
-		util.Check(err)
 
 		repoFile := repo.NewFile()
 		repoFile.Add(&entry)
 
-		err = repoFile.WriteFile(helmpath.ConfigPath("repositories.yaml"), 0664)
+		if err := repoFile.WriteFile(helmpath.ConfigPath("repositories.yaml"), 0664); err != nil {
+			return err
+		}
 
-		ReIndex()
+		if err := ReIndex(); err != nil {
+			return err
+		}
 
 		fmt.Println("Creating new helm metadata...DONE")
 	}
+
+	return nil
 }
 
-func getHelmHome() string {
+func getHelmHome() (string, error) {
 	if helmHome == "" {
 		usr, err := user.Current()
-		util.Check(err)
+		if err != nil {
+			return "", err
+		}
 
 		helmHome = filepath.Join(usr.HomeDir, ".ruckstack", "helm")
 
 	}
 
-	return helmHome
+	return helmHome, nil
 }
 
 func getDownloader() *downloader.ChartDownloader {
@@ -84,49 +103,55 @@ func getDownloader() *downloader.ChartDownloader {
 	return chartDownloader
 }
 
-func ReIndex() {
+func ReIndex() error {
 	if reindexed {
-		return
+		return nil
 	}
 
 	fmt.Println("Reindexing helm repositories...")
 
 	repoFile, err := repo.LoadFile(helmpath.ConfigPath("repositories.yaml"))
-	util.Check(err)
+	if err != nil {
+		return err
+	}
 
 	for _, repository := range repoFile.Repositories {
 		chartRepository, err := repo.NewChartRepository(repository, getter.All(cli.New()))
-		util.Check(err)
-
-		//_, err = os.Stat(helmHome.Cache())
-		//if os.IsNotExist(err) {
-		//	os.MkdirAll(helmHome.Cache(), 0755)
-		//}
+		if err != nil {
+			return err
+		}
 
 		_, err = chartRepository.DownloadIndexFile()
-		//panic(fmt.Errorf("Looks like %q is not a valid chart repository or cannot be reached: %s", entry.URL, err.Error()))
-		util.Check(err)
+		if err != nil {
+			return err
+		}
 	}
 
 	reindexed = true
 	fmt.Println("Reindexing helm repositories...DONE")
+
+	return nil
 }
 
-func Search(chartRepo string, chartName string) {
+func Search(chartRepo string, chartName string) error {
 	repositories, err := repo.LoadFile(helmpath.ConfigPath("repositories.yaml"))
-	util.Check(err)
+	if err != nil {
+		return err
+	}
 
 	repository := repositories.Get(chartRepo)
 	if repository == nil {
-		panic(fmt.Sprintf("Unknown helm repository %s", chartRepo))
+		return fmt.Errorf("unknown helm repository %s", chartRepo)
 	}
 
 	indexFile, err := repo.LoadIndexFile(filepath.Join(helmHome, "cache", "helm", "repository", helmpath.CacheIndexFile(repository.Name)))
-	util.Check(err)
+	if err != nil {
+		return err
+	}
 
 	versions := indexFile.Entries[chartName]
 	if versions == nil {
-		panic(fmt.Sprintf("Unknown chart %s/%s", chartRepo, chartName))
+		return fmt.Errorf("unknown chart %s/%s", chartRepo, chartName)
 	}
 
 	latestVersion := versions[0]
@@ -160,27 +185,27 @@ Latest Version: %s (App Version %s)
 		fmt.Printf("  %s (App Version %s)\n", version.Version, appVersion)
 	}
 
+	return nil
 }
 
-func DownloadChart(repo string, chart string, version string) string {
+func DownloadChart(repo string, chart string, version string) (string, error) {
 	cacheDir := global.BuildEnvironment.CacheDir + string(filepath.Separator) + "helm" + string(filepath.Separator) + repo
-	err := os.MkdirAll(cacheDir, 0755)
-	util.Check(err)
+	if err := os.MkdirAll(cacheDir, 0755); err != nil {
+		return "", err
+	}
 
 	savePath := cacheDir + string(filepath.Separator) + chart + "-" + version + ".tgz"
-	_, err = os.Stat(savePath)
+	_, err := os.Stat(savePath)
 	if os.IsNotExist(err) {
 		log.Printf("Downloading chart %s...", filepath.Base(savePath))
 
 		_, _, err := getDownloader().DownloadTo(repo+"/"+chart, version, cacheDir)
-		util.Check(err)
+		if err != nil {
+			return "", err
+		}
 	} else {
 		log.Printf("%s already exists. Not re-downloading", savePath)
 	}
 
-	return savePath
+	return savePath, nil
 }
-
-//func GetImages(chartPath string) {
-//	loader.Load(chartPath)
-//}

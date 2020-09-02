@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/global"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/installer"
-	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/service/dockerfile"
-	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/service/helm"
-	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/service/manifest"
+	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/service"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/project"
 	"log"
 	"net/url"
@@ -49,22 +47,43 @@ func Build(projectFile string, outDir string) error {
 	}
 	installFile.PackageConfig.SystemControlName = projectConfig.ServerBinaryName
 
-	for _, service := range projectConfig.DockerfileServices {
-		dockerfile.AddService(service, installFile, projectConfig)
-	}
-	for _, service := range projectConfig.HelmServices {
-		helm.AddService(service, installFile, projectConfig)
-	}
-	for _, service := range projectConfig.ManifestServices {
-		manifest.AddService(service, installFile, projectConfig)
+	for _, serviceConfig := range projectConfig.DockerfileServices {
+		builder := &service.DockerfileService{
+			ProjectConfig: projectConfig,
+			ServiceConfig: serviceConfig,
+		}
+		if err := builder.Build(installFile); err != nil {
+			return err
+		}
 	}
 
-	installFile.SaveDockerImages()
-	installFile.ClearDockerImages()
+	for _, serviceConfig := range projectConfig.HelmServices {
+		builder := &service.HelmService{
+			ProjectConfig: projectConfig,
+			ServiceConfig: serviceConfig,
+		}
+		if err := builder.Build(installFile); err != nil {
+			return err
+		}
+	}
+	for _, serviceConfig := range projectConfig.ManifestServices {
+		builder := &service.ManifestService{
+			ProjectConfig: projectConfig,
+			ServiceConfig: serviceConfig,
+		}
+		if err := builder.Build(installFile); err != nil {
+			return err
+		}
+	}
 
-	installFile.Build(projectConfig)
+	if err := installFile.SaveDockerImages(); err != nil {
+		return err
+	}
+	if err := installFile.ClearDockerImages(); err != nil {
+		return err
+	}
 
-	return nil
+	return installFile.Build()
 }
 
 /**

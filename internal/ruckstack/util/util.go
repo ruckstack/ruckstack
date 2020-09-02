@@ -17,12 +17,6 @@ import (
 
 var validate = validator.New()
 
-func Check(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
 func ExpectNoError(err error) {
 	if err != nil {
 		fmt.Printf("Unexpected error %s", err)
@@ -112,11 +106,15 @@ func ExtractFromGzip(gzipSource string, wantedFile string) (string, error) {
 		case tar.TypeReg:
 			if header.Name == wantedFile {
 				outFile, err := os.Create(savePath)
-				Check(err)
+				if err != nil {
+					return "", err
+				}
 
 				defer outFile.Close()
 				_, err = io.Copy(outFile, tarReader)
-				Check(err)
+				if err != nil {
+					return "", err
+				}
 
 				break
 			}

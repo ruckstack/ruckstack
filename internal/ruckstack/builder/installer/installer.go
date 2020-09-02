@@ -103,22 +103,37 @@ func NewInstaller(projectConfig *project.ProjectConfig) (*Installer, error) {
 	return installer, nil
 }
 
-func (installer *Installer) Build(projectConfig *project.ProjectConfig) {
+func (installer *Installer) Build() error {
 	for key, _ := range filesToAddToTar {
 		installer.AddFile(filesToAddToTar[key], key)
 	}
 
 	packageConfigFilePath := global.BuildEnvironment.WorkDir + string(filepath.Separator) + "package.config"
 	packageConfigFile, err := os.OpenFile(packageConfigFilePath, os.O_CREATE|os.O_RDWR, 0644)
-	util.Check(err)
-	encoder := yaml.NewEncoder(packageConfigFile)
-	encoder.Encode(installer.PackageConfig)
+	if err != nil {
+		return err
+	}
 
-	installer.AddFile(packageConfigFilePath, ".package.config")
-	installer.zipWriter.Close()
-	installer.file.Close()
+	encoder := yaml.NewEncoder(packageConfigFile)
+	if err := encoder.Encode(installer.PackageConfig); err != nil {
+		return err
+	}
+
+	if err := installer.AddFile(packageConfigFilePath, ".package.config"); err != nil {
+		return err
+	}
+
+	if err := installer.zipWriter.Close(); err != nil {
+		return err
+	}
+
+	if err := installer.file.Close(); err != nil {
+		return err
+	}
 
 	log.Printf("Built to %s", installer.file.Name())
+
+	return nil
 }
 
 /**
@@ -260,7 +275,7 @@ func (installer *Installer) AddAssetDir(assetBase string, targetBase string) err
 	return nil
 }
 
-func (installer *Installer) IncludeDockerImage(tag string) {
+func (installer *Installer) IncludeDockerImage(tag string) error {
 	installer.dockerImages = append(installer.dockerImages, tag)
 
 	dockerSaveCmd := exec.Command("docker", "image", "inspect", tag)
@@ -269,42 +284,50 @@ func (installer *Installer) IncludeDockerImage(tag string) {
 	err := dockerSaveCmd.Run()
 	if err == nil {
 		log.Printf("Already have image %s", tag)
+		return nil
 	} else {
 		dockerSaveCmd := exec.Command("docker", "pull", tag)
 
 		dockerSaveCmd.Stdout = os.Stdout
 		dockerSaveCmd.Stderr = os.Stderr
-		err := dockerSaveCmd.Run()
-		util.Check(err)
+		return dockerSaveCmd.Run()
 	}
 }
 
-func (installer *Installer) SaveDockerImages() {
+func (installer *Installer) SaveDockerImages() error {
 	log.Printf("Collecting containers...")
 	appImagePath := global.BuildEnvironment.WorkDir + string(filepath.Separator) + "images.tar"
 	dockerSaveCmd := exec.Command("docker", append([]string{"save", "--output", appImagePath}, installer.dockerImages...)...)
 	dockerSaveCmd.Stdout = os.Stdout
 	dockerSaveCmd.Stderr = os.Stderr
-	err := dockerSaveCmd.Run()
-	util.Check(err)
-	installer.AddFile(appImagePath, "data/agent/images/images.tar")
+	if err := dockerSaveCmd.Run(); err != nil {
+		return err
+	}
+	return installer.AddFile(appImagePath, "data/agent/images/images.tar")
 }
 
-func (installer *Installer) ClearDockerImages() {
+func (installer *Installer) ClearDockerImages() error {
 	log.Printf("Cleaning up containers...")
 
 	output, err := exec.Command("docker", "image", "ls",
 		"--format", "'{{.Repository}}:{{.Tag}}'",
 		"--filter", "label=ruckstack.built=true").Output()
-	util.Check(err)
+	if err != nil {
+		return err
+	}
 
 	for _, builtTag := range strings.Split(strings.TrimSpace(string(output)), "\n") {
 		builtTag = strings.Trim(builtTag, "'")
 		log.Printf("Removing %s", builtTag)
 		output, err := exec.Command("docker", "image", "rm", builtTag).Output()
 		log.Println(string(output))
-		util.Check(err)
+
+		if err != nil {
+			return err
+		}
 
 	}
+
+	return nil
 
 }
