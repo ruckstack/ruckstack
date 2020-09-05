@@ -11,14 +11,24 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-func ShowNodeStatus(watch bool) {
-	fmt.Printf("Nodes in %s Cluster\n", util.GetPackageConfig().Name)
+func ShowNodeStatus(watch bool) error {
+	packageConfig, err := util.GetPackageConfig()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Nodes in %s Cluster\n", packageConfig.Name)
 	fmt.Println("----------------------------------------------------")
 
-	kubeClient := kubeclient.KubeClient()
+	kubeClient, err := kubeclient.KubeClient()
+	if err != nil {
+		return err
+	}
 
 	list, err := kubeClient.CoreV1().Nodes().List(metav1.ListOptions{})
-	util.Check(err)
+	if err != nil {
+		return err
+	}
 
 	seenNodes := map[string]bool{}
 	for _, node := range list.Items {
@@ -60,6 +70,8 @@ func ShowNodeStatus(watch bool) {
 		})
 		informer.Run(stopper)
 	}
+
+	return nil
 }
 
 func displayNodeStatus(node *v1.Node) {

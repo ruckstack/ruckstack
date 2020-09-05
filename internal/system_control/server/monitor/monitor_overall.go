@@ -66,7 +66,10 @@ func watchOverall() {
 		}
 
 		err := ioutil.WriteFile(monitorFile, []byte(monitorStatus), 0644)
-		util.Check(err)
+		if err != nil {
+			fmt.Printf("ERROR: %s", err)
+			return
+		}
 
 		time.Sleep(10 * time.Second)
 	}

@@ -1,13 +1,18 @@
 package commands
 
 import (
+	"fmt"
 	"github.com/ruckstack/ruckstack/internal/system_control/server"
 	"github.com/ruckstack/ruckstack/internal/system_control/util"
 	"github.com/spf13/cobra"
 )
 
 func init() {
-	packageConfig := util.GetPackageConfig()
+	packageConfig, err := util.GetPackageConfig()
+	if err != nil {
+		fmt.Printf("error loading package config: %s", err)
+		return
+	}
 
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "start",
@@ -16,8 +21,7 @@ func init() {
 			REQUIRES_ROOT: "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			server.Start()
-			return nil
+			return server.Start()
 		},
 	})
 }

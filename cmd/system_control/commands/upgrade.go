@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"github.com/ruckstack/ruckstack/internal/system_control/upgrade"
 	"github.com/ruckstack/ruckstack/internal/system_control/util"
 	"github.com/spf13/cobra"
@@ -8,7 +9,11 @@ import (
 
 func init() {
 	var file string
-	packageConfig := util.GetPackageConfig()
+	packageConfig, err := util.GetPackageConfig()
+	if err != nil {
+		fmt.Printf("Error loading package config: %s", err)
+		return
+	}
 
 	var upgradeCmd = &cobra.Command{
 		Use:   "upgrade",
@@ -17,14 +22,13 @@ func init() {
 			REQUIRES_ROOT: "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			upgrade.Upgrade(file)
-			return nil
+			return upgrade.Upgrade(file)
 		},
 	}
 
 	upgradeCmd.Flags().StringVar(&file, "file", "", "Path to upgrade file (required)")
-	util.Check(upgradeCmd.MarkFlagFilename("file"))
-	util.Check(upgradeCmd.MarkFlagRequired("file"))
+	upgradeCmd.MarkFlagFilename("file")
+	upgradeCmd.MarkFlagRequired("file")
 
 	rootCmd.AddCommand(upgradeCmd)
 }

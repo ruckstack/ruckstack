@@ -25,9 +25,7 @@ func initAddNode(parent *cobra.Command) {
 		Short: "Adds a node to the cluster",
 		Long:  `Used during installation of additional server nodes`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cluster.AddNode()
-
-			return nil
+			return cluster.AddNode()
 		},
 	})
 

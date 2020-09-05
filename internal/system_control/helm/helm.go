@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 )
 
-func ExecHelm(args ...string) {
+func ExecHelm(args ...string) error {
 	command := exec.Command(util.InstallDir()+"/lib/helm", args...)
 	command.Env = append(command.Env,
 		fmt.Sprintf("KUBECONFIG=%s", kubeclient.KubeconfigFile()),
@@ -18,7 +18,5 @@ func ExecHelm(args ...string) {
 	command.Dir = util.InstallDir()
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
-	if err := command.Run(); err != nil {
-		panic(err)
-	}
+	return command.Run()
 }

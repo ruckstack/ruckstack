@@ -13,8 +13,7 @@ func init() {
 			REQUIRES_ROOT: "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			uninstall.Uninstall()
-			return nil
+			return uninstall.Uninstall()
 		},
 	})
 }

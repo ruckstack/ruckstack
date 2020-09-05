@@ -28,11 +28,19 @@ var lastPodStatus = map[string]string{}
 var ownerTree = map[string]*meta.OwnerReference{}
 var allServices = map[string]*serviceInfo{}
 
-func ShowServiceStatus(includeSystemService bool, watch bool) {
-	fmt.Printf("Services in %s\n", util.GetPackageConfig().Name)
+func ShowServiceStatus(includeSystemService bool, watch bool) error {
+	packageConfig, err := util.GetPackageConfig()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Services in %s\n", packageConfig.Name)
 	fmt.Println("----------------------------------------------------")
 
-	kubeClient = kubeclient.KubeClient()
+	kubeClient, err = kubeclient.KubeClient()
+	if err != nil {
+		return err
+	}
 
 	namespaces := []string{"default"}
 	if includeSystemService {
@@ -47,7 +55,10 @@ func ShowServiceStatus(includeSystemService bool, watch bool) {
 		fmt.Println("----------------------------------------------------")
 
 		replicaSetList, err := kubeClient.AppsV1().ReplicaSets(namespace).List(meta.ListOptions{})
-		util.Check(err)
+		if err != nil {
+			return err
+		}
+
 		for _, replicaSet := range replicaSetList.Items {
 			for _, owner := range replicaSet.OwnerReferences {
 				ownerTree[util.GetAbsoluteName(replicaSet.GetObjectMeta())] = &owner
@@ -55,7 +66,10 @@ func ShowServiceStatus(includeSystemService bool, watch bool) {
 		}
 
 		daemonSetList, err := kubeClient.AppsV1().DaemonSets(namespace).List(meta.ListOptions{})
-		util.Check(err)
+		if err != nil {
+			return err
+		}
+
 		for _, ds := range daemonSetList.Items {
 			allServices[util.GetAbsoluteName(ds.GetObjectMeta())] = &serviceInfo{
 				name:       ds.Name,
@@ -66,7 +80,10 @@ func ShowServiceStatus(includeSystemService bool, watch bool) {
 		}
 
 		deploymentList, err := kubeClient.AppsV1().Deployments(namespace).List(meta.ListOptions{})
-		util.Check(err)
+		if err != nil {
+			return err
+		}
+
 		for _, deployment := range deploymentList.Items {
 			allServices[util.GetAbsoluteName(deployment.GetObjectMeta())] = &serviceInfo{
 				name:       deployment.Name,
@@ -77,7 +94,10 @@ func ShowServiceStatus(includeSystemService bool, watch bool) {
 		}
 
 		statefulSetList, err := kubeClient.AppsV1().StatefulSets(namespace).List(meta.ListOptions{})
-		util.Check(err)
+		if err != nil {
+			return err
+		}
+
 		for _, statefulSet := range statefulSetList.Items {
 			allServices[util.GetAbsoluteName(statefulSet.GetObjectMeta())] = &serviceInfo{
 				name:       statefulSet.Name,
@@ -88,7 +108,10 @@ func ShowServiceStatus(includeSystemService bool, watch bool) {
 		}
 
 		podList, err := kubeClient.CoreV1().Pods(namespace).List(meta.ListOptions{})
-		util.Check(err)
+		if err != nil {
+			return err
+		}
+
 		for _, pod := range podList.Items {
 			lastPodStatus[util.GetAbsoluteName(pod.GetObjectMeta())] = getPodStatusDescription(&pod)
 
@@ -140,6 +163,8 @@ func ShowServiceStatus(includeSystemService bool, watch bool) {
 		//TODO: flag for showing system services
 
 	}
+
+	return nil
 }
 
 func watchPods(wg *sync.WaitGroup) {

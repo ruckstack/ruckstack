@@ -28,7 +28,7 @@ import (
 
 var reverseProxy *httputil.ReverseProxy
 
-func StartWebserver() {
+func StartWebserver() error {
 	generateKeys()
 
 	log.Println("Starting webserver...")
@@ -36,21 +36,25 @@ func StartWebserver() {
 	http.HandleFunc("/", handleRequest)
 
 	go func() {
-		err := http.ListenAndServe(":80", nil)
-		util.Check(err)
+		if err := http.ListenAndServe(":80", nil); err != nil {
+			log.Printf("ERROR: %s", err)
+		}
 	}()
 
 	go func() {
-		err := http.ListenAndServeTLS(":443",
+		if err := http.ListenAndServeTLS(":443",
 			util.InstallDir()+"/data/ssl-cert.pem",
 			util.InstallDir()+"/data/ssl-key.pem",
-			nil)
-		util.Check(err)
+			nil); err != nil {
+			log.Printf("ERROR: %s", err)
+		}
 	}()
 
 	go watchTraefikService()
 
 	log.Println("Starting webserver...complete")
+
+	return nil
 }
 
 var traefikIp string
@@ -62,7 +66,11 @@ func watchTraefikService() {
 		time.Sleep(10 * time.Second)
 	}
 
-	kubeClient := kubeclient.KubeClient()
+	var err error
+	kubeClient, err := kubeclient.KubeClient()
+	if err != nil {
+		log.Printf("ERROR: %s", err)
+	}
 
 	factory := informers.NewSharedInformerFactory(kubeClient, 0)
 	informer := factory.Core().V1().Services().Informer()
@@ -103,12 +111,16 @@ func checkTraefikService(newService *core.Service) {
 			log.Printf("Traefik IP is now %s. Configuring proxy...", traefikIp)
 
 			internalUrl, err := url.Parse(fmt.Sprintf("http://%s", traefikIp))
-			util.Check(err)
+			if err != nil {
+				log.Printf("ERROR: %s", err)
+			}
 
 			reverseProxy = httputil.NewSingleHostReverseProxy(internalUrl)
 			reverseProxy.ErrorHandler = func(response http.ResponseWriter, request *http.Request, err error) {
 				if err.Error() == "Gateway Error" {
-					showSiteDownPage(response)
+					if err := showSiteDownPage(response); err != nil {
+						log.Printf("ERROR: %s", err)
+					}
 				}
 			}
 
@@ -124,61 +136,75 @@ func checkTraefikService(newService *core.Service) {
 }
 
 func handleRequest(res http.ResponseWriter, req *http.Request) {
+	var err error
 	if strings.HasPrefix(req.URL.Path, "/ops/") {
-		serveOpsPage(res, req)
+		err = serveOpsPage(res, req)
 	} else if reverseProxy != nil && monitor.ServerStatus.SystemReady {
-		proxyToKubernetes(res, req)
+		err = proxyToKubernetes(res, req)
 	} else {
-		showSiteDownPage(res)
+		err = showSiteDownPage(res)
+	}
+
+	if err != nil {
+		log.Printf("Error handling %s : %s", req.URL.Path, err)
 	}
 
 }
 
-func serveOpsPage(res http.ResponseWriter, req *http.Request) {
+func serveOpsPage(res http.ResponseWriter, req *http.Request) error {
 	if strings.HasPrefix(req.URL.Path, "/ops/http") {
-
+		return nil
 	} else {
-		serveLocalFile(res, req.URL.Path)
+		return serveLocalFile(res, req.URL.Path)
 	}
 }
 
-func serveLocalFile(res http.ResponseWriter, url string) {
+func serveLocalFile(res http.ResponseWriter, url string) error {
 	siteDownFile, err := os.Open(util.InstallDir() + "/data/web" + url)
 	if err == nil {
 		defer siteDownFile.Close()
 
 		_, err = io.Copy(res, siteDownFile)
-		util.Check(err)
+		if err != nil {
+			return err
+		}
 	} else {
 		res.WriteHeader(404)
 	}
+	return nil
 }
 
-func showSiteDownPage(res http.ResponseWriter) {
-	serveLocalFile(res, "/site-down.html")
+func showSiteDownPage(res http.ResponseWriter) error {
+	return serveLocalFile(res, "/site-down.html")
 }
 
-func proxyToKubernetes(res http.ResponseWriter, req *http.Request) {
+func proxyToKubernetes(res http.ResponseWriter, req *http.Request) error {
 	reverseProxy.ServeHTTP(res, req)
+
+	return nil
 }
 
-func generateKeys() {
+func generateKeys() error {
 	sslCertFilePath := util.InstallDir() + "/data/ssl-cert.pem"
 
 	_, err := os.Stat(sslCertFilePath)
 	if err == nil {
 		log.Printf("Not regenerating %s", sslCertFilePath)
-		return
+		return nil
 	}
 
 	log.Printf("Generating SSL key %s", sslCertFilePath)
 
 	priv, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	util.Check(err)
+	if err != nil {
+		return err
+	}
 
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
-	util.Check(err)
+	if err != nil {
+		return err
+	}
 
 	template := x509.Certificate{
 		SerialNumber: serialNumber,
@@ -213,19 +239,29 @@ func generateKeys() {
 	}
 
 	certOut, err := os.Create(sslCertFilePath)
-	util.Check(err)
+	if err != nil {
+		return err
+	}
 	defer certOut.Close()
 
-	err = pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
-	util.Check(err)
+	if err := pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
+		return err
+	}
 
 	keyOut, err := os.OpenFile(util.InstallDir()+"/data/ssl-key.pem", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-	util.Check(err)
+	if err != nil {
+		return err
+	}
 	defer keyOut.Close()
 
 	privBytes, err := x509.MarshalPKCS8PrivateKey(priv)
-	util.Check(err)
-	err = pem.Encode(keyOut, &pem.Block{Type: "PRIVATE KEY", Bytes: privBytes})
-	util.Check(err)
+	if err != nil {
+		return err
+	}
 
+	if err := pem.Encode(keyOut, &pem.Block{Type: "PRIVATE KEY", Bytes: privBytes}); err != nil {
+		return err
+	}
+
+	return err
 }

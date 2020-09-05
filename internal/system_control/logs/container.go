@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/ruckstack/ruckstack/internal/system_control/kubeclient"
-	"github.com/ruckstack/ruckstack/internal/system_control/util"
 	core "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"math"
@@ -13,7 +12,7 @@ import (
 	"time"
 )
 
-func ShowContainerLogs(systemContainer bool, containerId string, watch bool, previous bool, since string) {
+func ShowContainerLogs(systemContainer bool, containerId string, watch bool, previous bool, since string) error {
 	if previous {
 		//cannot watch previous container logs
 		watch = false
@@ -24,7 +23,10 @@ func ShowContainerLogs(systemContainer bool, containerId string, watch bool, pre
 		namespace = "kube-system"
 	}
 
-	client := kubeclient.KubeClient()
+	client, err := kubeclient.KubeClient()
+	if err != nil {
+		return err
+	}
 
 	logOptions := &core.PodLogOptions{
 		Follow: watch,
@@ -40,7 +42,9 @@ func ShowContainerLogs(systemContainer bool, containerId string, watch bool, pre
 	fmt.Printf(" container %s", containerId)
 	if strings.ToLower(since) != "all" {
 		duration, err := time.ParseDuration(since)
-		util.Check(err)
+		if err != nil {
+			return err
+		}
 
 		sinceSeconds := int64(math.Abs(duration.Seconds()))
 		logOptions.SinceSeconds = &sinceSeconds
@@ -55,14 +59,19 @@ func ShowContainerLogs(systemContainer bool, containerId string, watch bool, pre
 	}
 	fmt.Println("-----------------------------------------")
 
-	outputLogs(namespace, containerId, false, logOptions, client)
+	if err := outputLogs(namespace, containerId, false, logOptions, client); err != nil {
+		return err
+	}
 
+	return nil
 }
 
-func outputLogs(namespace string, containerId string, includeContainerId bool, logOptions *core.PodLogOptions, client *kubernetes.Clientset) {
+func outputLogs(namespace string, containerId string, includeContainerId bool, logOptions *core.PodLogOptions, client *kubernetes.Clientset) error {
 	logs := client.CoreV1().Pods(namespace).GetLogs(containerId, logOptions)
 	logStream, err := logs.Stream()
-	util.Check(err)
+	if err != nil {
+		return err
+	}
 	defer logStream.Close()
 
 	colorRemover := regexp.MustCompile("\\x1b\\[[0-9;]*m")
@@ -75,4 +84,6 @@ func outputLogs(namespace string, containerId string, includeContainerId bool, l
 		}
 		fmt.Println(colorRemover.ReplaceAllString(line, ""))
 	}
+
+	return nil
 }

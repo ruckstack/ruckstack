@@ -12,11 +12,19 @@ import (
 
 var seenJobs = map[string]bool{}
 
-func ShowJobStatus(includeSystemJobs bool, watch bool) {
-	fmt.Printf("Jobs in %s\n", util.GetPackageConfig().Name)
+func ShowJobStatus(includeSystemJobs bool, watch bool) error {
+	packageConfig, err := util.GetPackageConfig()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Jobs in %s\n", packageConfig.Name)
 	fmt.Println("----------------------------------------------------")
 
-	kubeClient = kubeclient.KubeClient()
+	kubeClient, err = kubeclient.KubeClient()
+	if err != nil {
+		return err
+	}
 
 	namespaces := []string{"default"}
 	if includeSystemJobs {
@@ -31,7 +39,10 @@ func ShowJobStatus(includeSystemJobs bool, watch bool) {
 		fmt.Println("----------------------------------------------------")
 
 		jobList, err := kubeClient.BatchV1().Jobs(namespace).List(meta.ListOptions{})
-		util.Check(err)
+		if err != nil {
+			return err
+		}
+
 		for _, job := range jobList.Items {
 			printJobStatus(&job)
 
@@ -47,6 +58,8 @@ func ShowJobStatus(includeSystemJobs bool, watch bool) {
 		watchJobs()
 
 	}
+
+	return nil
 }
 
 func printJobStatus(job *batch.Job) {

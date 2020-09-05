@@ -32,8 +32,7 @@ func initSystemCrictl(parent *cobra.Command) {
 NOTE: normally this is not a command that should be run, but can be a useful escape hatch.`,
 		DisableFlagParsing: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			k3s.ExecCrictl(args...)
-			return nil
+			return k3s.ExecCrictl(args...)
 		},
 	})
 }
@@ -48,8 +47,8 @@ func initSystemCtr(parent *cobra.Command) {
 		Long: `Ctr is a low-level Containerd command.
 NOTE: normally this is not a command that should be run, but can be a useful escape hatch.`,
 		DisableFlagParsing: true,
-		Run: func(cmd *cobra.Command, args []string) {
-			k3s.ExecCtr(os.Stdout, os.Stderr, args...)
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return k3s.ExecCtr(os.Stdout, os.Stderr, args...)
 		},
 	})
 }
@@ -62,8 +61,7 @@ func initSystemKubectl(parent *cobra.Command) {
 NOTE: normally this is not a command that should be run, but can be a useful escape hatch.`,
 		DisableFlagParsing: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			k3s.ExecKubectl(args...)
-			return nil
+			return k3s.ExecKubectl(args...)
 		},
 	})
 }
@@ -76,8 +74,7 @@ func initSystemHelm(parent *cobra.Command) {
 NOTE: normally this is not a command that should be run, but can be a useful escape hatch.`,
 		DisableFlagParsing: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			helm.ExecHelm(args...)
-			return nil
+			return helm.ExecHelm(args...)
 		},
 	})
 }

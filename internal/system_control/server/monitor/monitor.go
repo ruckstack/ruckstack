@@ -22,7 +22,7 @@ var ServerStatus = struct {
 	SystemReady bool
 }{}
 
-func StartMonitor() {
+func StartMonitor() error {
 	log.Println("Starting monitor...")
 
 	for !kubeclient.ConfigExists() {
@@ -31,7 +31,11 @@ func StartMonitor() {
 		time.Sleep(10 * time.Second)
 	}
 
-	kubeClient = kubeclient.KubeClient()
+	var err error
+	kubeClient, err = kubeclient.KubeClient()
+	if err != nil {
+		return err
+	}
 
 	foundProblem("Monitors not started", "System starting")
 
@@ -44,6 +48,7 @@ func StartMonitor() {
 
 	log.Println("Starting monitor...Complete")
 
+	return nil
 }
 
 func fullName(obj metav1.ObjectMeta) string {

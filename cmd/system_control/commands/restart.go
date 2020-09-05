@@ -12,7 +12,7 @@ func init() {
 	}
 
 	initRestartContainer(restartCmd)
-	initServiceLogs(restartCmd)
+	initRestartService(restartCmd)
 
 	rootCmd.AddCommand(restartCmd)
 }
@@ -25,8 +25,7 @@ func initRestartContainer(parent *cobra.Command) {
 		Short: "Restart a container",
 		Args:  cobra.ExactValidArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			restart.Container(systemContainer, args[0])
-			return nil
+			return restart.Container(systemContainer, args[0])
 		},
 	}
 
@@ -43,8 +42,7 @@ func initRestartService(parent *cobra.Command) {
 		Short: "Restarts all containers in a service",
 		Args:  cobra.ExactValidArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			restart.Service(systemService, args[0])
-			return nil
+			return restart.Service(systemService, args[0])
 		},
 	}
 

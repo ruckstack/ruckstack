@@ -6,12 +6,10 @@ import (
 	"os/exec"
 )
 
-func ExecCrictl(args ...string) {
+func ExecCrictl(args ...string) error {
 	command := exec.Command(util.InstallDir()+"/lib/k3s", append([]string{"crictl"}, args...)...)
 	command.Dir = util.InstallDir()
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
-	if err := command.Run(); err != nil {
-		panic(err)
-	}
+	return command.Run()
 }

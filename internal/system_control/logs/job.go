@@ -3,13 +3,15 @@ package logs
 import (
 	"fmt"
 	"github.com/ruckstack/ruckstack/internal/system_control/kubeclient"
-	"github.com/ruckstack/ruckstack/internal/system_control/util"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func ShowJobLogs(systemJob bool, jobName string, watch bool) {
-	client := kubeclient.KubeClient()
+func ShowJobLogs(systemJob bool, jobName string, watch bool) error {
+	client, err := kubeclient.KubeClient()
+	if err != nil {
+		return err
+	}
 
 	logOptions := &core.PodLogOptions{
 		Follow: watch,
@@ -31,7 +33,9 @@ func ShowJobLogs(systemJob bool, jobName string, watch bool) {
 		namespace = "kube-system"
 	}
 	pods, err := client.CoreV1().Pods(namespace).List(meta.ListOptions{})
-	util.Check(err)
+	if err != nil {
+		return err
+	}
 
 	foundPod := false
 	for _, pod := range pods.Items {
@@ -40,7 +44,9 @@ func ShowJobLogs(systemJob bool, jobName string, watch bool) {
 			if owner.Name == jobName {
 				foundPod = true
 
-				outputLogs(namespace, pod.Name, true, logOptions, client)
+				if err := outputLogs(namespace, pod.Name, true, logOptions, client); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -50,4 +56,6 @@ func ShowJobLogs(systemJob bool, jobName string, watch bool) {
 
 		fmt.Println("")
 	}
+
+	return nil
 }

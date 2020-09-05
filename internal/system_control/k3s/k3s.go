@@ -14,26 +14,35 @@ import (
 
 var k3sStartCommand *exec.Cmd
 
-func Start() {
+func Start() error {
 	log.Println("Starting K3S...")
 
 	os.MkdirAll(util.InstallDir()+"/logs", os.FileMode(0755))
 
 	k3sLogs, err := os.OpenFile(util.InstallDir()+"/logs/k3s.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-	util.Check(err)
+	if err != nil {
+		return err
+	}
+
 	defer k3sLogs.Close()
 
 	kubecConfigFile := kubeclient.KubeconfigFile()
 	localConfig, err := util.GetLocalConfig()
-	util.Check(err)
+	if err != nil {
+		return err
+	}
 
 	ifaces, err := net.Interfaces()
-	util.Check(err)
+	if err != nil {
+		return err
+	}
 
 	var bindAddressIface string
 	for _, iface := range ifaces {
 		addrs, err := iface.Addrs()
-		util.Check(err)
+		if err != nil {
+			return err
+		}
 
 		for _, addr := range addrs {
 			var ip net.IP
@@ -87,19 +96,27 @@ func Start() {
 	k3sStartCommand = exec.Command(util.InstallDir()+"/lib/k3s", k3sArgs...)
 	k3sStartCommand.Stdout = k3sLogs
 	k3sStartCommand.Stderr = k3sLogs
-	err = k3sStartCommand.Start()
-	util.Check(err)
+	if err := k3sStartCommand.Start(); err != nil {
+		return err
+	}
 
 	stat, err := os.Stat(kubecConfigFile)
+	if err != nil {
+		return err
+	}
+
 	for stat == nil {
 		time.Sleep(10 * time.Second)
 		stat, err = os.Stat(kubecConfigFile)
 	}
 
-	util.Check(files.CheckFilePermissions(util.InstallDir(), "config/kubeconfig.yaml"))
+	if err := files.CheckFilePermissions(util.InstallDir(), "config/kubeconfig.yaml"); err != nil {
+		return err
+	}
 
 	log.Println("Starting K3S...Complete")
 
+	return nil
 }
 
 func Stop() {

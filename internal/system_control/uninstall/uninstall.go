@@ -11,15 +11,17 @@ import (
 	"strings"
 )
 
-func Uninstall() {
-	packageConfig := util.GetPackageConfig()
+func Uninstall() error {
+	packageConfig, err := util.GetPackageConfig()
+	if err != nil {
+		return err
+	}
 
 	ui := bufio.NewScanner(os.Stdin)
 	fmt.Printf("Uninstall %s from %s? [y|n] ", packageConfig.Name, util.InstallDir())
 	ui.Scan()
 	if ui.Text() != "y" {
-		fmt.Printf("Cancelling install")
-		os.Exit(1)
+		return fmt.Errorf("cancelling install")
 	}
 
 	fmt.Println("\nUninstalling " + packageConfig.Name + "...")
@@ -36,7 +38,7 @@ func Uninstall() {
 			//nothing matched, that is ok
 		} else {
 			fmt.Println(psOut.String())
-			panic(err)
+			return err
 		}
 	}
 
@@ -47,13 +49,18 @@ func Uninstall() {
 			continue
 		}
 		pid, err := strconv.Atoi(pidString)
-		util.Check(err)
+		if err != nil {
+			return err
+		}
 		process, err := os.FindProcess(pid)
-		util.Check(err)
+		if err != nil {
+			return err
+		}
 
 		if process.Pid != currentPid {
-			err := process.Kill()
-			util.Check(err)
+			if err := process.Kill(); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -70,6 +77,8 @@ func Uninstall() {
 	warn(os.RemoveAll(util.InstallDir()))
 
 	fmt.Println("\nUninstall complete")
+
+	return nil
 }
 
 func warn(err error) {

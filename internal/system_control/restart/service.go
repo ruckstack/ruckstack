@@ -8,8 +8,11 @@ import (
 	"strings"
 )
 
-func Service(systemService bool, serviceName string) {
-	var kubeClient = kubeclient.KubeClient()
+func Service(systemService bool, serviceName string) error {
+	var kubeClient, err = kubeclient.KubeClient()
+	if err != nil {
+		return err
+	}
 
 	serviceType := "Application"
 	namespace := "default"
@@ -19,26 +22,35 @@ func Service(systemService bool, serviceName string) {
 	}
 
 	pods, err := kubeClient.CoreV1().Pods(namespace).List(meta.ListOptions{})
-	util.Check(err)
+	if err != nil {
+		return err
+	}
 	foundPod := false
 	for _, pod := range pods.Items {
 		for _, owner := range pod.OwnerReferences {
 			if owner.Name == serviceName {
-				err := kubeClient.CoreV1().Pods(namespace).Delete(pod.Name, &meta.DeleteOptions{})
-				util.Check(err)
+				if err := kubeClient.CoreV1().Pods(namespace).Delete(pod.Name, &meta.DeleteOptions{}); err != nil {
+					return err
+				}
 				foundPod = true
 			}
 		}
 	}
 
 	if !foundPod {
-		fmt.Printf("Unknown %s service %s", strings.ToLower(serviceType), serviceName)
-		return
+		return fmt.Errorf("Unknown %s service %s", strings.ToLower(serviceType), serviceName)
+	}
+
+	packageConfig, err := util.GetPackageConfig()
+	if err != nil {
+		return err
 	}
 
 	fmt.Printf("%s service %s is restarting...\n", serviceType, serviceName)
 	fmt.Println("")
 	fmt.Println("Restart progress can be watched with:")
-	fmt.Printf("    %s/bin/%s status services --watch\n", util.InstallDir(), util.GetPackageConfig().SystemControlName)
+	fmt.Printf("    %s/bin/%s status services --watch\n", util.InstallDir(), packageConfig.SystemControlName)
+
+	return nil
 
 }

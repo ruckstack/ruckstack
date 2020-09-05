@@ -30,9 +30,7 @@ func initContainerLogs(parent *cobra.Command) {
 		Args:  cobra.ExactValidArgs(1),
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			logs.ShowContainerLogs(systemService, args[0], watchLogs, previousLogs, logsSince)
-
-			return nil
+			return logs.ShowContainerLogs(systemService, args[0], watchLogs, previousLogs, logsSince)
 		},
 	}
 
@@ -54,8 +52,7 @@ func initJobLogs(parent *cobra.Command) {
 		Args:  cobra.ExactValidArgs(1),
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			logs.ShowJobLogs(systemJobs, args[0], watchLogs)
-			return nil
+			return logs.ShowJobLogs(systemJobs, args[0], watchLogs)
 		},
 	}
 
@@ -77,8 +74,7 @@ func initServiceLogs(parent *cobra.Command) {
 		Args:  cobra.ExactValidArgs(1),
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			logs.ShowServiceLogs(systemService, args[0], watchLogs, logsSince, logsNode)
-			return nil
+			return logs.ShowServiceLogs(systemService, args[0], watchLogs, logsSince, logsNode)
 		},
 	}
 

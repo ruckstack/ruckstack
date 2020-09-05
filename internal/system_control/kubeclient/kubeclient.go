@@ -12,7 +12,7 @@ import (
 	"k8s.io/klog"
 )
 
-func KubeClient() *kubernetes.Clientset {
+func KubeClient() (*kubernetes.Clientset, error) {
 
 	klogFlags := flag.NewFlagSet("klog", flag.ExitOnError)
 	klogFlags.Set("logtostderr", "false")
@@ -24,13 +24,17 @@ func KubeClient() *kubernetes.Clientset {
 	}
 
 	config, err := clientcmd.BuildConfigFromFlags("", KubeconfigFile())
-	util.Check(err)
+	if err != nil {
+		return nil, err
+	}
 
 	// create the clientset
 	clientset, err := kubernetes.NewForConfig(config)
-	util.Check(err)
+	if err != nil {
+		return nil, err
+	}
 
-	return clientset
+	return clientset, nil
 }
 
 func ConfigExists() bool {

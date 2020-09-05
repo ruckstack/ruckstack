@@ -27,8 +27,7 @@ func initStatusJobs(parent *cobra.Command) {
 		Use:   "jobs",
 		Short: "Display status of jobs",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			status.ShowJobStatus(includeSystemJobs, watchJobs)
-			return nil
+			return status.ShowJobStatus(includeSystemJobs, watchJobs)
 		},
 	}
 
@@ -46,8 +45,7 @@ func initStatusNodes(parent *cobra.Command) {
 		Use:   "nodes",
 		Short: "Display status of nodes",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			status.ShowNodeStatus(watch)
-			return nil
+			return status.ShowNodeStatus(watch)
 		},
 	}
 
@@ -65,8 +63,7 @@ func initStatusServices(parent *cobra.Command) {
 		Use:   "services",
 		Short: "Display status of services",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			status.ShowServiceStatus(includeSystemServices, watchServices)
-			return nil
+			return status.ShowServiceStatus(includeSystemServices, watchServices)
 		},
 	}
 

@@ -42,21 +42,26 @@ func SetPackageConfig(passedPackageConfig *internal.PackageConfig) {
 	packageConfig = passedPackageConfig
 }
 
-func GetPackageConfig() *internal.PackageConfig {
+func GetPackageConfig() (*internal.PackageConfig, error) {
 	if packageConfig != nil {
-		return packageConfig
+		return packageConfig, nil
 	}
 
 	file, err := os.OpenFile(InstallDir()+"/.package.config", os.O_RDONLY, 0)
-	Check(err)
+	if err != nil {
+		return nil, err
+	}
+
 	defer file.Close()
 
 	packageConfig = new(internal.PackageConfig)
 	decoder := yaml.NewDecoder(file)
 	err = decoder.Decode(packageConfig)
-	Check(err)
+	if err != nil {
+		return nil, err
+	}
 
-	return packageConfig
+	return packageConfig, nil
 }
 
 func GetSystemConfig() (*internal.SystemConfig, error) {
@@ -95,8 +100,9 @@ func GetLocalConfig() (*internal.LocalConfig, error) {
 
 	decoder := yaml.NewDecoder(file)
 	localConfig = new(internal.LocalConfig)
-	err = decoder.Decode(localConfig)
-	Check(err)
+	if err := decoder.Decode(localConfig); err != nil {
+		return nil, err
+	}
 
 	return localConfig, nil
 }
@@ -110,12 +116,6 @@ func ExpectNoError(err error) {
 		fmt.Printf("Unexpected error %s", err)
 		//panic(err)
 		os.Exit(15)
-	}
-}
-
-func Check(err error) {
-	if err != nil {
-		panic(err)
 	}
 }
 

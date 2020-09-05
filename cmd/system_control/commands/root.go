@@ -37,7 +37,8 @@ func init() {
 	util.ExpectNoError(err)
 	executable = filepath.Base(executable)
 
-	packageConfig := util.GetPackageConfig()
+	packageConfig, err := util.GetPackageConfig()
+	util.ExpectNoError(err)
 	rootCmd.Use = executable
 	rootCmd.Short = packageConfig.Name + " System Control"
 	rootCmd.Version = packageConfig.Version

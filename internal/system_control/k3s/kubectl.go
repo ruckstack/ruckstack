@@ -8,7 +8,7 @@ import (
 	"os/exec"
 )
 
-func ExecKubectl(args ...string) {
+func ExecKubectl(args ...string) error {
 	command := exec.Command(util.InstallDir()+"/lib/k3s", append([]string{"kubectl"}, args...)...)
 	command.Env = os.Environ()
 	command.Env = append(command.Env,
@@ -17,6 +17,6 @@ func ExecKubectl(args ...string) {
 	command.Dir = util.InstallDir()
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
-	_ = command.Run()
+	return command.Run()
 
 }

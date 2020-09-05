@@ -13,7 +13,11 @@ import (
 var adminGroupGid int
 
 func CheckFilePermissions(installPath string, filePath string) error {
-	packageConfig := util.GetPackageConfig()
+	packageConfig, err := util.GetPackageConfig()
+	if err != nil {
+		return err
+	}
+
 	localConfig, err := util.GetLocalConfig()
 	if err != nil {
 		return err
@@ -51,7 +55,10 @@ func CheckFilePermissions(installPath string, filePath string) error {
 			}
 		} else {
 			match, err := filepath.Match(installPath+"/"+fileConfigPath, fullFilePath)
-			util.Check(err)
+			if err != nil {
+				return err
+			}
+
 			if match {
 				if isBetterFileMatch(fileConfigPath, foundFileConfigPath) {
 					foundFileConfig = fileConfig
@@ -78,7 +85,9 @@ func CheckFilePermissions(installPath string, filePath string) error {
 	//}
 
 	err = os.Chown(fullFilePath, 0, adminGroupGid)
-	util.Check(err)
+	if err != nil {
+		return err
+	}
 
 	var mode os.FileMode
 	if !foundFileConfig.AdminGroupReadable {
