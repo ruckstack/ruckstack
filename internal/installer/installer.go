@@ -17,12 +17,12 @@ import (
 	"time"
 
 	"github.com/ruckstack/ruckstack/internal"
-	"github.com/ruckstack/ruckstack/internal/system-control/files"
-	"github.com/ruckstack/ruckstack/internal/system-control/util"
+	"github.com/ruckstack/ruckstack/internal/system_control/files"
+	"github.com/ruckstack/ruckstack/internal/system_control/util"
 	"gopkg.in/yaml.v2"
 )
 
-func Install(packageConfig *internal.PackageConfig, installerArgs *InstallerArgs, zipReader *zip.ReadCloser) {
+func Install(packageConfig *internal.PackageConfig, installerArgs *InstallerArgs, zipReader *zip.ReadCloser) error {
 
 	fmt.Printf("%s %s Installer\n", packageConfig.Name, packageConfig.Version)
 	fmt.Println("---------------------------------------------")
@@ -33,8 +33,16 @@ func Install(packageConfig *internal.PackageConfig, installerArgs *InstallerArgs
 	ui := bufio.NewScanner(os.Stdin)
 
 	installPath := getInstallPath(ui, packageConfig, installerArgs)
-	joinToken := getJoinToken(ui, packageConfig, installerArgs)
-	bindAddress := getBindAddress(ui, installerArgs)
+	joinToken, err := getJoinToken(ui, packageConfig, installerArgs)
+	if err != nil {
+		return err
+	}
+
+	bindAddress, err := getBindAddress(ui, installerArgs)
+	if err != nil {
+		return err
+	}
+
 	adminGroup := getAdminGroup(ui, installerArgs)
 
 	localConfig.AdminGroup = adminGroup.Name
@@ -50,29 +58,49 @@ func Install(packageConfig *internal.PackageConfig, installerArgs *InstallerArgs
 
 	fmt.Printf("Installing to %s...\n", installPath)
 
-	err := extract(installPath, zipReader)
-	if err != nil {
-		panic(err)
+	if err := extract(installPath, zipReader); err != nil {
+		return err
 	}
 
-	util.Check(os.MkdirAll(installPath+"/config", 0755))
+	if err := os.MkdirAll(installPath+"/config", 0755); err != nil {
+		return err
+	}
 
 	if joinToken != nil {
-		util.Check(ioutil.WriteFile(filepath.Join(installPath, "config/kubeconfig.yaml"), []byte(joinToken.KubeConfig), 0640))
+		if err := ioutil.WriteFile(filepath.Join(installPath, "config/kubeconfig.yaml"), []byte(joinToken.KubeConfig), 0640); err != nil {
+			return nil
+		}
 	}
 
 	systemConfigFile, err := os.OpenFile(installPath+"/config/system.config", os.O_CREATE|os.O_RDWR, 0644)
+	if err != nil {
+		return err
+	}
 	systemConfigEncoder := yaml.NewEncoder(systemConfigFile)
-	util.Check(systemConfigEncoder.Encode(systemConfig))
-	util.Check(files.CheckFilePermissions(installPath, "config/system.config"))
+	if err := systemConfigEncoder.Encode(systemConfig); err != nil {
+		return err
+	}
+	if err := files.CheckFilePermissions(installPath, "config/system.config"); err != nil {
+		return err
+	}
 
 	localConfigFile, err := os.OpenFile(installPath+"/config/local.config", os.O_CREATE|os.O_RDWR, 0644)
+	if err != nil {
+		return err
+	}
+
 	localConfigEncoder := yaml.NewEncoder(localConfigFile)
-	util.Check(localConfigEncoder.Encode(localConfig))
-	util.Check(files.CheckFilePermissions(installPath, "config/local.config"))
+	if err := localConfigEncoder.Encode(localConfig); err != nil {
+		return err
+	}
+	if err := files.CheckFilePermissions(installPath, "config/local.config"); err != nil {
+		return err
+	}
 
 	fmt.Println("\n\nInstallation complete")
 	fmt.Printf("To start the server, run `%s/bin/%s start`\n\n", installPath, packageConfig.SystemControlName)
+
+	return nil
 }
 
 func getAdminGroup(ui *bufio.Scanner, installerArgs *InstallerArgs) *user.Group {
@@ -143,7 +171,7 @@ func getInstallPath(ui *bufio.Scanner, packageConfig *internal.PackageConfig, in
 	return absInstallPath
 }
 
-func getJoinToken(ui *bufio.Scanner, packageConfig *internal.PackageConfig, installerArgs *InstallerArgs) *AddNodeToken {
+func getJoinToken(ui *bufio.Scanner, packageConfig *internal.PackageConfig, installerArgs *InstallerArgs) (*AddNodeToken, error) {
 	addNodeToken := &AddNodeToken{}
 
 	var joinToken string
@@ -165,7 +193,7 @@ func getJoinToken(ui *bufio.Scanner, packageConfig *internal.PackageConfig, inst
 				joinCluster = true
 			} else if joinResponse == "n" {
 				gotValidResponse = true
-				return nil
+				return nil, nil
 			}
 		}
 	}
@@ -197,19 +225,17 @@ func getJoinToken(ui *bufio.Scanner, packageConfig *internal.PackageConfig, inst
 			splitInfo := strings.Split(serverPortAndProtocol, "/")
 			conn, err := net.DialTimeout(splitInfo[0], net.JoinHostPort(addNodeToken.Server, splitInfo[1]), timeout)
 			if err != nil {
-				fmt.Printf("Cannot connect to server -- %s\n", err.Error())
-
-				util.Check(err)
+				return nil, fmt.Errorf("cannot connect to server: %s", err)
 			}
 			conn.Close()
 		}
 	}
 
-	return addNodeToken
+	return addNodeToken, nil
 
 }
 
-func getBindAddress(ui *bufio.Scanner, installerArgs *InstallerArgs) string {
+func getBindAddress(ui *bufio.Scanner, installerArgs *InstallerArgs) (string, error) {
 	var bindAddress string
 	if installerArgs != nil {
 		bindAddress = installerArgs.BindAddress
@@ -223,10 +249,15 @@ func getBindAddress(ui *bufio.Scanner, installerArgs *InstallerArgs) string {
 
 	foundIp := false
 	ifaces, err := net.Interfaces()
-	util.Check(err)
+	if err != nil {
+		return "", err
+	}
+
 	for _, i := range ifaces {
 		addrs, err := i.Addrs()
-		util.Check(err)
+		if err != nil {
+			return "", err
+		}
 
 		for _, addr := range addrs {
 			var ip net.IP
@@ -249,7 +280,7 @@ func getBindAddress(ui *bufio.Scanner, installerArgs *InstallerArgs) string {
 		return getBindAddress(ui, nil)
 	}
 
-	return bindAddress
+	return bindAddress, nil
 }
 
 func extract(installPath string, zipReader *zip.ReadCloser) (err error) {
@@ -284,13 +315,13 @@ func extract(installPath string, zipReader *zip.ReadCloser) (err error) {
 			out.Close()
 
 			mtime := fileInfo.ModTime()
-			err = os.Chtimes(fullname, mtime, mtime)
-			if err != nil {
+			if err := os.Chtimes(fullname, mtime, mtime); err != nil {
 				return err
 			}
 
-			err = files.CheckFilePermissions(installPath, file.Name)
-			util.Check(err)
+			if err := files.CheckFilePermissions(installPath, file.Name); err != nil {
+				return err
+			}
 
 			if i%10 == 0 {
 				fmt.Print(".")

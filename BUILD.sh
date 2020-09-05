@@ -9,16 +9,16 @@ build() {
   echo "Building ruckstack ${VERSION}..."
 
   echo "Compiling system-control..."
-  (export GOOS=linux && go build -o out/system-control cmd/system-control/main.go)
+  (export GOOS=linux && go build -o out/system_control cmd/system_control/main.go)
 
   echo "Compiling installer..."
   (export GOOS=linux && go build -o out/installer cmd/installer/main.go)
 
   echo "Collecting ruckstack resources..."
   (go-bindata -o internal/ruckstack/builder/resources/bindata/bindata.go -pkg bindata \
-          internal/ruckstack/builder/resources/install-dir/... \
-          internal/ruckstack/builder/resources/new-project/... \
-          out/system-control \
+          internal/ruckstack/builder/resources/install_dir/... \
+          internal/ruckstack/builder/resources/new_project/... \
+          out/system_control \
           out/installer \
   )
 
@@ -45,7 +45,7 @@ clean() {
   echo "Cleaning..."
   rm -rf out
   rm -rf internal/ruckstack/resources/bindata
-  rm -rf internal/system-control/resources/bin
+  rm -rf internal/system_control/resources/bin
   echo "Done"
 }
 

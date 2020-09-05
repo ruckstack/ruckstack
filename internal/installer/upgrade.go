@@ -4,8 +4,8 @@ import (
 	"archive/zip"
 	"fmt"
 	"github.com/ruckstack/ruckstack/internal"
-	"github.com/ruckstack/ruckstack/internal/system-control/k3s"
-	"github.com/ruckstack/ruckstack/internal/system-control/util"
+	"github.com/ruckstack/ruckstack/internal/system_control/k3s"
+	"github.com/ruckstack/ruckstack/internal/system_control/util"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-func Upgrade(upgradeFile string, targetDir string) {
+func Upgrade(upgradeFile string, targetDir string) error {
 
 	upgradeLog, err := os.OpenFile(filepath.Join(targetDir, "logs", "upgrade-"+strconv.FormatInt(time.Now().Unix(), 10)+".log"), os.O_WRONLY|os.O_CREATE, 0644)
 	defer upgradeLog.Close()
@@ -24,7 +24,10 @@ func Upgrade(upgradeFile string, targetDir string) {
 	log.SetOutput(upgradeLog)
 	log.Printf("Upgrading %s from %s", targetDir, upgradeFile)
 
-	util.Check(err)
+	if err != nil {
+		return err
+	}
+
 	util.SetInstallDir(targetDir)
 
 	zipReader, err := zip.OpenReader(upgradeFile)
@@ -56,10 +59,14 @@ func Upgrade(upgradeFile string, targetDir string) {
 
 	serverShutdown := false
 	serverPidData, err := ioutil.ReadFile(filepath.Join(util.InstallDir(), "data", "server.pid"))
-	util.Check(err)
+	if err != nil {
+		return err
+	}
 
 	serverPid, err := strconv.Atoi(string(serverPidData))
-	util.Check(err)
+	if err != nil {
+		return err
+	}
 
 	serverProcess, err := os.FindProcess(serverPid)
 	err = serverProcess.Signal(syscall.Signal(0))
@@ -67,8 +74,9 @@ func Upgrade(upgradeFile string, targetDir string) {
 		log.Printf("Found running server on PID %d", serverPid)
 		userMessage("Shutting down server...\n")
 
-		err := serverProcess.Kill()
-		util.Check(err)
+		if err := serverProcess.Kill(); err != nil {
+			return err
+		}
 
 		serverShutdown = true
 	} else {
@@ -76,8 +84,9 @@ func Upgrade(upgradeFile string, targetDir string) {
 	}
 
 	userMessage("Extracting files...")
-	err = extract(util.InstallDir(), zipReader)
-	util.Check(err)
+	if err := extract(util.InstallDir(), zipReader); err != nil {
+		return err
+	}
 
 	_, err = os.Stat("/run/k3s/containerd/containerd.sock")
 	if os.IsNotExist(err) {
@@ -105,6 +114,8 @@ func Upgrade(upgradeFile string, targetDir string) {
 	} else {
 		userMessage("Server was NOT auto-started as part of the upgrade process\n")
 	}
+
+	return nil
 }
 
 func userMessage(message string, args ...interface{}) {

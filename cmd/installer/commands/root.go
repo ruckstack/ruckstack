@@ -19,9 +19,7 @@ var rootCmd = &cobra.Command{
 	Short: "Installs application",
 
 	RunE: func(cmd *cobra.Command, args []string) error {
-		installer.Install(packageConfig, installerArgs, zipReader)
-
-		return nil
+		return installer.Install(packageConfig, installerArgs, zipReader)
 	},
 }
 

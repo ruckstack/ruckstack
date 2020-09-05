@@ -28,7 +28,10 @@ func main() {
 			}
 		}
 
-		installer.Upgrade(installPackage, args[2])
+		err := installer.Upgrade(installPackage, args[2])
+		if err != nil {
+			mainFailed(err)
+		}
 
 		os.Exit(0)
 	}
