@@ -10,8 +10,13 @@ import (
 	"strings"
 )
 
-func Parse(projectPath string) (*ProjectConfig, error) {
-	projectConfigFile, err := ini.InsensitiveLoad(projectPath)
+func Parse(source interface{}) (*ProjectConfig, error) {
+	projectPath := "in-memory"
+	if stringPath, ok := source.(string); ok {
+		projectPath = stringPath
+	}
+
+	projectConfigFile, err := ini.InsensitiveLoad(source)
 	if os.IsNotExist(err) {
 		return nil, fmt.Errorf("project file %s not found", projectPath)
 	}
@@ -28,8 +33,7 @@ func Parse(projectPath string) (*ProjectConfig, error) {
 
 	projectConfigFile.Section("ruckstack-project").MapTo(projectConfig)
 
-	err = util.Validate(projectConfig)
-	if err != nil {
+	if err := util.Validate(projectConfig); err != nil {
 		return nil, err
 	}
 

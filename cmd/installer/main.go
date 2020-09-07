@@ -44,6 +44,6 @@ func main() {
 }
 
 func mainFailed(messages ...interface{}) {
-	fmt.Println(messages)
+	fmt.Println(messages...)
 	os.Exit(-1)
 }
