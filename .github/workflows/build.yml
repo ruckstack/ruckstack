@@ -29,17 +29,12 @@ jobs:
             curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
             dep ensure
         fi
-        go get -u github.com/shuLhan/go-bindata/...
 
     - name: Build
       run: ~/work/ruckstack/ruckstack/BUILD.sh
       
-#    - name: Test
-#      run: go test -v .
-
     - uses: actions/upload-artifact@v2
       with:
         name: ruckstack-builders
         path: |
-          ~/work/ruckstack/ruckstack/out/*.zip
-          ~/work/ruckstack/ruckstack/out/*.tgz
+          ~/work/ruckstack/ruckstack/out/artifacts

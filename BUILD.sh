@@ -8,35 +8,34 @@ VERSION=0.8.3
 build() {
   echo "Building ruckstack ${VERSION}..."
 
+  echo "Running tests..."
+  go test ./...
+
   echo "Compiling system-control..."
-  (export GOOS=linux && go build -o out/system_control cmd/system_control/main.go)
+  (export GOOS=linux && go build -o out/image/system/system_control cmd/system_control/main.go)
 
   echo "Compiling installer..."
-  (export GOOS=linux && go build -o out/installer cmd/installer/main.go)
-
-  echo "Collecting ruckstack resources..."
-  (go-bindata -o internal/ruckstack/builder/resources/bindata/bindata.go -pkg bindata \
-          internal/ruckstack/builder/resources/install_dir/... \
-          internal/ruckstack/builder/resources/new_project/... \
-          out/system_control \
-          out/installer \
-  )
+  (export GOOS=linux && go build -o out/image/system/installer cmd/installer/main.go)
 
   echo "Compiling ruckstack..."
-  (export GOOS=windows && go build -o out/dist/win/bin/ruckstack.exe cmd/ruckstack/main.go)
-  (export GOOS=linux && go build -o out/dist/linux/ruckstack/bin/ruckstack cmd/ruckstack/main.go)
+  (export GOOS=linux && export CGO_ENABLED=0 && go build -o out/image/bin/ruckstack cmd/ruckstack/main.go)
 
-  echo "Creating windows distribution..."
-  cp ./LICENSE out/dist/win
-  cp -r dist out/dist/win
-  (cd out/dist/win && zip -q -r ../../ruckstack-win-${VERSION}.zip *)
+  echo "Compiling ruckstack launcher..."
+  (export GOOS=linux && go build -o out/artifacts/linux/ruckstack cmd/ruckstack_launcher/main.go)
+  (export GOOS=windows && go build -o out/artifacts/win/ruckstack.exe cmd/ruckstack_launcher/main.go)
+  (export GOOS=darwin && go build -o out/artifacts/mac/ruckstack cmd/ruckstack_launcher/main.go)
+  chmod 755 out/artifacts/linux/ruckstack
+  chmod 755 out/artifacts/mac/ruckstack
 
-  echo "Creating linux distribution..."
-  cp ./LICENSE out/dist/linux/ruckstack
-  cp -r dist out/dist/linux/ruckstack
-  chmod 755 out/dist/linux/ruckstack/bin/ruckstack
-  (cd out/dist/linux && tar cfz ../../ruckstack-linux-${VERSION}.tgz ruckstack)
+  echo "Creating ruckstack distribution..."
+  cp ./LICENSE out/image
+  cp -r dist/* out/image
+  chmod 755 out/image/bin/ruckstack
 
+  echo "Building 'ruckstack:dev' docker image..."
+  mkdir -p out/artifacts/docker
+  docker build -t ruckstack:latest -t ruckstack:v${VERSION} out/image
+  docker save -o out/artifacts/docker/ruckstack-${VERSION}.tar ruckstack:latest
 
   echo "Done"
 }
@@ -44,8 +43,6 @@ build() {
 clean() {
   echo "Cleaning..."
   rm -rf out
-  rm -rf internal/ruckstack/resources/bindata
-  rm -rf internal/system_control/resources/bin
   echo "Done"
 }
 

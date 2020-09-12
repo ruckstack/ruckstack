@@ -3,7 +3,7 @@
 **/bindata.go
 /out
 /tmp
-internal/ruckstack/builder/resources/new_project/example/out
+dist/resources/new_project/example/out
 TODO.txt
 **/__debug_bin
 /workspace

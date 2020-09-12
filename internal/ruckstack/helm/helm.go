@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"github.com/mitchellh/go-wordwrap"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/global"
+	"github.com/ruckstack/ruckstack/internal/ruckstack/ui"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/downloader"
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/helmpath"
 	"helm.sh/helm/v3/pkg/helmpath/xdg"
 	"helm.sh/helm/v3/pkg/repo"
-	"log"
 	"os"
 	"os/user"
 	"path"
@@ -46,7 +46,7 @@ func Setup() error {
 
 	_, err = os.Stat(helmpath.ConfigPath("repositories.yaml"))
 	if os.IsNotExist(err) {
-		fmt.Println("Creating new helm metadata...")
+		ui.Println("Creating new helm metadata...")
 
 		if err := os.MkdirAll(filepath.Dir(helmpath.ConfigPath("repositories.yaml")), 0755); err != nil {
 			return err
@@ -68,7 +68,7 @@ func Setup() error {
 			return err
 		}
 
-		fmt.Println("Creating new helm metadata...DONE")
+		ui.Println("Creating new helm metadata...DONE")
 	}
 
 	return nil
@@ -108,7 +108,7 @@ func ReIndex() error {
 		return nil
 	}
 
-	fmt.Println("Reindexing helm repositories...")
+	ui.Println("Reindexing helm repositories...")
 
 	repoFile, err := repo.LoadFile(helmpath.ConfigPath("repositories.yaml"))
 	if err != nil {
@@ -128,7 +128,7 @@ func ReIndex() error {
 	}
 
 	reindexed = true
-	fmt.Println("Reindexing helm repositories...DONE")
+	ui.Println("Reindexing helm repositories...DONE")
 
 	return nil
 }
@@ -161,7 +161,7 @@ func Search(chartRepo string, chartName string) error {
 		appVersion = "n/a"
 	}
 
-	fmt.Printf(`
+	ui.Printf(`
 Chart: %s/%s
 Latest Version: %s (App Version %s)
 %s
@@ -175,14 +175,14 @@ Latest Version: %s (App Version %s)
 		latestVersion.Home,
 		wordwrap.WrapString(latestVersion.Description, 80))
 
-	fmt.Println("\nAll Available Versions:")
+	ui.Println("\nAll Available Versions:")
 
 	for _, version := range versions {
 		appVersion := version.AppVersion
 		if appVersion == "" {
 			appVersion = "n/a"
 		}
-		fmt.Printf("  %s (App Version %s)\n", version.Version, appVersion)
+		ui.Printf("  %s (App Version %s)\n", version.Version, appVersion)
 	}
 
 	return nil
@@ -197,14 +197,14 @@ func DownloadChart(repo string, chart string, version string) (string, error) {
 	savePath := cacheDir + string(filepath.Separator) + chart + "-" + version + ".tgz"
 	_, err := os.Stat(savePath)
 	if os.IsNotExist(err) {
-		log.Printf("Downloading chart %s...", filepath.Base(savePath))
+		ui.Printf("Downloading chart %s...", filepath.Base(savePath))
 
 		_, _, err := getDownloader().DownloadTo(repo+"/"+chart, version, cacheDir)
 		if err != nil {
 			return "", err
 		}
 	} else {
-		log.Printf("%s already exists. Not re-downloading", savePath)
+		ui.Printf("%s already exists. Not re-downloading", savePath)
 	}
 
 	return savePath, nil

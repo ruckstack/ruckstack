@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"github.com/ruckstack/ruckstack/internal/ruckstack/newproject"
+	"github.com/ruckstack/ruckstack/internal/ruckstack/new_project"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/util"
 	"github.com/spf13/cobra"
 )
@@ -19,11 +19,11 @@ func init() {
 				newProjectType = "example"
 			}
 
-			return newproject.NewProject(newProjectOut, newProjectType)
+			return new_project.NewProject(newProjectOut, newProjectType)
 		},
 	}
 
-	newProjectCmd.Flags().StringVar(&newProjectType, "type", "", "Type of project to create. Possible value: `starter` (default) or `example`")
+	newProjectCmd.Flags().StringVar(&newProjectType, "type", "starter", "Type of project to create. Possible value: `starter` or `example`")
 	newProjectCmd.Flags().StringVar(&newProjectOut, "out", "", "Directory to create project in (required)")
 
 	util.ExpectNoError(newProjectCmd.MarkFlagFilename("out"))

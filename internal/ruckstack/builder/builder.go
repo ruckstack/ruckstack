@@ -6,7 +6,7 @@ import (
 	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/installer"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/service"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/project"
-	"log"
+	"github.com/ruckstack/ruckstack/internal/ruckstack/ui"
 	"net/url"
 	"os"
 	"os/user"
@@ -30,7 +30,7 @@ func Build(projectFile string, outDir string) error {
 	}
 
 	//add standard files to the installer
-	if err := installFile.AddAssetDir("internal/ruckstack/builder/resources/install-dir", "."); err != nil {
+	if err := installFile.AddResourceDir("install_dir", "."); err != nil {
 		return err
 	}
 	if err := installFile.AddDownloadedNestedFile(fmt.Sprintf("https://get.helm.sh/helm-v%s-linux-amd64.tar.gz", url.PathEscape(projectConfig.HelmVersion)), "linux-amd64/helm", "lib/helm"); err != nil {
@@ -99,7 +99,7 @@ func prepareBuildEnvironment(outDir string) error {
 	global.BuildEnvironment.WorkDir = filepath.Join(outDir, "work")
 	global.BuildEnvironment.CacheDir = filepath.Join(usr.HomeDir, ".ruckstack", "cache")
 
-	log.Printf("Cleaning out directory %s...", global.BuildEnvironment.OutDir)
+	ui.Printf("Cleaning out directory %s...", global.BuildEnvironment.OutDir)
 	if err := os.RemoveAll(global.BuildEnvironment.WorkDir); err != nil {
 		return err
 	}

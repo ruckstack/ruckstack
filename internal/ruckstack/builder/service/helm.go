@@ -1,11 +1,11 @@
 package service
 
 import (
-	"fmt"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/global"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/installer"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/helm"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/project"
+	"github.com/ruckstack/ruckstack/internal/ruckstack/ui"
 	"gopkg.in/yaml.v2"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
@@ -15,7 +15,6 @@ import (
 	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/kubectl/pkg/scheme"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,7 +27,7 @@ type HelmService struct {
 }
 
 func (service *HelmService) Build(app *installer.Installer) error {
-	log.Println("Service type: helm")
+	ui.Println("Service type: helm")
 
 	service.serviceWorkDir = filepath.Join(global.BuildEnvironment.WorkDir, service.ServiceConfig.Id)
 	if err := os.MkdirAll(service.serviceWorkDir, 0755); err != nil {
@@ -113,7 +112,7 @@ func (service *HelmService) saveDockerImages(loadedChart *chart.Chart, app *inst
 			decode := scheme.Codecs.UniversalDeserializer().Decode
 			obj, groupVersionKind, err := decode([]byte(data), nil, nil)
 			if err != nil {
-				fmt.Printf("Cannot parse %s: %s\n", filename, err)
+				ui.Printf("Cannot parse %s: %s\n", filename, err)
 				continue
 			}
 
@@ -135,7 +134,7 @@ func (service *HelmService) saveDockerImages(loadedChart *chart.Chart, app *inst
 
 			if podSpec != nil {
 				for _, container := range podSpec.Containers {
-					log.Printf("See ss image %s\n", container.Image)
+					ui.Printf("See ss image %s\n", container.Image)
 					if err := app.IncludeDockerImage(container.Image); err != nil {
 						return err
 					}

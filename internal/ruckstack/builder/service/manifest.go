@@ -3,7 +3,7 @@ package service
 import (
 	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/installer"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/project"
-	"log"
+	"github.com/ruckstack/ruckstack/internal/ruckstack/ui"
 	"path/filepath"
 )
 
@@ -14,7 +14,7 @@ type ManifestService struct {
 }
 
 func (service *ManifestService) Build(app *installer.Installer) error {
-	log.Println("Service type: manifest")
+	ui.Println("Service type: manifest")
 
 	fullManifestPath := filepath.Join(filepath.Dir(service.ServiceConfig.BaseDir), service.ServiceConfig.Manifest)
 

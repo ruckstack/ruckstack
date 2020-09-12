@@ -8,10 +8,10 @@ import (
 	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/global"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/installer"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/project"
+	"github.com/ruckstack/ruckstack/internal/ruckstack/ui"
 	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -27,7 +27,7 @@ type DockerfileService struct {
 }
 
 func (service *DockerfileService) Build(app *installer.Installer) error {
-	log.Println("Service type: dockerfile")
+	ui.Println("Service type: dockerfile")
 
 	if service.ServiceConfig.ServiceVersion == "" {
 		service.ServiceConfig.ServiceVersion = fmt.Sprintf("%x", md5.Sum([]byte(time.Now().String())))[0:6]
@@ -254,7 +254,7 @@ func (service *DockerfileService) buildChart() (string, error) {
 		return "", err
 	}
 
-	log.Printf("Creating %s...", chartFilePath)
+	ui.Printf("Creating %s...", chartFilePath)
 
 	gzipWriter := gzip.NewWriter(chartFile)
 	defer gzipWriter.Close()

@@ -6,20 +6,21 @@ import (
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/builder/global"
+	"github.com/ruckstack/ruckstack/internal/ruckstack/ui"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 )
 
 var validate = validator.New()
 
 func ExpectNoError(err error) {
 	if err != nil {
-		fmt.Printf("Unexpected error %s", err)
+		ui.Printf("Unexpected error %s", err)
 		//panic(err)
 		os.Exit(15)
 	}
@@ -42,11 +43,11 @@ func DownloadFile(url string) (string, error) {
 
 	_, err := os.Stat(savePath)
 	if err == nil {
-		log.Println(savePath + " already exists. Not re-downloading")
+		ui.Println(savePath + " already exists. Not re-downloading")
 		return savePath, nil
 	}
 
-	log.Println("Downloading " + url + "...")
+	ui.Println("Downloading " + url + "...")
 	resp, err := http.Get(url)
 	if err != nil {
 		return "", fmt.Errorf("cannot download %s: %s", url, err)
@@ -122,4 +123,132 @@ func ExtractFromGzip(gzipSource string, wantedFile string) (string, error) {
 	}
 
 	return savePath, nil
+}
+
+func CopyFile(source string, dest string) (err error) {
+	sourcefile, err := os.Open(source)
+	if err != nil {
+		return err
+	}
+
+	defer sourcefile.Close()
+
+	destfile, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+
+	defer destfile.Close()
+
+	_, err = io.Copy(destfile, sourcefile)
+	if err == nil {
+		sourceinfo, err := os.Stat(source)
+		if err != nil {
+			err = os.Chmod(dest, sourceinfo.Mode())
+		}
+
+	}
+
+	return
+}
+
+func CopyDir(source string, dest string) (err error) {
+
+	// get properties of source dir
+	sourceinfo, err := os.Stat(source)
+	if err != nil {
+		return err
+	}
+
+	// create dest dir
+
+	err = os.MkdirAll(dest, sourceinfo.Mode())
+	if err != nil {
+		return err
+	}
+
+	directory, _ := os.Open(source)
+
+	objects, err := directory.Readdir(-1)
+
+	for _, obj := range objects {
+
+		sourcefilepointer := source + "/" + obj.Name()
+
+		destinationfilepointer := dest + "/" + obj.Name()
+
+		if obj.IsDir() {
+			// create sub-directories - recursively
+			err = CopyDir(sourcefilepointer, destinationfilepointer)
+			if err != nil {
+				ui.Println(err)
+			}
+		} else {
+			// perform copy
+			err = CopyFile(sourcefilepointer, destinationfilepointer)
+			if err != nil {
+				ui.Println(err)
+			}
+		}
+
+	}
+	return
+}
+
+func GetRuckstackHome() string {
+	defaultHome := "/ruckstack"
+
+	ruckstackHome, err := os.Getwd()
+	if err != nil {
+		ui.Println(err)
+		return defaultHome
+	}
+	if strings.Contains(ruckstackHome, "github.com") {
+		for ruckstackHome != "/" {
+			if _, err := os.Stat(filepath.Join(ruckstackHome, "LICENSE")); os.IsNotExist(err) {
+				ruckstackHome = filepath.Dir(ruckstackHome)
+				continue
+			}
+			break
+		}
+
+		return ruckstackHome
+	} else {
+		ex, err := os.Executable()
+		if err != nil {
+			ui.Println(err)
+			return defaultHome
+		}
+
+		exPath := filepath.Dir(ex)
+		return filepath.Dir(exPath)
+	}
+
+}
+
+/**
+Returns the given path as a sub-path of the Ruckstack "tmp" dir
+*/
+func TempPath(pathInTmp ...string) string {
+	return filepath.Join(append([]string{GetRuckstackHome(), "tmp"}, pathInTmp...)...)
+}
+
+/**
+Check for a WRAPPED_* environment variable that was set by ruckstack wrapper and return that if it was set.
+Otherwise, return the nonWrappedValue
+*/
+func WrappedValue(name string, nonWrappedValue string) string {
+	env := os.Getenv("WRAPPED_" + strings.ToUpper(name))
+	if env == "" {
+		return nonWrappedValue
+	} else {
+		return env
+	}
+}
+
+/**
+Returns true if ruckstack is running via the launcher
+*/
+func IsRunningLauncher() bool {
+	return os.Getenv("RUCKSTACK_DOCKERIZED") == "true"
 }
