@@ -1,9 +1,7 @@
 /.idea
 /*.iml
-**/bindata.go
 /out
 /tmp
-dist/resources/new_project/example/out
 TODO.txt
 **/__debug_bin
 /workspace

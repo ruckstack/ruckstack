@@ -6,6 +6,10 @@ import (
 	"path/filepath"
 )
 
+/**
+Returns the full path to the given subpath of "resources" in ruckstackHome.
+Returns an error if the file does not exist
+*/
 func ResourcePath(path ...string) (string, error) {
 	ruckstackHome := util.GetRuckstackHome()
 
