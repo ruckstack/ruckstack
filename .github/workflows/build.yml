@@ -17,6 +17,13 @@ jobs:
         with:
           go-version: ^1.13
 
+      - uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
       - name: Checkout Code
         uses: actions/checkout@v2
 
@@ -24,7 +31,7 @@ jobs:
         run: bash BUILD.sh compile
 
       - name: Test
-        run: bash BUILD.sh test
+        run: bash ~/work/ruckstack/ruckstack/BUILD.sh test
         working-directory: ~/work/ruckstack/ruckstack
 
       - uses: actions/upload-artifact@v2
