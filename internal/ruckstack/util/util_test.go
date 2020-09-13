@@ -2,13 +2,12 @@ package util
 
 import (
 	"github.com/stretchr/testify/assert"
-	"strings"
 	"testing"
 )
 
 func TestGetRuckstackHome(t *testing.T) {
 	home := GetRuckstackHome()
-	assert.True(t, strings.HasSuffix(strings.ReplaceAll(home, "\\", "/"), "github.com/ruckstack/ruckstack"))
+	assert.Regexp(t, "github.com/ruckstack/ruckstack$", home)
 }
 
 func TestTemPath(t *testing.T) {
