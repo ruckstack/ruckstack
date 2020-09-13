@@ -31,8 +31,7 @@ jobs:
         run: bash BUILD.sh compile
 
       - name: Test
-        run: bash ~/work/ruckstack/ruckstack/BUILD.sh test
-        working-directory: ~/work/ruckstack/ruckstack
+        run: bash BUILD.sh test
 
       - uses: actions/upload-artifact@v2
         with:
