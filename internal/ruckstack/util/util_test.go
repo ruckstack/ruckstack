@@ -7,7 +7,8 @@ import (
 
 func TestGetRuckstackHome(t *testing.T) {
 	home := GetRuckstackHome()
-	assert.Regexp(t, "github.com/ruckstack/ruckstack$", home)
+	assert.NotEqual(t, "/", home)
+	assert.FileExists(t, home+"/LICENSE")
 }
 
 func TestTemPath(t *testing.T) {
