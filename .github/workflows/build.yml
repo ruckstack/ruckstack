@@ -54,5 +54,5 @@ jobs:
         with:
           file: out/image/Dockerfile
           context: out/image
-          registry: ghcr.io
-          tag_with_ref: true
+          push: true
+          tags: ghcr.io/ruckstack/ruckstack:${GITHUB_REF##*/}
