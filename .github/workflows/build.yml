@@ -17,12 +17,21 @@ jobs:
         with:
           go-version: ^1.13
 
-      - uses: actions/cache@v2
+      - name: Cache Go Modules
+        uses: actions/cache@v2
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
 
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -33,8 +42,17 @@ jobs:
       - name: Test
         run: bash BUILD.sh test
 
-      - uses: actions/upload-artifact@v2
+      - name: Save artifacts
+        uses: actions/upload-artifact@v2
         with:
           name: ruckstack-builders
           path: |
             ~/work/ruckstack/ruckstack/out/artifacts
+
+      - name: Docker Build and Push
+        uses: docker/build-push-action@v2
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ghcr.io
+          tag_with_ref: true
