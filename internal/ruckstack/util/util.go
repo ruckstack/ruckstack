@@ -16,7 +16,10 @@ import (
 	"strings"
 )
 
-var validate = validator.New()
+var (
+	validate      = validator.New()
+	ruckstackHome string
+)
 
 func ExpectNoError(err error) {
 	if err != nil {
@@ -196,33 +199,37 @@ func CopyDir(source string, dest string) (err error) {
 }
 
 func GetRuckstackHome() string {
+	if ruckstackHome != "" {
+		return ruckstackHome
+	}
+
 	defaultHome := "/ruckstack"
 
-	ruckstackHome, err := os.Getwd()
+	executable, err := os.Executable()
 	if err != nil {
-		ui.Println(err)
+		ui.Printf("Cannot determine executable. Using default home directory. Error: %s\n", err)
 		return defaultHome
 	}
-	if strings.Contains(ruckstackHome, "github.com") {
-		for ruckstackHome != "/" {
-			if _, err := os.Stat(filepath.Join(ruckstackHome, "LICENSE")); os.IsNotExist(err) {
-				ruckstackHome = filepath.Dir(ruckstackHome)
-				continue
-			}
-			break
-		}
-
-		return ruckstackHome
+	if executable == "ruckstack" {
+		ruckstackHome = filepath.Dir(executable)
 	} else {
-		ex, err := os.Executable()
+		ruckstackHome, err = os.Getwd()
+
 		if err != nil {
-			ui.Println(err)
+			ui.Printf("Cannot determine working directory. Using default home directory. Error: %s\n", err)
 			return defaultHome
 		}
-
-		exPath := filepath.Dir(ex)
-		return filepath.Dir(exPath)
 	}
+
+	for ruckstackHome != "/" {
+		if _, err := os.Stat(filepath.Join(ruckstackHome, "LICENSE")); os.IsNotExist(err) {
+			ruckstackHome = filepath.Dir(ruckstackHome)
+			continue
+		}
+		break
+	}
+
+	return ruckstackHome
 
 }
 
