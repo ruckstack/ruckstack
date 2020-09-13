@@ -31,7 +31,8 @@ jobs:
         fi
 
     - name: Build
-      run: ~/work/ruckstack/ruckstack/BUILD.sh
+      working-directory: ~/work/ruckstack/ruckstack/
+      run: ./BUILD.sh
       
     - uses: actions/upload-artifact@v2
       with:
