@@ -65,4 +65,4 @@ jobs:
           file: out/image/Dockerfile
           context: out/image
           push: true
-          tags: "ghcr.io/ruckstack/ruckstack:${github.ref}"
+          tags: ghcr.io/ruckstack/ruckstack:${{ github.ref }}
