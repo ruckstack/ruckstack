@@ -5,11 +5,16 @@ set -e
 ##Ideally this comes from $(out/linux/bin/ruckstack --version)
 VERSION=0.8.3
 
-build() {
-  echo "Building ruckstack ${VERSION}..."
+build_all() {
+  compile
+  test
+  build_docker
 
-  echo "Running tests..."
-  go test ./...
+  echo "Done"
+}
+
+compile() {
+  echo "Building ruckstack ${VERSION}..."
 
   echo "Compiling system-control..."
   (export GOOS=linux && go build -o out/image/system/system_control cmd/system_control/main.go)
@@ -31,13 +36,18 @@ build() {
   cp ./LICENSE out/image
   cp -r dist/* out/image
   chmod 755 out/image/bin/ruckstack
+}
 
-  echo "Building 'ruckstack:dev' docker image..."
+test() {
+  echo "Running tests..."
+  go test ./...
+}
+
+build_docker() {
+  echo "Building docker image..."
   mkdir -p out/artifacts/docker
   docker build -t ruckstack:latest -t ruckstack:v${VERSION} out/image
   docker save -o out/artifacts/docker/ruckstack-${VERSION}.tar ruckstack:latest
-
-  echo "Done"
 }
 
 clean() {
@@ -48,7 +58,7 @@ clean() {
 
 if [ $# -eq 0 ]
 then
-    build
+    build_all
 else
     "$@"
 fi

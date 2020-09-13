@@ -21,7 +21,11 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Build
-        run: bash BUILD.sh
+        run: bash BUILD.sh compile
+
+      - name: Test
+        run: bash BUILD.sh test
+        working-directory: ~/work/ruckstack/ruckstack
 
       - uses: actions/upload-artifact@v2
         with:
