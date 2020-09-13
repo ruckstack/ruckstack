@@ -32,7 +32,7 @@ jobs:
 
     - name: Build
       working-directory: ~/work/ruckstack/ruckstack/
-      run: ./BUILD.sh
+      run: ~/work/ruckstack/ruckstack/BUILD.sh
       
     - uses: actions/upload-artifact@v2
       with:
