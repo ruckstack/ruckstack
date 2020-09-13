@@ -20,10 +20,8 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
-      - run: du -d 4
-
       - name: Build
-        run: BUILD.sh
+        run: bash BUILD.sh
 
       - uses: actions/upload-artifact@v2
         with:
