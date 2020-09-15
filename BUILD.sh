@@ -46,8 +46,7 @@ test() {
 build_docker() {
   echo "Building docker image..."
   mkdir -p out/artifacts/docker
-  docker build -t ruckstack:latest -t ruckstack:v${VERSION} out/image
-  docker save -o out/artifacts/docker/ruckstack-${VERSION}.tar ruckstack:latest
+  docker build -t ghcr.io/ruckstack/ruckstack:local out/image
 }
 
 clean() {

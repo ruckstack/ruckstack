@@ -23,7 +23,7 @@ func init() {
 		},
 	}
 
-	newProjectCmd.Flags().StringVar(&newProjectType, "type", "starter", "Type of project to create. Possible value: `starter` or `example`")
+	newProjectCmd.Flags().StringVar(&newProjectType, "type", "empty", "Type of project to create. Possible values: empty or example")
 	newProjectCmd.Flags().StringVar(&newProjectOut, "out", "", "Directory to create project in (required)")
 
 	util.ExpectNoError(newProjectCmd.MarkFlagFilename("out"))

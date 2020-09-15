@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
+	"github.com/ruckstack/ruckstack/internal/ruckstack/ui"
+	"io"
 	"log"
 	"os"
 	"os/user"
@@ -26,18 +29,16 @@ func main() {
 	}
 	ctx := context.Background()
 
-	cli, err := client.NewClientWithOpts(client.FromEnv)
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		exitWithError(fmt.Errorf("cannot create docker client: %s", err))
 	}
-
-	cli.NegotiateAPIVersion(ctx)
 
 	parsedArgs, updatedArgs, env, mountPoints := processArguments(os.Args[1:])
 
 	env = append(env, "RUCKSTACK_DOCKERIZED=true")
 
-	useVersion := parsedArgs["--use-version"]
+	useVersion := parsedArgs["--launch-version"]
 	if useVersion == "" {
 		useVersion = "latest"
 	}
@@ -46,12 +47,17 @@ func main() {
 		useVersion = "v" + useVersion
 	}
 
+	imageName := parsedArgs["--launch-image"]
+	if imageName == "" {
+		imageName = "ghcr.io/ruckstack/ruckstack"
+	}
+
 	_, verbose := parsedArgs["--verbose"]
 	if verbose {
 		log.SetFlags(log.Ldate | log.Ltime)
 	}
 
-	image := fmt.Sprintf("ruckstack:%s", useVersion)
+	image := fmt.Sprintf("%s:%s", imageName, useVersion)
 
 	if verbose {
 		log.Printf("LAUNCHER: Image: %s", image)
@@ -61,6 +67,27 @@ func main() {
 		for _, mountPt := range mountPoints {
 			log.Printf("LAUNCHER: Mount Point %s -> %s\n", mountPt.Source, mountPt.Target)
 		}
+	}
+
+	filters := filters.NewArgs()
+	filters.Add("reference", image)
+	imageList, err := cli.ImageList(ctx, types.ImageListOptions{
+		Filters: filters,
+	})
+	if err != nil {
+		exitWithError(err)
+	}
+
+	if len(imageList) == 0 {
+		ui.VPrintf("No local images found for %s. Pulling...", image)
+
+		reader, err := cli.ImagePull(ctx, image, types.ImagePullOptions{})
+		if err != nil {
+			exitWithError(err)
+		}
+		io.Copy(os.Stdout, reader)
+	} else {
+		ui.VPrintf("Image %s is already in the local image cache. No need to pull", image)
 	}
 
 	resp, err := cli.ContainerCreate(ctx,

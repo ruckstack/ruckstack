@@ -17,13 +17,15 @@ var rootCmd = &cobra.Command{
 
 var verboseMode bool
 var useVersion string
+var imageName string
 
 func init() {
 	cobra.OnInitialize(initConfig)
 
 	//document and/or don't fail on arguments handled by the launcher
 	rootCmd.Flags().BoolVar(&verboseMode, "verbose", false, "Enable more detailed output")
-	rootCmd.Flags().StringVar(&useVersion, "use-version", "latest", "Specify the version of the Ruckstack cli to use")
+	rootCmd.Flags().StringVar(&useVersion, "launch-version", "latest", "Specify the version of the Ruckstack cli to use")
+	rootCmd.Flags().StringVar(&imageName, "launch-image", "ruckstack", "Specify the Ruckstack cli image to use")
 }
 
 func initConfig() {
@@ -33,7 +35,11 @@ func initConfig() {
 
 	if !util.IsRunningLauncher() {
 		if useVersion != "latest" {
-			ui.Println("WARNING: --use-version is only used when running the Ruckstack launcher, not when running the container directly")
+			ui.Println("WARNING: --launch-version is only used when running the Ruckstack launcher. It is ignored when running the container directly")
+		}
+
+		if imageName != "ruckstack" {
+			ui.Println("WARNING: --launch-image is only used when running the Ruckstack launcher. It is ignored when running the container directly")
 		}
 	}
 }

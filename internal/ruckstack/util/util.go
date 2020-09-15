@@ -205,6 +205,14 @@ func GetRuckstackHome() string {
 
 	defaultHome := "/ruckstack"
 
+	ruckstackHome = defaultHome
+	_, err := os.Stat(ruckstackHome)
+	if err == nil {
+		ui.VPrintf("Ruckstack home: %s\n", ruckstackHome)
+		return ruckstackHome
+	}
+
+	//No /ruckstack directory. Figure out the home directory
 	executable, err := os.Executable()
 	if err != nil {
 		ui.Printf("Cannot determine executable. Using default home directory. Error: %s\n", err)
@@ -229,6 +237,12 @@ func GetRuckstackHome() string {
 		break
 	}
 
+	if ruckstackHome == "/" {
+		ui.VPrintf("Cannot determine Ruckstack home. Using default")
+		ruckstackHome = defaultHome
+	}
+
+	ui.VPrintf("Ruckstack home: %s\n", ruckstackHome)
 	return ruckstackHome
 
 }

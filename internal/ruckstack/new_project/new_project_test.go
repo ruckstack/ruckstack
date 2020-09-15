@@ -25,7 +25,7 @@ func TestNewProject_starter(t *testing.T) {
 
 	assert.Nil(t, os.RemoveAll(outDir))
 
-	err := NewProject(outDir, "starter")
+	err := NewProject(outDir, "empty")
 	assert.Nil(t, err)
 	assert.FileExists(t, filepath.Join(outDir, "ruckstack.conf"))
 	assert.NoFileExists(t, filepath.Join(outDir, "cart"))
@@ -37,5 +37,5 @@ func TestNewProject_invalid(t *testing.T) {
 	assert.Nil(t, os.RemoveAll(outDir))
 
 	err := NewProject(outDir, "invalid")
-	assert.Equal(t, err.Error(), "unknown template: 'invalid'. Available templates: example, starter")
+	assert.Equal(t, err.Error(), "unknown template: 'invalid'. Available templates: empty, example")
 }

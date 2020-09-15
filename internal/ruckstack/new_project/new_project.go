@@ -12,7 +12,7 @@ import (
 )
 
 func NewProject(outputDirectory string, projectType string) error {
-	sourceDir, err := resources.ResourcePath("new_project", projectType)
+	sourceDir, err := resources.ResourcePath("new_project/" + projectType)
 	if err != nil {
 		if os.IsNotExist(err) {
 			newProjectDir, _ := resources.ResourcePath("new_project")

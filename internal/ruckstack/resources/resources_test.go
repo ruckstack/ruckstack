@@ -12,7 +12,7 @@ func TestGetResourcePath(t *testing.T) {
 	assert.DirExists(t, path)
 	assert.Regexp(t, ".*/resources/.*", path, "resources")
 
-	path, err = ResourcePath("new_project", "example", "ruckstack.conf")
+	path, err = ResourcePath("new_project/example/ruckstack.conf")
 	assert.Nil(t, err)
 	assert.FileExists(t, path)
 
