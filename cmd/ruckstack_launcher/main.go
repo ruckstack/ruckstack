@@ -8,10 +8,10 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/stdcopy"
+	"github.com/docker/docker/pkg/term"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/ui"
-	"io"
-	"log"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -21,22 +21,29 @@ import (
 
 func main() {
 
-	log.SetFlags(0)
+	containerConfig := &container.Config{
+		Tty: false,
+	}
+
+	hostConfig := &container.HostConfig{}
 
 	currentUser, err := user.Current()
 	if err != nil {
 		exitWithError(fmt.Errorf("cannot read current user: %s", err))
 	}
-	ctx := context.Background()
-
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		exitWithError(fmt.Errorf("cannot create docker client: %s", err))
-	}
+	containerConfig.User = fmt.Sprintf("%s:%s", currentUser.Uid, currentUser.Gid)
 
 	parsedArgs, updatedArgs, env, mountPoints := processArguments(os.Args[1:])
+	containerConfig.Cmd = updatedArgs
+	containerConfig.Env = env
+	hostConfig.Mounts = mountPoints
 
-	env = append(env, "RUCKSTACK_DOCKERIZED=true")
+	_, verbose := parsedArgs["--verbose"]
+	if verbose {
+		ui.SetVerbose(verbose)
+	}
+
+	containerConfig.Env = append(containerConfig.Env, "RUCKSTACK_DOCKERIZED=true")
 
 	useVersion := parsedArgs["--launch-version"]
 	if useVersion == "" {
@@ -52,55 +59,51 @@ func main() {
 		imageName = "ghcr.io/ruckstack/ruckstack"
 	}
 
-	_, verbose := parsedArgs["--verbose"]
-	if verbose {
-		log.SetFlags(log.Ldate | log.Ltime)
+	_, forcePull := parsedArgs["--launch-force-pull"]
+
+	containerConfig.Image = fmt.Sprintf("%s:%s", imageName, useVersion)
+
+	ui.VPrintf("LAUNCHER: Force Pull: %t", forcePull)
+	ui.VPrintf("LAUNCHER: Image: %s", containerConfig.Image)
+	ui.VPrintf("LAUNCHER: User: %s", containerConfig.User)
+	ui.VPrintf("LAUNCHER: Command: %s", containerConfig.Cmd)
+	ui.VPrintf("LAUNCHER: Environment:\n    %s", strings.Join(env, "\n    "))
+
+	for _, mountPt := range hostConfig.Mounts {
+		ui.VPrintf("LAUNCHER: Mount Point %s -> %s\n", mountPt.Source, mountPt.Target)
 	}
 
-	image := fmt.Sprintf("%s:%s", imageName, useVersion)
+	ctx := context.Background()
 
-	if verbose {
-		log.Printf("LAUNCHER: Image: %s", image)
-		log.Printf("LAUNCHER: Command: %s", updatedArgs)
-		log.Printf("LAUNCHER: Environment:\n    %s", strings.Join(env, "\n    "))
-
-		for _, mountPt := range mountPoints {
-			log.Printf("LAUNCHER: Mount Point %s -> %s\n", mountPt.Source, mountPt.Target)
-		}
-	}
-
-	filters := filters.NewArgs()
-	filters.Add("reference", image)
-	imageList, err := cli.ImageList(ctx, types.ImageListOptions{
-		Filters: filters,
-	})
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		exitWithError(err)
+		exitWithError(fmt.Errorf("cannot create docker client: %s", err))
 	}
 
-	if len(imageList) == 0 {
-		ui.VPrintf("No local images found for %s. Pulling...", image)
-
-		reader, err := cli.ImagePull(ctx, image, types.ImagePullOptions{})
+	if forcePull {
+		pullImage(cli, ctx, containerConfig)
+	} else {
+		listFilters := filters.NewArgs()
+		listFilters.Add("reference", containerConfig.Image)
+		imageList, err := cli.ImageList(ctx, types.ImageListOptions{
+			Filters: listFilters,
+		})
 		if err != nil {
 			exitWithError(err)
 		}
-		io.Copy(os.Stdout, reader)
-	} else {
-		ui.VPrintf("Image %s is already in the local image cache. No need to pull", image)
+
+		if len(imageList) == 0 {
+			ui.VPrintf("No local images found for %s", containerConfig.Image)
+
+			pullImage(cli, ctx, containerConfig)
+		} else {
+			ui.VPrintf("Image %s is already in the local image cache. No need to pull", containerConfig.Image)
+		}
 	}
 
 	resp, err := cli.ContainerCreate(ctx,
-		&container.Config{
-			Image: image,
-			Cmd:   updatedArgs,
-			User:  fmt.Sprintf("%s:%s", currentUser.Uid, currentUser.Gid),
-			Tty:   false,
-			Env:   env,
-		},
-		&container.HostConfig{
-			Mounts: mountPoints,
-		},
+		containerConfig,
+		hostConfig,
 		nil, "ruckstack-run")
 	if err != nil {
 		exitWithError(fmt.Errorf("cannot create CLI container: %s", err))
@@ -130,8 +133,25 @@ func main() {
 	stdcopy.StdCopy(os.Stdout, os.Stderr, out)
 }
 
+func pullImage(cli *client.Client, ctx context.Context, containerConfig *container.Config) {
+	ui.VPrintf("Pulling %s...", containerConfig.Image)
+
+	reader, err := cli.ImagePull(ctx, containerConfig.Image, types.ImagePullOptions{})
+	if err != nil {
+		if strings.Contains(err.Error(), "manifest unknown") {
+			exitWithError(fmt.Errorf("Cannot pull image %s. May be an invalid version?", containerConfig.Image))
+		} else {
+			exitWithError(err)
+		}
+	}
+	defer reader.Close()
+
+	termFd, isTerm := term.GetFdInfo(os.Stdout)
+	_ = jsonmessage.DisplayJSONMessagesStream(reader, os.Stdout, termFd, isTerm, nil)
+}
+
 func exitWithError(err error) {
-	log.Println("LAUNCHER:", err)
+	ui.Println("LAUNCHER:", err)
 	os.Exit(-1)
 }
 

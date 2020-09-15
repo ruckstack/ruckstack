@@ -18,14 +18,16 @@ var rootCmd = &cobra.Command{
 var verboseMode bool
 var useVersion string
 var imageName string
+var forcePull bool
 
 func init() {
 	cobra.OnInitialize(initConfig)
 
 	//document and/or don't fail on arguments handled by the launcher
 	rootCmd.Flags().BoolVar(&verboseMode, "verbose", false, "Enable more detailed output")
-	rootCmd.Flags().StringVar(&useVersion, "launch-version", "latest", "Specify the version of the Ruckstack cli to use")
-	rootCmd.Flags().StringVar(&imageName, "launch-image", "ruckstack", "Specify the Ruckstack cli image to use")
+	rootCmd.Flags().StringVar(&useVersion, "launch-version", "latest", "Specify the version of the Ruckstack CLI to launch")
+	rootCmd.Flags().StringVar(&imageName, "launch-image", "ruckstack", "Specify the Ruckstack CLI image to launch")
+	rootCmd.Flags().BoolVar(&forcePull, "launch-force-pull", false, "Force the Ruckstack CLI to re-download the image to launch")
 }
 
 func initConfig() {
