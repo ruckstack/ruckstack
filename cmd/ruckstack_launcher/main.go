@@ -13,7 +13,6 @@ import (
 	"github.com/docker/docker/pkg/term"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/ui"
 	"os"
-	"os/user"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -27,12 +26,6 @@ func main() {
 
 	hostConfig := &container.HostConfig{}
 
-	currentUser, err := user.Current()
-	if err != nil {
-		exitWithError(fmt.Errorf("cannot read current user: %s", err))
-	}
-	containerConfig.User = fmt.Sprintf("%s:%s", currentUser.Uid, currentUser.Gid)
-
 	parsedArgs, updatedArgs, env, mountPoints := processArguments(os.Args[1:])
 	containerConfig.Cmd = updatedArgs
 	containerConfig.Env = env
@@ -44,6 +37,11 @@ func main() {
 	}
 
 	containerConfig.Env = append(containerConfig.Env, "RUCKSTACK_DOCKERIZED=true")
+
+	launchUser := parsedArgs["--launch-user"]
+	if launchUser != "" {
+		containerConfig.User = launchUser
+	}
 
 	useVersion := parsedArgs["--launch-version"]
 	if useVersion == "" {
@@ -97,7 +95,7 @@ func main() {
 
 			pullImage(cli, ctx, containerConfig)
 		} else {
-			ui.VPrintf("Image %s is already in the local image cache. No need to pull", containerConfig.Image)
+			ui.VPrintf("Not pulling image %s: already in local image cache", containerConfig.Image)
 		}
 	}
 
@@ -151,7 +149,12 @@ func pullImage(cli *client.Client, ctx context.Context, containerConfig *contain
 }
 
 func exitWithError(err error) {
-	ui.Println("LAUNCHER:", err)
+	if strings.Contains(err.Error(), "Cannot connect to the Docker daemon") {
+		ui.VPrintln("LAUNCHER:", err.Error())
+		ui.Println("Error launching Ruckstack: Ruckstack requires Docker to run. Please install and/or start the Docker daemon process and re-run Ruckstack")
+	} else {
+		ui.Println("Error launching Ruckstack:", err)
+	}
 	os.Exit(-1)
 }
 

@@ -4,6 +4,8 @@ import (
 	"github.com/ruckstack/ruckstack/internal/ruckstack/ui"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/util"
 	"github.com/spf13/cobra"
+	"os"
+	"strings"
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -16,18 +18,20 @@ var rootCmd = &cobra.Command{
 }
 
 var verboseMode bool
-var useVersion string
-var imageName string
-var forcePull bool
+var launchVersion string
+var launchImage string
+var launchUser string
+var launchForcePull bool
 
 func init() {
 	cobra.OnInitialize(initConfig)
 
 	//document and/or don't fail on arguments handled by the launcher
 	rootCmd.Flags().BoolVar(&verboseMode, "verbose", false, "Enable more detailed output")
-	rootCmd.Flags().StringVar(&useVersion, "launch-version", "latest", "Specify the version of the Ruckstack CLI to launch")
-	rootCmd.Flags().StringVar(&imageName, "launch-image", "ruckstack", "Specify the Ruckstack CLI image to launch")
-	rootCmd.Flags().BoolVar(&forcePull, "launch-force-pull", false, "Force the Ruckstack CLI to re-download the image to launch")
+	rootCmd.Flags().StringVar(&launchVersion, "launch-version", "latest", "Specify the version of the Ruckstack CLI to launch")
+	rootCmd.Flags().StringVar(&launchImage, "launch-image", "ruckstack", "Specify the Ruckstack CLI image to launch")
+	rootCmd.Flags().StringVar(&launchUser, "launch-user", "", "Specify `user:group` to run the image under")
+	rootCmd.Flags().BoolVar(&launchForcePull, "launch-force-pull", false, "Force the Ruckstack CLI to re-download the image to launch")
 }
 
 func initConfig() {
@@ -36,12 +40,10 @@ func initConfig() {
 	}
 
 	if !util.IsRunningLauncher() {
-		if useVersion != "latest" {
-			ui.Println("WARNING: --launch-version is only used when running the Ruckstack launcher. It is ignored when running the container directly")
-		}
-
-		if imageName != "ruckstack" {
-			ui.Println("WARNING: --launch-image is only used when running the Ruckstack launcher. It is ignored when running the container directly")
+		for _, arg := range os.Args {
+			if strings.HasPrefix(arg, "--launch-") {
+				ui.Printf("WARNING: %s is only used when running the Ruckstack launcher. It is ignored when running the container directly", arg)
+			}
 		}
 	}
 }
