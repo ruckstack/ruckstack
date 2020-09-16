@@ -45,7 +45,7 @@ jobs:
       - name: Save artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: ruckstack-${{ format(github.head_ref, 'refs/heads/', '') }}
+          name: ruckstack-${{ format(github.head_ref, 'refs/heads/', '') }}.zip
           path: |
             ~/work/ruckstack/ruckstack/out/artifacts
 

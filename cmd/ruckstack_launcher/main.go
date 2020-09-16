@@ -132,7 +132,7 @@ func main() {
 }
 
 func pullImage(cli *client.Client, ctx context.Context, containerConfig *container.Config) {
-	ui.VPrintf("Pulling %s...", containerConfig.Image)
+	ui.VPrintf("Downloading Ruckstack image...", containerConfig.Image)
 
 	reader, err := cli.ImagePull(ctx, containerConfig.Image, types.ImagePullOptions{})
 	if err != nil {

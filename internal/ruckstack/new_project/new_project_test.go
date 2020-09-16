@@ -1,6 +1,8 @@
 package new_project
 
 import (
+	"bytes"
+	"github.com/ruckstack/ruckstack/internal/ruckstack/ui"
 	"github.com/ruckstack/ruckstack/internal/ruckstack/util"
 	"github.com/stretchr/testify/assert"
 	"os"
@@ -9,6 +11,10 @@ import (
 )
 
 func TestNewProject_example(t *testing.T) {
+	output := new(bytes.Buffer)
+	ui.SetOutput(output)
+	defer ui.SetOutput(os.Stdout)
+
 	outDir := util.TempPath("test_new_example_project")
 
 	assert.Nil(t, os.RemoveAll(outDir))
@@ -18,6 +24,8 @@ func TestNewProject_example(t *testing.T) {
 	assert.FileExists(t, filepath.Join(outDir, "ruckstack.conf"))
 	assert.FileExists(t, filepath.Join(outDir, "cart", "Dockerfile"))
 	assert.FileExists(t, filepath.Join(outDir, "homepage", "src", "index.jsp"))
+
+	assert.Contains(t, output.String(), "Created example project in")
 }
 
 func TestNewProject_starter(t *testing.T) {
