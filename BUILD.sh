@@ -17,25 +17,25 @@ compile() {
   echo "Building ruckstack ${VERSION}..."
 
   echo "Compiling system-control..."
-  (export GOOS=linux && go build -o out/image/system/system_control system_control/cmd/main.go)
+  (export GOOS=linux && go build -o out/builder_image/system/system_control server/system_control/cmd/main.go)
 
   echo "Compiling installer..."
-  (export GOOS=linux && go build -o out/image/system/installer installer/cmd/main.go)
+  (export GOOS=linux && go build -o out/builder_image/system/installer server/installer/cmd/main.go)
 
   echo "Compiling builder..."
-  (export GOOS=linux && export CGO_ENABLED=0 && go build -o out/image/bin/ruckstack builder/cmd/main.go)
+  (export GOOS=linux && export CGO_ENABLED=0 && go build -o out/builder_image/bin/ruckstack builder/cli/cmd/main.go)
 
   echo "Compiling builder launcher..."
-  (export GOOS=linux && go build -o out/artifacts/linux/ruckstack launcher/cmd/main.go)
-  (export GOOS=windows && go build -o out/artifacts/win/ruckstack.exe launcher/cmd/main.go)
-  (export GOOS=darwin && go build -o out/artifacts/mac/ruckstack launcher/cmd/main.go)
+  (export GOOS=linux && go build -o out/artifacts/linux/ruckstack builder/launcher/cmd/main.go)
+  (export GOOS=windows && go build -o out/artifacts/win/ruckstack.exe builder/launcher/cmd/main.go)
+  (export GOOS=darwin && go build -o out/artifacts/mac/ruckstack builder/launcher/cmd/main.go)
   chmod 755 out/artifacts/linux/ruckstack
   chmod 755 out/artifacts/mac/ruckstack
 
   echo "Creating ruckstack distribution..."
-  cp ./LICENSE out/image
-  cp -r builder/home/* out/image
-  chmod 755 out/image/bin/ruckstack
+  cp ./LICENSE out/builder_image
+  cp -r builder/cli/home/* out/builder_image
+  chmod 755 out/builder_image/bin/ruckstack
 }
 
 test() {
@@ -46,7 +46,7 @@ test() {
 build_docker() {
   echo "Building docker image..."
   mkdir -p out/artifacts/docker
-  docker build -t ghcr.io/ruckstack/ruckstack:local out/image
+  docker build -t ghcr.io/ruckstack/ruckstack:local out/builder_image
 }
 
 clean() {
