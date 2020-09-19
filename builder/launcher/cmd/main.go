@@ -18,6 +18,11 @@ import (
 	"strings"
 )
 
+var (
+	//controls if project/out/etc. directories are auto-crated. Purely for testing purposes.
+	autoMkDirs = true
+)
+
 func main() {
 
 	containerConfig := &container.Config{
@@ -149,13 +154,15 @@ func pullImage(cli *client.Client, ctx context.Context, containerConfig *contain
 }
 
 func exitWithError(err error) {
+	errorMessage := fmt.Sprintf("Error launching Ruckstack: %s", err)
+
 	if strings.Contains(err.Error(), "Cannot connect to the Docker daemon") {
 		ui.VPrintln("LAUNCHER:", err.Error())
-		ui.Println("Error launching Ruckstack: Ruckstack requires Docker to run. Please install and/or start the Docker daemon process and re-run Ruckstack")
+		errorMessage = "Error launching Ruckstack: Ruckstack requires Docker to run. Please install and/or start the Docker daemon process and re-run Ruckstack"
 	} else {
-		ui.Println("Error launching Ruckstack:", err)
+		errorMessage = "Error launching Ruckstack:" + err.Error()
 	}
-	os.Exit(-1)
+	ui.Fatal(errorMessage)
 }
 
 /**
@@ -202,9 +209,11 @@ func processArguments(originalArgs []string) (map[string]string, []string, []str
 
 			sourcePath, _ := filepath.Abs(originalArgs[i])
 
-			err = os.MkdirAll(sourcePath, 0755)
-			if err != nil {
-				exitWithError(fmt.Errorf("cannot create directory %s: %s", sourcePath, err))
+			if autoMkDirs {
+				err = os.MkdirAll(sourcePath, 0755)
+				if err != nil {
+					exitWithError(fmt.Errorf("cannot create directory %s: %s", sourcePath, err))
+				}
 			}
 			mountPoints = append(mountPoints, mount.Mount{
 				Type:     mount.TypeBind,
@@ -224,9 +233,11 @@ func processArguments(originalArgs []string) (map[string]string, []string, []str
 
 			sourcePath, _ := filepath.Abs(originalArgs[i])
 
-			err = os.MkdirAll(sourcePath, 0755)
-			if err != nil {
-				exitWithError(fmt.Errorf("cannot create directory %s: %s", sourcePath, err))
+			if autoMkDirs {
+				err = os.MkdirAll(sourcePath, 0755)
+				if err != nil {
+					exitWithError(fmt.Errorf("cannot create directory %s: %s", sourcePath, err))
+				}
 			}
 			mountPoints = append(mountPoints, mount.Mount{
 				Type:     mount.TypeBind,

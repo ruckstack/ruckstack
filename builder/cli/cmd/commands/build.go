@@ -2,7 +2,6 @@ package commands
 
 import (
 	"github.com/ruckstack/ruckstack/builder/cli/internal/builder"
-	"github.com/ruckstack/ruckstack/builder/cli/internal/helm"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/util"
 	"github.com/spf13/cobra"
 )
@@ -17,10 +16,6 @@ func init() {
 		Long:  `Builds your Ruckstack project into an installable archive`,
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := helm.Setup(); err != nil {
-				return err
-			}
-
 			return builder.Build(project, out)
 		},
 	}

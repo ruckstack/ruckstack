@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"runtime/debug"
 )
 
 var (
@@ -60,4 +61,25 @@ func VPrintf(format string, a ...interface{}) {
 	if verbose {
 		Printf(format, a...)
 	}
+}
+
+/**
+Prints the message and exits with an error
+*/
+func Fatal(v ...interface{}) {
+	if verbose {
+		debug.PrintStack()
+	}
+
+	logger.Fatal(v...)
+}
+
+/**
+Prints the message and exits with an error
+*/
+func Fatalf(format string, a ...interface{}) {
+	if verbose {
+		debug.PrintStack()
+	}
+	logger.Fatalf(format, a...)
 }

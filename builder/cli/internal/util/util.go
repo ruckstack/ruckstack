@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/builder/global"
+	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"io"
 	"io/ioutil"
@@ -22,9 +23,7 @@ var (
 
 func ExpectNoError(err error) {
 	if err != nil {
-		ui.Printf("Unexpected error %s", err)
-		//panic(err)
-		os.Exit(15)
+		ui.Fatalf("Unexpected error %s", err)
 	}
 }
 
@@ -36,7 +35,7 @@ func DownloadFile(url string) (string, error) {
 
 	cacheKey := regexp.MustCompile(`https?://.+?/`).ReplaceAllString(url, "")
 
-	savePath := filepath.Join(global.BuildEnvironment.CacheDir, cacheKey)
+	savePath := environment.CachePath(cacheKey)
 
 	saveDir, _ := filepath.Split(savePath)
 	if err := os.MkdirAll(saveDir, 0755); err != nil {

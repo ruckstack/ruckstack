@@ -7,8 +7,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/builder/global"
+	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/project"
-	"github.com/ruckstack/ruckstack/builder/cli/internal/resources"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/util"
 	"github.com/ruckstack/ruckstack/common/config"
 	"github.com/ruckstack/ruckstack/common/ui"
@@ -81,7 +81,7 @@ func NewInstaller(projectConfig *project.ProjectConfig) (*Installer, error) {
 	installerPath := path.Join(global.BuildEnvironment.OutDir, installer.filename)
 	ui.Printf("Creating %s...", installerPath)
 
-	resourcePath, err := resources.ResourcePath("system/installer")
+	resourcePath, err := environment.ResourcePath("system/installer")
 	if err != nil {
 		return nil, err
 	}
@@ -237,7 +237,7 @@ func (installer *Installer) installerFileMode(targetPath string) int64 {
 }
 
 func (installer *Installer) AddAsset(assetPath string, targetPath string) error {
-	resourcePath, err := resources.ResourcePath(assetPath)
+	resourcePath, err := environment.ResourcePath(assetPath)
 	if err != nil {
 		return err
 	}

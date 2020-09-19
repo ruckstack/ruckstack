@@ -2,6 +2,7 @@
 /*.iml
 /out
 /tmp
+/cache
 TODO.txt
 **/__debug_bin
 /workspace

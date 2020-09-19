@@ -9,7 +9,6 @@ import (
 	"github.com/ruckstack/ruckstack/common/ui"
 	"net/url"
 	"os"
-	"os/user"
 	"path/filepath"
 )
 
@@ -90,21 +89,15 @@ func Build(projectFile string, outDir string) error {
 Configures the global BuildEnvironment data and creates/cleans directories as needed.
 */
 func prepareBuildEnvironment(outDir string) error {
-	usr, err := user.Current()
-	if err != nil {
-		return err
-	}
-
 	global.BuildEnvironment.OutDir = outDir
 	global.BuildEnvironment.WorkDir = filepath.Join(outDir, "work")
-	global.BuildEnvironment.CacheDir = filepath.Join(usr.HomeDir, ".ruckstack", "cache")
 
 	ui.Printf("Cleaning out directory %s...", global.BuildEnvironment.OutDir)
 	if err := os.RemoveAll(global.BuildEnvironment.WorkDir); err != nil {
 		return err
 	}
 
-	for _, dir := range []string{global.BuildEnvironment.WorkDir, global.BuildEnvironment.CacheDir} {
+	for _, dir := range []string{global.BuildEnvironment.WorkDir} {
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			return err
 		}

@@ -9,7 +9,4 @@ type buildEnvironment struct {
 
 	/** Per-project working directory */
 	WorkDir string
-
-	/** Global/cross-project cache directory */
-	CacheDir string
 }

@@ -34,7 +34,7 @@ compile() {
 
   echo "Creating ruckstack distribution..."
   cp ./LICENSE out/builder_image
-  cp -r builder/cli/home/* out/builder_image
+  cp -r builder/cli/install_root/* out/builder_image
   chmod 755 out/builder_image/bin/ruckstack
 }
 

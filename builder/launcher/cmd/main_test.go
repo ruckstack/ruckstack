@@ -1,14 +1,14 @@
 package main
 
 import (
-	"github.com/ruckstack/ruckstack/builder/internal/environment"
 	"gotest.tools/assert"
 	"testing"
 )
 
 func Test_processArguments(t *testing.T) {
-	pathToOut := environment.TempPath("path/to/out")
-	pathToProject := environment.TempPath("path/to/project")
+	pathToOut := "/path/to/out"
+	pathToProject := "/path/to/project"
+	autoMkDirs = false
 
 	tests := []struct {
 		name       string

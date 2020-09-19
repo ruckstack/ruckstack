@@ -23,9 +23,6 @@ func initReIndex(parent *cobra.Command) {
 		Use:   "re-index",
 		Short: "Refreshes list of available helm charts",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := helm.Setup(); err != nil {
-				return err
-			}
 			if err := helm.ReIndex(); err != nil {
 				return err
 			}
@@ -45,9 +42,6 @@ func initSearch(parent *cobra.Command) {
 		Use:   "search",
 		Short: "Simple Helm search",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := helm.Setup(); err != nil {
-				return err
-			}
 			return helm.Search(chartRepo, chartName)
 		},
 	}

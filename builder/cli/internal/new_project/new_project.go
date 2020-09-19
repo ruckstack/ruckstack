@@ -2,7 +2,7 @@ package new_project
 
 import (
 	"fmt"
-	"github.com/ruckstack/ruckstack/builder/cli/internal/resources"
+	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/util"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"io/ioutil"
@@ -11,10 +11,10 @@ import (
 )
 
 func NewProject(outputDirectory string, projectType string) error {
-	sourceDir, err := resources.ResourcePath("new_project/" + projectType)
+	sourceDir, err := environment.ResourcePath("new_project/" + projectType)
 	if err != nil {
 		if os.IsNotExist(err) {
-			newProjectDir, _ := resources.ResourcePath("new_project")
+			newProjectDir, _ := environment.ResourcePath("new_project")
 			projectTypes, _ := ioutil.ReadDir(newProjectDir)
 			projectTypeNames := make([]string, len(projectTypes))
 
