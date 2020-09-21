@@ -2,7 +2,7 @@ package commands
 
 import (
 	"github.com/ruckstack/ruckstack/builder/cli/internal/helm"
-	"github.com/ruckstack/ruckstack/builder/cli/internal/util"
+	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -46,10 +46,10 @@ func initSearch(parent *cobra.Command) {
 		},
 	}
 
-	cmd.Flags().StringVar(&chartName, "chart", "", "Chart to search (required)")
+	cmd.Flags().StringVar(&chartName, "chart", "", "Chart to search")
 	cmd.Flags().StringVar(&chartRepo, "repo", "stable", "Chart repository to search. Defaults to 'stable'")
 
-	util.ExpectNoError(cmd.MarkFlagRequired("chart"))
+	ui.MarkFlagsRequired(cmd, "chart")
 
 	parent.AddCommand(cmd)
 }

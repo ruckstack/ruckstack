@@ -7,7 +7,7 @@ type PackageConfig struct {
 	BuildTime         int64  `yaml:"buildTime"`
 	SystemControlName string `yaml:"systemControlName"`
 
-	FilePermissions map[string]InstalledFileConfig `yaml:"filePermissions"`
+	FilePermissions map[string]PackagedFileConfig `yaml:"filePermissions"`
 	Files           map[string]string
 }
 
@@ -23,7 +23,7 @@ type LocalConfig struct {
 	} `yaml:"join"`
 }
 
-type InstalledFileConfig struct {
+type PackagedFileConfig struct {
 	AdminGroupReadable bool `yaml:"adminGroupReadable"`
 	AdminGroupWritable bool `yaml:"adminGroupWritable"`
 	Executable         bool

@@ -1,16 +1,13 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/mount"
-	"github.com/docker/docker/client"
-	"github.com/docker/docker/pkg/jsonmessage"
-	"github.com/docker/docker/pkg/stdcopy"
-	"github.com/docker/docker/pkg/term"
+	"github.com/ruckstack/ruckstack/builder/internal/argwrapper"
+	"github.com/ruckstack/ruckstack/builder/internal/docker"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"os"
 	"path/filepath"
@@ -43,11 +40,6 @@ func main() {
 
 	containerConfig.Env = append(containerConfig.Env, "RUCKSTACK_DOCKERIZED=true")
 
-	launchUser := parsedArgs["--launch-user"]
-	if launchUser != "" {
-		containerConfig.User = launchUser
-	}
-
 	useVersion := parsedArgs["--launch-version"]
 	if useVersion == "" {
 		useVersion = "latest"
@@ -76,19 +68,16 @@ func main() {
 		ui.VPrintf("LAUNCHER: Mount Point %s -> %s\n", mountPt.Source, mountPt.Target)
 	}
 
-	ctx := context.Background()
-
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		exitWithError(fmt.Errorf("cannot create docker client: %s", err))
-	}
-
 	if forcePull {
-		pullImage(cli, ctx, containerConfig)
+		ui.VPrintf("Forced pull No local images found for %s", containerConfig.Image)
+		if err := docker.ImagePull(containerConfig.Image); err != nil {
+			exitWithError(err)
+		}
+
 	} else {
 		listFilters := filters.NewArgs()
 		listFilters.Add("reference", containerConfig.Image)
-		imageList, err := cli.ImageList(ctx, types.ImageListOptions{
+		imageList, err := docker.ImageList(types.ImageListOptions{
 			Filters: listFilters,
 		})
 		if err != nil {
@@ -97,60 +86,15 @@ func main() {
 
 		if len(imageList) == 0 {
 			ui.VPrintf("No local images found for %s", containerConfig.Image)
-
-			pullImage(cli, ctx, containerConfig)
+			docker.ImagePull(containerConfig.Image)
 		} else {
 			ui.VPrintf("Not pulling image %s: already in local image cache", containerConfig.Image)
 		}
 	}
 
-	resp, err := cli.ContainerCreate(ctx,
-		containerConfig,
-		hostConfig,
-		nil, "ruckstack-run")
-	if err != nil {
-		exitWithError(fmt.Errorf("cannot create CLI container: %s", err))
+	if err := docker.ContainerRun(containerConfig, hostConfig, nil, "ruckstack-run", true); err != nil {
+		exitWithError(err)
 	}
-
-	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		exitWithError(fmt.Errorf("cannot start CLI container: %s", err))
-	}
-
-	defer cleanup(cli, resp)
-
-	waitOk, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
-	select {
-	case err := <-errCh:
-		if err != nil {
-			exitWithError(fmt.Errorf("error running CLI container: %s", err))
-		}
-	case <-waitOk:
-		//ran correctly
-	}
-
-	out, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true})
-	if err != nil {
-		exitWithError(fmt.Errorf("error getting container logs: %s", err))
-	}
-
-	stdcopy.StdCopy(os.Stdout, os.Stderr, out)
-}
-
-func pullImage(cli *client.Client, ctx context.Context, containerConfig *container.Config) {
-	ui.VPrintln("Downloading Ruckstack image...")
-
-	reader, err := cli.ImagePull(ctx, containerConfig.Image, types.ImagePullOptions{})
-	if err != nil {
-		if strings.Contains(err.Error(), "manifest unknown") {
-			exitWithError(fmt.Errorf("Cannot pull image %s. May be an invalid version?", containerConfig.Image))
-		} else {
-			exitWithError(err)
-		}
-	}
-	defer reader.Close()
-
-	termFd, isTerm := term.GetFdInfo(os.Stdout)
-	_ = jsonmessage.DisplayJSONMessagesStream(reader, os.Stdout, termFd, isTerm, nil)
 }
 
 func exitWithError(err error) {
@@ -200,18 +144,12 @@ func processArguments(originalArgs []string) (map[string]string, []string, []str
 		switch possibleArg {
 		case "--out":
 			newArgs[i] = "/data/out"
-			abs, err := filepath.Abs(originalArgs[i])
-			if err != nil {
-				exitWithError(err)
-			}
-			envVariables = append(envVariables, fmt.Sprintf("WRAPPED_OUT=%s", originalArgs[i]))
-			envVariables = append(envVariables, fmt.Sprintf("WRAPPED_OUT_ABS=%s", abs))
+			envVariables = argwrapper.SaveOriginalValue("out", originalArgs[i], envVariables)
 
 			sourcePath, _ := filepath.Abs(originalArgs[i])
 
 			if autoMkDirs {
-				err = os.MkdirAll(sourcePath, 0755)
-				if err != nil {
+				if err := os.MkdirAll(sourcePath, 0755); err != nil {
 					exitWithError(fmt.Errorf("cannot create directory %s: %s", sourcePath, err))
 				}
 			}
@@ -224,18 +162,12 @@ func processArguments(originalArgs []string) (map[string]string, []string, []str
 		case "--project":
 			newArgs[i] = "/data/project"
 
-			abs, err := filepath.Abs(originalArgs[i])
-			if err != nil {
-				exitWithError(err)
-			}
-			envVariables = append(envVariables, fmt.Sprintf("WRAPPED_PROJECT=%s", originalArgs[i]))
-			envVariables = append(envVariables, fmt.Sprintf("WRAPPED_PROJECT_ABS=%s", abs))
+			envVariables = argwrapper.SaveOriginalValue("project", originalArgs[i], envVariables)
 
 			sourcePath, _ := filepath.Abs(originalArgs[i])
 
 			if autoMkDirs {
-				err = os.MkdirAll(sourcePath, 0755)
-				if err != nil {
+				if err := os.MkdirAll(sourcePath, 0755); err != nil {
 					exitWithError(fmt.Errorf("cannot create directory %s: %s", sourcePath, err))
 				}
 			}
@@ -250,17 +182,4 @@ func processArguments(originalArgs []string) (map[string]string, []string, []str
 	}
 
 	return parsedArgs, newArgs, envVariables, mountPoints
-}
-
-func cleanup(cli *client.Client, resp container.ContainerCreateCreatedBody) {
-	if err := cli.ContainerRemove(
-		context.Background(),
-		resp.ID,
-		types.ContainerRemoveOptions{
-			Force:         true,
-			RemoveVolumes: true,
-		},
-	); err != nil {
-		exitWithError(fmt.Errorf("error cleaning up docker container: %s", err))
-	}
 }

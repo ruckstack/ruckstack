@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"github.com/spf13/cobra"
 	"io"
 	"log"
 	"os"
@@ -39,6 +40,10 @@ func SetOutput(writer io.Writer) {
 
 func Println(a ...interface{}) {
 	logger.Println(a...)
+}
+
+func Print(a ...interface{}) {
+	logger.Print(a...)
 }
 
 /**
@@ -82,4 +87,29 @@ func Fatalf(format string, a ...interface{}) {
 		debug.PrintStack()
 	}
 	logger.Fatalf(format, a...)
+}
+
+func MarkFlagsRequired(command *cobra.Command, requiredFlags ...string) {
+	for _, requiredFlag := range requiredFlags {
+		if err := command.MarkFlagRequired(requiredFlag); err != nil {
+			Fatal(err)
+		}
+		command.Flag(requiredFlag).Usage = command.Flag(requiredFlag).Usage + " (required)"
+	}
+}
+
+func MarkFlagsFilename(command *cobra.Command, filenameFlags ...string) {
+	for _, requiredFlag := range filenameFlags {
+		if err := command.MarkFlagFilename(requiredFlag); err != nil {
+			Fatal(err)
+		}
+	}
+}
+
+func MarkFlagsDirname(command *cobra.Command, dirnameFlags ...string) {
+	for _, requiredFlag := range dirnameFlags {
+		if err := command.MarkFlagDirname(requiredFlag); err != nil {
+			Fatal(err)
+		}
+	}
 }

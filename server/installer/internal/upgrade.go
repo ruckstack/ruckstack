@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"fmt"
 	"github.com/ruckstack/ruckstack/common/config"
+	"github.com/ruckstack/ruckstack/common/global_util"
 	"github.com/ruckstack/ruckstack/server/internal/environment"
 	"github.com/ruckstack/ruckstack/server/internal/k3s"
 	"gopkg.in/yaml.v2"
@@ -84,7 +85,7 @@ func Upgrade(upgradeFile string, targetDir string) error {
 	}
 
 	userMessage("Extracting files...")
-	if err := extract(environment.InstallDir(), zipReader); err != nil {
+	if err := global_util.Unzip(environment.InstallDir(), zipReader); err != nil {
 		return err
 	}
 

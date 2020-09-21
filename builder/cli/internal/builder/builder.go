@@ -2,19 +2,21 @@ package builder
 
 import (
 	"fmt"
-	"github.com/ruckstack/ruckstack/builder/cli/internal/builder/global"
-	"github.com/ruckstack/ruckstack/builder/cli/internal/builder/installer"
+	"github.com/ruckstack/ruckstack/builder/cli/internal/builder/install_file"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/builder/service"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/project"
+	"github.com/ruckstack/ruckstack/builder/internal/environment"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"net/url"
 	"os"
-	"path/filepath"
 )
 
 func Build(projectFile string, outDir string) error {
 
-	if err := prepareBuildEnvironment(outDir); err != nil {
+	environment.OutDir = outDir
+
+	ui.Printf("Cleaning out directory...")
+	if err := os.RemoveAll(outDir); err != nil {
 		return err
 	}
 
@@ -23,15 +25,21 @@ func Build(projectFile string, outDir string) error {
 		return fmt.Errorf("error parsing project file %s: %s", projectFile, err)
 	}
 
-	installFile, err := installer.NewInstaller(projectConfig)
+	installFile, err := install_file.StartInstallFile(projectConfig)
 	if err != nil {
 		return nil
 	}
 
-	//add standard files to the installer
-	if err := installFile.AddResourceDir("install_dir", "."); err != nil {
+	//add install_dir
+	installDir, err := environment.ResourcePath("install_dir")
+	if err != nil {
 		return err
 	}
+	if err = installFile.AddDirectory(installDir, ""); err != nil {
+		return err
+	}
+
+	//add 3rd party files
 	if err := installFile.AddDownloadedNestedFile(fmt.Sprintf("https://get.helm.sh/helm-v%s-linux-amd64.tar.gz", url.PathEscape(projectConfig.HelmVersion)), "linux-amd64/helm", "lib/helm"); err != nil {
 		return err
 	}
@@ -41,9 +49,7 @@ func Build(projectFile string, outDir string) error {
 	if err := installFile.AddDownloadedFile(fmt.Sprintf("https://github.com/rancher/k3s/releases/download/v%s/k3s-airgap-images-amd64.tar", url.PathEscape(projectConfig.K3sVersion)), "data/agent/images/k3s.tar"); err != nil {
 		return err
 	}
-	if err := installFile.AddAsset("out/system-control", "bin/"+projectConfig.ServerBinaryName); err != nil {
-		return err
-	}
+
 	installFile.PackageConfig.SystemControlName = projectConfig.ServerBinaryName
 
 	for _, serviceConfig := range projectConfig.DockerfileServices {
@@ -75,33 +81,5 @@ func Build(projectFile string, outDir string) error {
 		}
 	}
 
-	if err := installFile.SaveDockerImages(); err != nil {
-		return err
-	}
-	if err := installFile.ClearDockerImages(); err != nil {
-		return err
-	}
-
 	return installFile.Build()
-}
-
-/**
-Configures the global BuildEnvironment data and creates/cleans directories as needed.
-*/
-func prepareBuildEnvironment(outDir string) error {
-	global.BuildEnvironment.OutDir = outDir
-	global.BuildEnvironment.WorkDir = filepath.Join(outDir, "work")
-
-	ui.Printf("Cleaning out directory %s...", global.BuildEnvironment.OutDir)
-	if err := os.RemoveAll(global.BuildEnvironment.WorkDir); err != nil {
-		return err
-	}
-
-	for _, dir := range []string{global.BuildEnvironment.WorkDir} {
-		if err := os.MkdirAll(dir, 0755); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }

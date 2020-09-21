@@ -2,7 +2,7 @@ package commands
 
 import (
 	"github.com/ruckstack/ruckstack/builder/cli/internal/builder"
-	"github.com/ruckstack/ruckstack/builder/cli/internal/util"
+	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -10,7 +10,7 @@ func init() {
 	var project string
 	var out string
 
-	var buildCmd = &cobra.Command{
+	var cmd = &cobra.Command{
 		Use:   "build",
 		Short: "Builds project",
 		Long:  `Builds your Ruckstack project into an installable archive`,
@@ -20,15 +20,13 @@ func init() {
 		},
 	}
 
-	buildCmd.Flags().StringVar(&project, "project", "", "Project file to build (required)")
-	buildCmd.Flags().StringVar(&out, "out", "", "Directory to save built artifacts to (required)")
+	cmd.Flags().StringVar(&project, "project", "", "Project file to build")
+	cmd.Flags().StringVar(&out, "out", "", "Directory to save built artifacts to")
 
-	util.ExpectNoError(buildCmd.MarkFlagFilename("project"))
-	util.ExpectNoError(buildCmd.MarkFlagRequired("project"))
+	ui.MarkFlagsRequired(cmd, "project", "out")
+	ui.MarkFlagsFilename(cmd, "project")
+	ui.MarkFlagsDirname(cmd, "out")
 
-	util.ExpectNoError(buildCmd.MarkFlagDirname("out"))
-	util.ExpectNoError(buildCmd.MarkFlagRequired("out"))
-
-	rootCmd.AddCommand(buildCmd)
+	rootCmd.AddCommand(cmd)
 
 }

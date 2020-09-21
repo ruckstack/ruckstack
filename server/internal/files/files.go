@@ -41,7 +41,7 @@ func CheckFilePermissions(installPath string, filePath string) error {
 	}
 
 	var foundFileConfigPath string
-	var foundFileConfig config.InstalledFileConfig
+	var foundFileConfig config.PackagedFileConfig
 
 	fullFilePath := filepath.Join(installPath, filePath)
 	for fileConfigPath, fileConfig := range packageConfig.FilePermissions {
@@ -69,7 +69,7 @@ func CheckFilePermissions(installPath string, filePath string) error {
 	}
 
 	if foundFileConfigPath == "" {
-		foundFileConfig = config.InstalledFileConfig{
+		foundFileConfig = config.PackagedFileConfig{
 			AdminGroupReadable: false,
 			AdminGroupWritable: false,
 			Executable:         false,

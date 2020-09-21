@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"github.com/ruckstack/ruckstack/builder/cli/internal/util"
+	"github.com/ruckstack/ruckstack/builder/internal/environment"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/spf13/cobra"
 	"os"
@@ -12,7 +12,7 @@ import (
 var rootCmd = &cobra.Command{
 	Use:              "ruckstack",
 	Short:            "Ruckstack CLI",
-	Long:             `Ruckstack CLI`,
+	Long:             "Ruckstack CLI",
 	Version:          "0.9.0",
 	TraverseChildren: true,
 }
@@ -30,7 +30,6 @@ func init() {
 	rootCmd.Flags().BoolVar(&verboseMode, "verbose", false, "Enable more detailed output")
 	rootCmd.Flags().StringVar(&launchVersion, "launch-version", "latest", "Specify the version of the Ruckstack CLI to launch")
 	rootCmd.Flags().StringVar(&launchImage, "launch-image", "ruckstack", "Specify the Ruckstack CLI image to launch")
-	rootCmd.Flags().StringVar(&launchUser, "launch-user", "", "Specify `user:group` to run the image under")
 	rootCmd.Flags().BoolVar(&launchForcePull, "launch-force-pull", false, "Force the Ruckstack CLI to re-download the image to launch")
 }
 
@@ -39,7 +38,7 @@ func initConfig() {
 		ui.SetVerbose(true)
 	}
 
-	if !util.IsRunningLauncher() {
+	if !environment.IsRunningLauncher() {
 		for _, arg := range os.Args {
 			if strings.HasPrefix(arg, "--launch-") {
 				ui.Printf("WARNING: %s is only used when running the Ruckstack launcher. It is ignored when running the container directly", arg)

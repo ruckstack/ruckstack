@@ -2,7 +2,7 @@ package helm
 
 import (
 	"bytes"
-	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
+	"github.com/ruckstack/ruckstack/builder/internal/environment"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -30,11 +30,11 @@ func TestReIndex(t *testing.T) {
 	assert.FileExists(t, stableIndexPath)
 
 	stableChartsText, err := ioutil.ReadFile(stableChartsPath)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Contains(t, string(stableChartsText), "postgresql")
 
 	stableIndexText, err := ioutil.ReadFile(stableIndexPath)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Contains(t, string(stableIndexText), "description: Chart for PostgreSQL, an object-relational database management system")
 }
 
@@ -99,10 +99,10 @@ func TestSearch(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := Search(tt.args.chartRepo, tt.args.chartName)
 			if tt.wantErr {
-				assert.NotNil(t, err)
+				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tt.outputContains)
 			} else {
-				assert.Nil(t, err)
+				assert.NoError(t, err)
 				assert.Contains(t, output.String(), tt.outputContains)
 				assert.Contains(t, output.String(), "All Available Versions:")
 			}
@@ -149,7 +149,7 @@ func TestDownloadChart(t *testing.T) {
 			if tt.wantErr {
 				assert.Equal(t, err, tt.wantErr)
 			} else {
-				assert.Nil(t, err)
+				assert.NoError(t, err)
 				assert.Contains(t, got, "/cache/helm/download/stable/postgresql-8.1.2.tgz")
 				assert.FileExists(t, got)
 				assert.Contains(t, output.String(), "Downloading chart")
@@ -157,7 +157,7 @@ func TestDownloadChart(t *testing.T) {
 				//does not re-download
 				output.Reset()
 				got, err = DownloadChart(tt.args.repo, tt.args.chart, tt.args.version)
-				assert.Nil(t, err)
+				assert.NoError(t, err)
 				assert.Contains(t, got, "/cache/helm/download/stable/postgresql-8.1.2.tgz")
 				assert.NotContains(t, output.String(), "Downloading chart")
 				assert.Contains(t, output.String(), "Already downloaded")

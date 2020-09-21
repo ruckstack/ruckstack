@@ -5,16 +5,13 @@ import (
 	"compress/gzip"
 	"fmt"
 	"github.com/go-playground/validator/v10"
-	"github.com/ruckstack/ruckstack/builder/cli/internal/builder/global"
-	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
+	"github.com/ruckstack/ruckstack/builder/internal/environment"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
 )
 
 var (
@@ -88,10 +85,7 @@ func ExtractFromGzip(gzipSource string, wantedFile string) (string, error) {
 
 	tarReader := tar.NewReader(uncompressedStream)
 
-	savePath, err := ioutil.TempDir(filepath.Join(global.BuildEnvironment.WorkDir), "extract")
-	if err != nil {
-		return "", err
-	}
+	savePath := environment.TempPath("extract")
 
 	for true {
 		header, err := tarReader.Next()
@@ -194,24 +188,4 @@ func CopyDir(source string, dest string) (err error) {
 
 	}
 	return
-}
-
-/**
-Check for a WRAPPED_* environment variable that was set by ruckstack wrapper and return that if it was set.
-Otherwise, return the nonWrappedValue
-*/
-func WrappedValue(name string, nonWrappedValue string) string {
-	env := os.Getenv("WRAPPED_" + strings.ToUpper(name))
-	if env == "" {
-		return nonWrappedValue
-	} else {
-		return env
-	}
-}
-
-/**
-Returns true if ruckstack is running via the launcher
-*/
-func IsRunningLauncher() bool {
-	return os.Getenv("RUCKSTACK_DOCKERIZED") == "true"
 }

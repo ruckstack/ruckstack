@@ -5,15 +5,15 @@ import (
 	"compress/gzip"
 	"crypto/md5"
 	"fmt"
-	"github.com/ruckstack/ruckstack/builder/cli/internal/builder/global"
-	"github.com/ruckstack/ruckstack/builder/cli/internal/builder/installer"
+	"github.com/ruckstack/ruckstack/builder/cli/internal/builder/install_file"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/project"
+	"github.com/ruckstack/ruckstack/builder/internal/docker"
+	"github.com/ruckstack/ruckstack/builder/internal/environment"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
@@ -26,14 +26,14 @@ type DockerfileService struct {
 	serviceWorkDir string
 }
 
-func (service *DockerfileService) Build(app *installer.Installer) error {
+func (service *DockerfileService) Build(app *install_file.InstallFile) error {
 	ui.Println("Service type: dockerfile")
 
 	if service.ServiceConfig.ServiceVersion == "" {
 		service.ServiceConfig.ServiceVersion = fmt.Sprintf("%x", md5.Sum([]byte(time.Now().String())))[0:6]
 	}
 
-	service.serviceWorkDir = path.Join(global.BuildEnvironment.WorkDir, service.ServiceConfig.Id, "chart")
+	service.serviceWorkDir = environment.TempPath(service.ServiceConfig.Id + "/chart")
 	if err := os.MkdirAll(path.Join(service.serviceWorkDir, "templates"), 0755); err != nil {
 		return err
 	}
@@ -77,7 +77,7 @@ func (service *DockerfileService) Build(app *installer.Installer) error {
 		return err
 	}
 
-	if err := app.IncludeDockerImage(dockerTag); err != nil {
+	if err := app.AddDockerImage(dockerTag); err != nil {
 		return err
 	}
 
@@ -85,14 +85,19 @@ func (service *DockerfileService) Build(app *installer.Installer) error {
 }
 
 func (service *DockerfileService) buildContainer(dockerTag string) error {
-	dockerBuildCmd := exec.Command("docker", "build",
-		"-t", dockerTag,
-		"--label", "ruckstack.built=true",
-		".")
-	dockerBuildCmd.Dir = service.ServiceConfig.BaseDir
-	dockerBuildCmd.Stdout = os.Stdout
-	dockerBuildCmd.Stderr = os.Stderr
-	return dockerBuildCmd.Run()
+	dockerfile := "Dockerfile"
+
+	err := docker.ImageBuild(dockerfile,
+		[]string{dockerTag},
+		map[string]string{
+			"ruckstack.built": "true",
+		})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (service *DockerfileService) writeChart() error {
@@ -248,7 +253,7 @@ func (service *DockerfileService) writeIngress() error {
 }
 
 func (service *DockerfileService) buildChart() (string, error) {
-	chartFilePath := path.Join(global.BuildEnvironment.WorkDir, service.ServiceConfig.Id, service.ServiceConfig.Id+".tgz")
+	chartFilePath := environment.TempPath(service.ServiceConfig.Id + "/" + service.ServiceConfig.Id + ".tgz")
 	chartFile, err := os.Create(chartFilePath)
 	if err != nil {
 		return "", err
@@ -324,7 +329,7 @@ func (service *DockerfileService) writeManifest() (string, error) {
 		return "", err
 	}
 
-	outputPath := path.Join(global.BuildEnvironment.WorkDir, service.ServiceConfig.Id+".yaml")
+	outputPath := environment.TempPath(service.ServiceConfig.Id + ".yaml")
 	err = ioutil.WriteFile(outputPath, out, 0644)
 	if err != nil {
 		return "", err

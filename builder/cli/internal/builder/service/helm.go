@@ -1,10 +1,10 @@
 package service
 
 import (
-	"github.com/ruckstack/ruckstack/builder/cli/internal/builder/global"
-	"github.com/ruckstack/ruckstack/builder/cli/internal/builder/installer"
+	"github.com/ruckstack/ruckstack/builder/cli/internal/builder/install_file"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/helm"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/project"
+	"github.com/ruckstack/ruckstack/builder/internal/environment"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"gopkg.in/yaml.v2"
 	"helm.sh/helm/v3/pkg/chart"
@@ -26,10 +26,10 @@ type HelmService struct {
 	serviceWorkDir string
 }
 
-func (service *HelmService) Build(app *installer.Installer) error {
+func (service *HelmService) Build(app *install_file.InstallFile) error {
 	ui.Println("Service type: helm")
 
-	service.serviceWorkDir = filepath.Join(global.BuildEnvironment.WorkDir, service.ServiceConfig.Id)
+	service.serviceWorkDir = environment.TempPath(service.ServiceConfig.Id)
 	if err := os.MkdirAll(service.serviceWorkDir, 0755); err != nil {
 		return err
 	}
@@ -82,7 +82,7 @@ func (service *HelmService) Build(app *installer.Installer) error {
 	return service.saveDockerImages(loadedChart, app)
 }
 
-func (service *HelmService) saveDockerImages(loadedChart *chart.Chart, app *installer.Installer) error {
+func (service *HelmService) saveDockerImages(loadedChart *chart.Chart, app *install_file.InstallFile) error {
 	options := chartutil.ReleaseOptions{
 		Name:      "testRelease",
 		Namespace: "default",
@@ -135,7 +135,7 @@ func (service *HelmService) saveDockerImages(loadedChart *chart.Chart, app *inst
 			if podSpec != nil {
 				for _, container := range podSpec.Containers {
 					ui.Printf("See ss image %s\n", container.Image)
-					if err := app.IncludeDockerImage(container.Image); err != nil {
+					if err := app.AddDockerImage(container.Image); err != nil {
 						return err
 					}
 				}

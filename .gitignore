@@ -6,3 +6,7 @@
 TODO.txt
 **/__debug_bin
 /workspace
+
+#Compiled binaries
+builder/cli/install_root/resources/installer
+builder/cli/install_root/resources/system-control

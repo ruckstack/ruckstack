@@ -7,14 +7,13 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/ruckstack/ruckstack/common/config"
+	"github.com/ruckstack/ruckstack/common/global_util"
 	"github.com/ruckstack/ruckstack/server/internal/environment"
 	"github.com/ruckstack/ruckstack/server/internal/files"
-	"io"
 	"io/ioutil"
 	"net"
 	"os"
 	"os/user"
-	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -58,9 +57,14 @@ func Install(packageConfig *config.PackageConfig, installerArgs *InstallerArgs, 
 
 	fmt.Printf("Installing to %s...\n", installPath)
 
-	if err := extract(installPath, zipReader); err != nil {
+	if err := global_util.Unzip(installPath, zipReader); err != nil {
 		return err
 	}
+
+	//TODO: Re-enable permission check
+	//if err := files.CheckFilePermissions(installPath, file.Name); err != nil {
+	//	return err
+	//}
 
 	if err := os.MkdirAll(installPath+"/config", 0755); err != nil {
 		return err
@@ -281,54 +285,6 @@ func getBindAddress(ui *bufio.Scanner, installerArgs *InstallerArgs) (string, er
 	}
 
 	return bindAddress, nil
-}
-
-func extract(installPath string, zipReader *zip.ReadCloser) (err error) {
-	fmt.Print(".....")
-
-	for i, file := range zipReader.File {
-		fullname := path.Join(installPath, file.Name)
-		fileInfo := file.FileInfo()
-		if fileInfo.IsDir() {
-			os.MkdirAll(fullname, fileInfo.Mode().Perm())
-		} else {
-			_, err := os.Stat(fullname)
-			if err == nil {
-				os.Remove(fullname)
-			}
-
-			os.MkdirAll(filepath.Dir(fullname), 0755)
-			perms := fileInfo.Mode().Perm()
-			out, err := os.OpenFile(fullname, os.O_CREATE|os.O_RDWR, perms)
-			if err != nil {
-				return err
-			}
-			rc, err := file.Open()
-			if err != nil {
-				return err
-			}
-			_, err = io.CopyN(out, rc, fileInfo.Size())
-			if err != nil {
-				return err
-			}
-			rc.Close()
-			out.Close()
-
-			mtime := fileInfo.ModTime()
-			if err := os.Chtimes(fullname, mtime, mtime); err != nil {
-				return err
-			}
-
-			if err := files.CheckFilePermissions(installPath, file.Name); err != nil {
-				return err
-			}
-
-			if i%10 == 0 {
-				fmt.Print(".")
-			}
-		}
-	}
-	return
 }
 
 type InstallerArgs struct {

@@ -34,7 +34,7 @@ port: 8888
 
 `))
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	assert.Equal(t, "test", project.Id)
 	assert.Equal(t, "test", project.ServerBinaryName)

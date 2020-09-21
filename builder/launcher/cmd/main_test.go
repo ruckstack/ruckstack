@@ -52,9 +52,7 @@ func Test_processArguments(t *testing.T) {
 			},
 			env: []string{
 				"WRAPPED_OUT=" + pathToOut,
-				"WRAPPED_OUT_ABS=" + pathToOut,
 				"WRAPPED_PROJECT=" + pathToProject,
-				"WRAPPED_PROJECT_ABS=" + pathToProject,
 			},
 			mountCount: 2,
 		},
