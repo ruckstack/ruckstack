@@ -63,6 +63,6 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           file: out/image/Dockerfile
-          context: out/image
+          context: out/builder_image
           push: true
           tags: ghcr.io/ruckstack/ruckstack:${{ format(github.head_ref, 'refs/heads/', '') }}
