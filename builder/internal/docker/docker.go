@@ -1,7 +1,6 @@
 package docker
 
 import (
-	"archive/tar"
 	"context"
 	"fmt"
 	"github.com/docker/docker/api/types"
@@ -25,18 +24,23 @@ func init() {
 
 	cli, err = client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		ui.Fatalf("cannot create docker client: %s", err)
+		ui.Fatalf("cannot create docker client: %s", cleanErrorMessage(err))
 	}
 }
 
 func ImagePull(imageRef string) error {
+	if strings.HasPrefix(imageRef, "build.local/") {
+		ui.VPrintf("Cannot pull local image %s...", imageRef)
+		return nil
+	}
+
 	ui.VPrintf("Pulling %s...", imageRef)
 	reader, err := cli.ImagePull(context.Background(), imageRef, types.ImagePullOptions{})
 	if err != nil {
 		if strings.Contains(err.Error(), "manifest unknown") {
 			return fmt.Errorf("Cannot pull image %s. May be an invalid version?", imageRef)
 		} else {
-			return err
+			return cleanErrorMessage(err)
 		}
 	}
 	defer reader.Close()
@@ -59,11 +63,11 @@ func ContainerRun(containerConfig *container.Config, hostConfig *container.HostC
 		networkConfig,
 		containerName)
 	if err != nil {
-		return fmt.Errorf("cannot create CLI container: %s", err)
+		return fmt.Errorf("cannot create CLI container: %s", cleanErrorMessage(err))
 	}
 
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		return fmt.Errorf("cannot start CLI container: %s", err)
+		return fmt.Errorf("cannot start CLI container: %s", cleanErrorMessage(err))
 	}
 
 	if removeWhenDone {
@@ -74,7 +78,7 @@ func ContainerRun(containerConfig *container.Config, hostConfig *container.HostC
 	select {
 	case err := <-errCh:
 		if err != nil {
-			return fmt.Errorf("error running CLI container: %s", err)
+			return fmt.Errorf("error running CLI container: %s", cleanErrorMessage(err))
 		}
 	case <-waitOk:
 		//ran correctly
@@ -82,7 +86,7 @@ func ContainerRun(containerConfig *container.Config, hostConfig *container.HostC
 
 	out, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true})
 	if err != nil {
-		return fmt.Errorf("error getting container logs: %s", err)
+		return fmt.Errorf("error getting container logs: %s", cleanErrorMessage(err))
 	}
 
 	_, err = stdcopy.StdCopy(ui.GetOutput(), ui.GetOutput(), out)
@@ -104,17 +108,15 @@ func SaveImages(outputPath string, imageRefs ...string) error {
 
 	tarStream, err := cli.ImageSave(context.Background(), imageRefs)
 	if err != nil {
-		errMsg := err.Error()
-		errMsg = strings.Replace(errMsg, "Error response from daemon: ", "", 1)
-		return fmt.Errorf("Error saving images %s: %s", strings.Join(imageRefs, ", "), errMsg)
+		return fmt.Errorf("Error saving images %s: %s", strings.Join(imageRefs, ", "), cleanErrorMessage(err))
 	}
 
-	tarReader := tar.NewReader(tarStream)
-	if _, err := tarReader.Next(); err != nil {
-		return err
-	}
+	//tarReader := tar.NewReader(tarStream)
+	//if _, err := tarReader.Next(); err != nil {
+	//	return err
+	//}
 
-	_, err = io.Copy(outputFile, tarReader)
+	_, err = io.Copy(outputFile, tarStream)
 	if err != nil {
 		return err
 	}
@@ -122,12 +124,18 @@ func SaveImages(outputPath string, imageRefs ...string) error {
 	return nil
 }
 
+func cleanErrorMessage(err error) error {
+	errMsg := err.Error()
+	errMsg = strings.Replace(errMsg, "Error response from daemon: ", "", 1)
+	return fmt.Errorf(errMsg)
+}
+
 func ImageRemove(imageId string) error {
 	_, err := cli.ImageRemove(context.Background(), imageId, types.ImageRemoveOptions{
 		Force: true,
 	})
 	if err != nil {
-		return fmt.Errorf("error removing image %s: %s", imageId, err)
+		return fmt.Errorf("error removing image %s: %s", imageId, cleanErrorMessage(err))
 	}
 
 	return err
@@ -148,7 +156,7 @@ func GetContainerId(containerName string) (string, error) {
 		Filters: listFilters,
 	})
 	if err != nil {
-		return "", fmt.Errorf("error finding container %s: %s", containerName, err)
+		return "", fmt.Errorf("error finding container %s: %s", containerName, cleanErrorMessage(err))
 	}
 
 	if len(containerList) == 0 {
@@ -170,7 +178,7 @@ func GetImageId(imageRef string) (string, error) {
 		Filters: listFilters,
 	})
 	if err != nil {
-		return "", fmt.Errorf("error finding image %s: %s", imageRef, err)
+		return "", fmt.Errorf("error finding image %s: %s", imageRef, cleanErrorMessage(err))
 	}
 
 	if len(imageList) == 0 {
@@ -193,7 +201,7 @@ func ContainerRemove(containerId string) error {
 	)
 
 	if err != nil {
-		return fmt.Errorf("error cleaning up docker container: %s", err)
+		return fmt.Errorf("error cleaning up docker container: %s", cleanErrorMessage(err))
 	}
 
 	return nil

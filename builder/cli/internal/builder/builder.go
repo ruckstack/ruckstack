@@ -3,7 +3,6 @@ package builder
 import (
 	"fmt"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/builder/install_file"
-	"github.com/ruckstack/ruckstack/builder/cli/internal/builder/service"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/project"
 	"github.com/ruckstack/ruckstack/builder/internal/environment"
 	"github.com/ruckstack/ruckstack/common/ui"
@@ -11,24 +10,28 @@ import (
 	"os"
 )
 
-func Build(projectFile string, outDir string) error {
-
-	environment.OutDir = outDir
-
+func Build() error {
 	ui.Printf("Cleaning out directory...")
-	if err := os.RemoveAll(outDir); err != nil {
+	if err := os.RemoveAll(environment.OutDir); err != nil {
+		return err
+	}
+	if err := os.MkdirAll(environment.OutDir, 0755); err != nil {
 		return err
 	}
 
-	projectConfig, err := project.Parse(projectFile)
+	projectConfig, err := project.Parse(environment.ProjectDir + "/ruckstack.conf")
 	if err != nil {
-		return fmt.Errorf("error parsing project file %s: %s", projectFile, err)
+		return fmt.Errorf("error parsing project: %s", err)
 	}
 
-	installFile, err := install_file.StartInstallFile(projectConfig)
+	installFile, err := install_file.StartCreation(environment.OutPath(projectConfig.Id + "_" + projectConfig.Version + ".installer"))
 	if err != nil {
-		return nil
+		return err
 	}
+	installFile.PackageConfig.Id = projectConfig.Id
+	installFile.PackageConfig.Name = projectConfig.Name
+	installFile.PackageConfig.Version = projectConfig.Version
+	installFile.PackageConfig.SystemControlName = projectConfig.SystemControlName
 
 	//add install_dir
 	installDir, err := environment.ResourcePath("install_dir")
@@ -50,36 +53,13 @@ func Build(projectFile string, outDir string) error {
 		return err
 	}
 
-	installFile.PackageConfig.SystemControlName = projectConfig.ServerBinaryName
-
-	for _, serviceConfig := range projectConfig.DockerfileServices {
-		builder := &service.DockerfileService{
-			ProjectConfig: projectConfig,
-			ServiceConfig: serviceConfig,
-		}
-		if err := builder.Build(installFile); err != nil {
+	for _, serviceConfig := range projectConfig.Services {
+		serviceConfig.SetProjectId(projectConfig.Id)
+		serviceConfig.SetProjectVersion(projectConfig.Version)
+		if err := serviceConfig.Build(installFile); err != nil {
 			return err
 		}
 	}
 
-	for _, serviceConfig := range projectConfig.HelmServices {
-		builder := &service.HelmService{
-			ProjectConfig: projectConfig,
-			ServiceConfig: serviceConfig,
-		}
-		if err := builder.Build(installFile); err != nil {
-			return err
-		}
-	}
-	for _, serviceConfig := range projectConfig.ManifestServices {
-		builder := &service.ManifestService{
-			ProjectConfig: projectConfig,
-			ServiceConfig: serviceConfig,
-		}
-		if err := builder.Build(installFile); err != nil {
-			return err
-		}
-	}
-
-	return installFile.Build()
+	return installFile.CompleteCreation()
 }

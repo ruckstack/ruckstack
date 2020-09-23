@@ -85,7 +85,7 @@ func Upgrade(upgradeFile string, targetDir string) error {
 	}
 
 	userMessage("Extracting files...")
-	if err := global_util.Unzip(environment.InstallDir(), zipReader); err != nil {
+	if err := global_util.Unzip(zipReader, environment.InstallDir()); err != nil {
 		return err
 	}
 

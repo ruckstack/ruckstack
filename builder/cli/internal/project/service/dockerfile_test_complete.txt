@@ -1,0 +1,1 @@
+FROM jetty:9-jre11-slim

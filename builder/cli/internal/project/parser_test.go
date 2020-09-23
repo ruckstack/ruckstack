@@ -1,8 +1,8 @@
 package project
 
 import (
+	"github.com/ruckstack/ruckstack/builder/cli/internal/project/service"
 	"github.com/stretchr/testify/assert"
-	"strings"
 	"testing"
 )
 
@@ -27,7 +27,6 @@ port: 1234
 
 [service-test_manifest]
 type: manifest
-base_dir: manifest_basedir
 manifest: test-manifest.yaml
 port: 8888
 
@@ -37,33 +36,33 @@ port: 8888
 	assert.NoError(t, err)
 
 	assert.Equal(t, "test", project.Id)
-	assert.Equal(t, "test", project.ServerBinaryName)
+	assert.Equal(t, "test", project.SystemControlName)
 	assert.Equal(t, "Test Project", project.Name)
 	assert.Equal(t, "1.0.5", project.Version)
 	assert.NotEmpty(t, project.K3sVersion)
 	assert.NotEmpty(t, project.HelmVersion)
 
-	assert.Equal(t, 1, len(project.DockerfileServices))
-	assert.Equal(t, "test_dockerfile", project.DockerfileServices[0].Id)
-	assert.Equal(t, "dockerfile", project.DockerfileServices[0].Type)
-	assert.Equal(t, 8080, project.DockerfileServices[0].Port)
-	assert.Equal(t, "Dockerfile", project.DockerfileServices[0].Dockerfile)
-	assert.True(t, strings.HasSuffix(project.DockerfileServices[0].BaseDir, "docker_basedir"))
-	assert.Equal(t, "", project.DockerfileServices[0].ServiceVersion)
-	assert.Equal(t, "/", project.DockerfileServices[0].UrlPath)
-	assert.Equal(t, false, project.DockerfileServices[0].PathPrefixStrip)
+	assert.Equal(t, 3, len(project.Services))
+	firstService := project.Services[0].(*service.DockerfileService)
+	secondService := project.Services[1].(*service.HelmService)
+	thirdService := project.Services[2].(*service.ManifestService)
 
-	assert.Equal(t, 1, len(project.HelmServices))
-	assert.Equal(t, "test_helm", project.HelmServices[0].Id)
-	assert.Equal(t, "helm", project.HelmServices[0].Type)
-	assert.Equal(t, 1234, project.HelmServices[0].Port)
-	assert.Equal(t, "stable/helm-test", project.HelmServices[0].Chart)
-	assert.Equal(t, "7.3.9", project.HelmServices[0].Version)
+	assert.Equal(t, "test_dockerfile", firstService.Id)
+	assert.Equal(t, "dockerfile", firstService.Type)
+	assert.Equal(t, 8080, firstService.Port)
+	assert.Equal(t, "Dockerfile", firstService.Dockerfile)
+	assert.Equal(t, "", firstService.ServiceVersion)
+	assert.Equal(t, "/", firstService.UrlPath)
+	assert.Equal(t, false, firstService.PathPrefixStrip)
 
-	assert.Equal(t, 1, len(project.ManifestServices))
-	assert.Equal(t, "test_manifest", project.ManifestServices[0].Id)
-	assert.Equal(t, "manifest", project.ManifestServices[0].Type)
-	assert.Equal(t, 8888, project.ManifestServices[0].Port)
-	assert.Equal(t, "test-manifest.yaml", project.ManifestServices[0].Manifest)
-	assert.Equal(t, "manifest_basedir", project.ManifestServices[0].BaseDir)
+	assert.Equal(t, "test_helm", secondService.Id)
+	assert.Equal(t, "helm", secondService.Type)
+	assert.Equal(t, 1234, secondService.Port)
+	assert.Equal(t, "stable/helm-test", secondService.Chart)
+	assert.Equal(t, "7.3.9", secondService.Version)
+
+	assert.Equal(t, "test_manifest", thirdService.Id)
+	assert.Equal(t, "manifest", thirdService.Type)
+	assert.Equal(t, 8888, thirdService.Port)
+	assert.Equal(t, "test-manifest.yaml", thirdService.Manifest)
 }

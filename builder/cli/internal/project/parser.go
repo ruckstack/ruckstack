@@ -2,7 +2,7 @@ package project
 
 import (
 	"fmt"
-	"github.com/ruckstack/ruckstack/builder/cli/internal/util"
+	"github.com/ruckstack/ruckstack/builder/cli/internal/project/service"
 	"gopkg.in/ini.v1"
 	"os"
 	"path/filepath"
@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func Parse(source interface{}) (*ProjectConfig, error) {
+func Parse(source interface{}) (*Project, error) {
 	projectPath := "in-memory"
 	if stringPath, ok := source.(string); ok {
 		projectPath = stringPath
@@ -26,16 +26,12 @@ func Parse(source interface{}) (*ProjectConfig, error) {
 
 	projectConfigFile.NameMapper = ini.TitleUnderscore
 
-	projectConfig := &ProjectConfig{
+	projectConfig := &Project{
 		K3sVersion:  "1.18.6+k3s1",
 		HelmVersion: "3.2.4",
 	}
 
 	projectConfigFile.Section("ruckstack-project").MapTo(projectConfig)
-
-	if err := util.Validate(projectConfig); err != nil {
-		return nil, err
-	}
 
 	matched, _ := regexp.MatchString(`^[a-z0-9-_]+$`, projectConfig.Id)
 	if !matched {
@@ -60,19 +56,23 @@ func Parse(source interface{}) (*ProjectConfig, error) {
 		}
 	}
 
-	if len(projectConfig.DockerfileServices) == 0 && len(projectConfig.HelmServices) == 0 && len(projectConfig.ManifestServices) == 0 {
+	if len(projectConfig.Services) == 0 {
 		return nil, fmt.Errorf("No services are defined in %s", projectPath)
 	}
 
-	if projectConfig.ServerBinaryName == "" {
-		projectConfig.ServerBinaryName = projectConfig.Id
+	if projectConfig.SystemControlName == "" {
+		projectConfig.SystemControlName = projectConfig.Id
+	}
+
+	if err := projectConfig.Validate(); err != nil {
+		return nil, err
 	}
 
 	return projectConfig, nil
 
 }
 
-func parseServiceFile(serviceConfigPath string, projectConfig *ProjectConfig) error {
+func parseServiceFile(serviceConfigPath string, projectConfig *Project) error {
 	serviceConfigFile, err := ini.InsensitiveLoad(serviceConfigPath)
 	if err != nil {
 		return nil
@@ -89,7 +89,7 @@ func parseServiceFile(serviceConfigPath string, projectConfig *ProjectConfig) er
 	return err
 }
 
-func parseServiceSection(defaultId string, serviceSection *ini.Section, projectConfig *ProjectConfig, filePath string) error {
+func parseServiceSection(defaultId string, serviceSection *ini.Section, projectConfig *Project, filePath string) error {
 	if !serviceSection.HasKey("type") {
 		if serviceSection.Name() == "service" {
 			return fmt.Errorf("no service type in %s", filePath)
@@ -98,57 +98,31 @@ func parseServiceSection(defaultId string, serviceSection *ini.Section, projectC
 		}
 	}
 
+	var serviceConfig Service
+
 	switch serviceType := serviceSection.Key("type").Value(); serviceType {
 	case "dockerfile":
-		serviceConfig := &DockerfileServiceConfig{
+		dockerServiceConfig := &service.DockerfileService{
 			Dockerfile:      "Dockerfile",
 			PathPrefixStrip: false,
 		}
-		serviceConfig.Id = defaultId
 
-		serviceSection.MapTo(serviceConfig)
-
-		err := util.Validate(serviceConfig)
-		if err != nil {
-			return err
-		}
-
-		if !filepath.IsAbs(serviceConfig.BaseDir) {
-			serviceConfig.BaseDir, err = filepath.Abs(filepath.Join(filepath.Dir(filePath), serviceConfig.BaseDir))
-			if err != nil {
-				return nil
-			}
-		}
-
-		projectConfig.DockerfileServices = append(projectConfig.DockerfileServices, serviceConfig)
+		serviceConfig = dockerServiceConfig
 	case "helm":
-		serviceConfig := &HelmServiceConfig{}
-		serviceConfig.Id = defaultId
+		serviceConfig = &service.HelmService{}
 
-		serviceSection.MapTo(serviceConfig)
-
-		err := util.Validate(serviceConfig)
-		if err != nil {
-			return err
-		}
-
-		projectConfig.HelmServices = append(projectConfig.HelmServices, serviceConfig)
 	case "manifest":
-		serviceConfig := &ManifestServiceConfig{}
-		serviceConfig.Id = defaultId
-
-		serviceSection.MapTo(serviceConfig)
-
-		err := util.Validate(serviceConfig)
-		if err != nil {
-			return err
-		}
-
-		projectConfig.ManifestServices = append(projectConfig.ManifestServices, serviceConfig)
-
+		serviceConfig = &service.ManifestService{}
 	default:
 		return fmt.Errorf("unknown service type: %s", serviceType)
 	}
+
+	serviceConfig.SetId(defaultId)
+	if err := serviceSection.MapTo(serviceConfig); err != nil {
+		return err
+	}
+
+	projectConfig.Services = append(projectConfig.Services, serviceConfig)
 
 	return nil
 

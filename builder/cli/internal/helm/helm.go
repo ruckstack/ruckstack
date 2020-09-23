@@ -14,6 +14,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 )
 
 var (
@@ -173,7 +174,9 @@ func DownloadChart(repo string, chart string, version string) (string, error) {
 
 		savePath, _, err := chartDownloader.DownloadTo(repo+"/"+chart, version, downloadDir)
 		if err != nil {
-			return "", err
+			errMessage := err.Error()
+			errMessage = strings.Replace(errMessage, ". (try 'helm repo update')", "", 1)
+			return "", fmt.Errorf(errMessage)
 		}
 		ui.Printf("Downloading chart %s...DONE", filepath.Base(savePath))
 

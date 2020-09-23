@@ -9,4 +9,4 @@ TODO.txt
 
 #Compiled binaries
 builder/cli/install_root/resources/installer
-builder/cli/install_root/resources/system-control
+builder/cli/install_root/resources/install_dir/bin/system-control

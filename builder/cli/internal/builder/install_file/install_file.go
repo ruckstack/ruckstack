@@ -1,21 +1,28 @@
 package install_file
 
 import (
+	"archive/tar"
 	"archive/zip"
+	"bufio"
+	"bytes"
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/filters"
-	"github.com/ruckstack/ruckstack/builder/cli/internal/project"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/util"
 	"github.com/ruckstack/ruckstack/builder/internal/docker"
 	"github.com/ruckstack/ruckstack/builder/internal/environment"
 	"github.com/ruckstack/ruckstack/common/config"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"gopkg.in/yaml.v2"
+	"helm.sh/helm/v3/pkg/chart"
+	"helm.sh/helm/v3/pkg/chart/loader"
+	"helm.sh/helm/v3/pkg/chartutil"
+	"helm.sh/helm/v3/pkg/engine"
 	"io"
 	"io/ioutil"
+	appV1 "k8s.io/api/apps/v1"
+	coreV1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes/scheme"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,7 +32,7 @@ import (
 type InstallFile struct {
 	PackageConfig *config.PackageConfig
 
-	dockerImages []string
+	dockerImages map[string]bool
 
 	file      *os.File
 	zipWriter *zip.Writer
@@ -39,13 +46,10 @@ Begins creating the install file.
 The install file is the installer binary followed by a zip of what to install.
 This method will create the file with the installer and open a zip write for the remaining contents.
 */
-func StartInstallFile(projectConfig *project.ProjectConfig) (*InstallFile, error) {
+func StartCreation(installerPath string) (*InstallFile, error) {
 
 	installFile := &InstallFile{
 		PackageConfig: &config.PackageConfig{
-			Id:        projectConfig.Id,
-			Name:      projectConfig.Name,
-			Version:   projectConfig.Version,
 			BuildTime: time.Now().Unix(),
 
 			Files: map[string]string{},
@@ -73,11 +77,10 @@ func StartInstallFile(projectConfig *project.ProjectConfig) (*InstallFile, error
 				},
 			},
 		},
-		dockerImages:    []string{},
+		dockerImages:    map[string]bool{},
 		filesToAddToTar: map[string]string{},
 	}
 
-	installerPath := environment.OutPath(projectConfig.Id + "_" + projectConfig.Version + ".installer")
 	ui.Printf("Building %s...", filepath.Base(installerPath))
 
 	installerBinaryPath, err := environment.ResourcePath("installer")
@@ -106,7 +109,7 @@ func StartInstallFile(projectConfig *project.ProjectConfig) (*InstallFile, error
 	return installFile, nil
 }
 
-func (installFile *InstallFile) Build() error {
+func (installFile *InstallFile) CompleteCreation() error {
 	for key, _ := range installFile.filesToAddToTar {
 		if err := installFile.AddFile(installFile.filesToAddToTar[key], key); err != nil {
 			return err
@@ -194,30 +197,40 @@ func (installFile *InstallFile) AddFile(srcPath string, targetPath string) error
 		return fmt.Errorf("cannot stat %s: %s", srcPath, err)
 	}
 
-	hash := sha1.New()
-	_, err = io.Copy(hash, file)
+	if strings.HasPrefix(targetPath, "data/agent/images") && strings.HasSuffix(targetPath, ".tar") {
+		if err := installFile.saveImagesJar(srcPath, targetPath); err != nil {
+			return err
+		}
+	} else {
+		return installFile.AddFileData(file, targetPath, fileInfo.ModTime())
+	}
+
+	return nil
+
+}
+
+func (installFile *InstallFile) AddFileData(data io.Reader, installerPath string, modTime time.Time) error {
+	dataBytes, err := ioutil.ReadAll(data)
 	if err != nil {
-		return fmt.Errorf("cannot compute hash for %s: %s", srcPath, err)
+		return err
+	}
+
+	hash := sha1.New()
+	_, err = io.Copy(hash, bytes.NewReader(dataBytes))
+	if err != nil {
+		return fmt.Errorf("cannot compute hash for %s: %s", installerPath, err)
 	}
 
 	hashBytes := hash.Sum(nil)[:20]
-	hashString := hex.EncodeToString(hashBytes)
-	_, err = file.Seek(0, 0)
-	if err != nil {
-		return fmt.Errorf("cannot reset %s: %s", srcPath, err)
-	}
+	dataHash := hex.EncodeToString(hashBytes)
 
-	return installFile.addData(file, targetPath, uint64(fileInfo.Size()), fileInfo.ModTime(), hashString)
-}
-
-func (installFile *InstallFile) addData(data io.Reader, installerPath string, size uint64, modTime time.Time, dataHash string) error {
 	installerPath = strings.Replace(installerPath, "./", "", 1)
 
+	uncompressedSize := uint64(len(dataBytes))
 	header := &zip.FileHeader{
 		Name:               installerPath,
-		UncompressedSize64: size,
+		UncompressedSize64: uncompressedSize,
 		Modified:           modTime,
-		//Mode:    installFile.installerFileMode(assetPath),
 	}
 
 	entryWriter, err := installFile.zipWriter.CreateHeader(header)
@@ -225,18 +238,54 @@ func (installFile *InstallFile) addData(data io.Reader, installerPath string, si
 		return fmt.Errorf("could not write header for file %s: %s", installFile.file.Name(), err)
 	}
 
-	written, err := io.Copy(entryWriter, data)
+	written, err := io.Copy(entryWriter, bytes.NewReader(dataBytes))
 	if err != nil {
 		return fmt.Errorf("could not write to %s: %s", installFile.file.Name(), err)
 	}
 
-	if uint64(written) != size {
-		return fmt.Errorf("expected %s to be %d bytes but was %d", installerPath, size, written)
+	if uint64(written) != uncompressedSize {
+		return fmt.Errorf("expected %s to be %d bytes but was %d", installerPath, uncompressedSize, written)
 	}
 
 	installFile.PackageConfig.Files[installerPath] = dataHash
 
 	return nil
+}
+
+func (installFile *InstallFile) AddHelmChart(chartFile string, chartId string) error {
+	manifest := map[string]interface{}{
+		"apiVersion": "helm.cattle.io/v1",
+		"kind":       "HelmChart",
+		"metadata": map[string]interface{}{
+			"name":      chartId,
+			"namespace": "kube-system",
+		},
+		"spec": map[string]interface{}{
+			"chart":           "https://%{KUBERNETES_API}%/static/charts/" + chartId + ".tgz",
+			"targetNamespace": "default",
+		},
+	}
+
+	manifestData, err := yaml.Marshal(manifest)
+	if err != nil {
+		return err
+	}
+
+	if err := installFile.AddFileData(bytes.NewReader(manifestData), "data/server/manifests/"+chartId+".yaml", time.Now()); err != nil {
+		return err
+	}
+
+	if err := installFile.AddFile(chartFile, "data/server/static/charts/"+chartId+".tgz"); err != nil {
+		return err
+	}
+
+	loadedChart, err := loader.Load(chartFile)
+	if err != nil {
+		return err
+	}
+
+	return installFile.processManifests(loadedChart)
+
 }
 
 func (installFile *InstallFile) installerFileMode(targetPath string) int64 {
@@ -256,53 +305,197 @@ func (installFile *InstallFile) AddDirectory(assetBase string, targetBase string
 	return err
 }
 
-func (installFile *InstallFile) AddDockerImage(tag string) error {
-	installFile.dockerImages = append(installFile.dockerImages, tag)
+func (installFile *InstallFile) AddImage(tag string) error {
+	installFile.dockerImages[tag] = true
 
 	return nil
 }
 
 func (installFile *InstallFile) saveDockerImages() error {
 
-	for _, tag := range installFile.dockerImages {
+	var allTags []string
+	for tag, _ := range installFile.dockerImages {
+		allTags = append(allTags, tag)
 		err := docker.ImagePull(tag)
 		if err != nil {
-			return fmt.Errorf("error pulling %s", tag)
+			return fmt.Errorf("error pulling %s: %s", tag, err)
 		}
 	}
 
 	ui.Printf("Collecting containers...")
-	imagesTarPath := environment.TempPath("images.tar")
-	if err := docker.SaveImages(imagesTarPath, installFile.dockerImages...); err != nil {
-		return fmt.Errorf("error collecting containers: %s", err)
-	}
+	if len(installFile.dockerImages) > 0 {
+		imagesTarPath := environment.TempPath("images-*.tar")
+		if err := docker.SaveImages(imagesTarPath, allTags...); err != nil {
+			return fmt.Errorf("error collecting containers: %s", err)
+		}
 
-	if err := installFile.AddFile(imagesTarPath, "data/agent/images/images.tar"); err != nil {
+		if err := installFile.AddFile(imagesTarPath, "data/agent/images/images.tar"); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (installFile *InstallFile) saveImagesJar(imagesTarPath string, targetPath string) error {
+	targetPath = strings.Replace(targetPath, ".tar", ".untar", 1)
+	if err := os.MkdirAll(targetPath, 0755); err != nil {
 		return err
 	}
 
+	imagesTarFile, err := os.Open(imagesTarPath)
+	if err != nil {
+		return err
+	}
+	tarReader := tar.NewReader(imagesTarFile)
+
+	for {
+		header, err := tarReader.Next()
+
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			return err
+		}
+
+		if header == nil {
+			continue
+		}
+
+		target := targetPath + "/" + header.Name
+
+		switch header.Typeflag {
+
+		case tar.TypeReg:
+			if err := installFile.AddFileData(tarReader, target, header.ModTime); err != nil {
+				return err
+			}
+
+		}
+	}
 	return nil
 }
 
 func (installFile *InstallFile) ClearDockerImages() error {
 	ui.Printf("Cleaning up containers...")
 
-	listFilters := filters.NewArgs()
-	listFilters.Add("label", "ruckstack.built=true")
+	//listFilters := filters.NewArgs()
+	//listFilters.Add("label", "ruckstack.built=true")
+	//
+	//images, err := docker.ImageList(types.ImageListOptions{
+	//	Filters: listFilters,
+	//})
+	//if err != nil {
+	//	return err
+	//}
+	//for _, image := range images {
+	//	ui.Printf("Removing %s", image.ID)
+	//	if err := docker.ImageRemove(image.ID); err != nil {
+	//		return err
+	//	}
+	//}
 
-	images, err := docker.ImageList(types.ImageListOptions{
-		Filters: listFilters,
-	})
+	return nil
+
+}
+
+/**
+Parses the descriptorContent as a kubernetes descriptor and saves any referenced containers to the install file
+*/
+func (installFile *InstallFile) AddImagesInManifest(descriptorContent []byte) error {
+	decoder := yaml.NewDecoder(bytes.NewReader(descriptorContent))
+
+	for {
+		var value interface{}
+		err := decoder.Decode(&value)
+
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errMessage := strings.Replace(err.Error(), "yaml: ", "", 1) //remove extra "yaml: "
+			return fmt.Errorf("yaml syntax error: %s", errMessage)
+		}
+		if value == nil {
+			continue
+		}
+
+		var output bytes.Buffer
+		outputWriter := bufio.NewWriter(&output)
+		encoder := yaml.NewEncoder(outputWriter)
+		if err := encoder.Encode(value); err != nil {
+			return err
+		}
+		if err := outputWriter.Flush(); err != nil {
+			return nil
+		}
+
+		obj, groupVersionKind, err := scheme.Codecs.UniversalDeserializer().Decode(output.Bytes(), nil, nil)
+		if err != nil {
+			return err
+		}
+
+		var podSpec *coreV1.PodSpec
+
+		switch groupVersionKind.Kind {
+		case "StatefulSet":
+			podSpec = &obj.(*appV1.StatefulSet).Spec.Template.Spec
+		case "Deployment":
+			podSpec = &obj.(*appV1.Deployment).Spec.Template.Spec
+		case "DaemonSet":
+			podSpec = &obj.(*appV1.DaemonSet).Spec.Template.Spec
+		case "ReplicaSet":
+			podSpec = &obj.(*appV1.ReplicaSet).Spec.Template.Spec
+		case "Pod":
+			podSpec = &obj.(*coreV1.Pod).Spec
+		}
+
+		if podSpec != nil {
+			for _, container := range podSpec.Containers {
+				ui.Printf("Including image %s\n", container.Image)
+				if err := installFile.AddImage(container.Image); err != nil {
+					return err
+				}
+			}
+		}
+
+	}
+	return nil
+
+}
+
+func (installFile *InstallFile) processManifests(loadedChart *chart.Chart) error {
+	options := chartutil.ReleaseOptions{
+		Name:      "testRelease",
+		Namespace: "default",
+	}
+
+	cvals, err := chartutil.CoalesceValues(loadedChart, map[string]interface{}{})
 	if err != nil {
 		return err
 	}
-	for _, image := range images {
-		ui.Printf("Removing %s", image.ID)
-		if err := docker.ImageRemove(image.ID); err != nil {
-			return err
+	valuesToRender, err := chartutil.ToRenderValues(loadedChart, cvals, options, nil)
+	if err != nil {
+		return err
+	}
+
+	render, err := engine.Render(loadedChart, valuesToRender)
+	if err != nil {
+		return err
+	}
+
+	for filename, data := range render {
+		data = strings.TrimSpace(data)
+		if len(data) == 0 {
+			continue
+		}
+		if strings.HasSuffix(filename, ".yaml") || strings.HasSuffix(filename, ".yml") {
+			if err := installFile.AddImagesInManifest([]byte(data)); err != nil {
+				return fmt.Errorf("Error parsing %s: %s", filename, err)
+			}
 		}
 	}
 
 	return nil
-
 }

@@ -9,11 +9,21 @@ import (
 	"path/filepath"
 )
 
-func Unzip(installPath string, zipReader *zip.ReadCloser) (err error) {
+func UnzipFile(zipFile string, outputDir string) (err error) {
+	zipReader, err := zip.OpenReader(zipFile)
+	if err != nil {
+		return err
+	}
+	defer zipReader.Close()
+
+	return Unzip(zipReader, outputDir)
+}
+
+func Unzip(zipContent *zip.ReadCloser, outputDir string) (err error) {
 	ui.Print(".....")
 
-	for i, file := range zipReader.File {
-		fullname := path.Join(installPath, file.Name)
+	for i, file := range zipContent.File {
+		fullname := path.Join(outputDir, file.Name)
 		fileInfo := file.FileInfo()
 		if fileInfo.IsDir() {
 			os.MkdirAll(fullname, fileInfo.Mode().Perm())

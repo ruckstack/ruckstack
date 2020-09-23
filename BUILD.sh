@@ -17,7 +17,7 @@ compile() {
   echo "Building ruckstack ${VERSION}..."
 
   echo "Compiling system-control..."
-  (export GOOS=linux && go build -o builder/cli/install_root/resources/system-control server/system_control/cmd/main.go)
+  (export GOOS=linux && go build -o builder/cli/install_root/resources/install_dir/bin/system-control server/system_control/cmd/main.go)
 
   echo "Compiling installer..."
   (export GOOS=linux && go build -o builder/cli/install_root/resources/installer server/installer/cmd/main.go)
@@ -52,7 +52,7 @@ build_docker() {
 clean() {
   echo "Cleaning..."
   rm -rf out
-  rm -f builder/cli/install_root/resources/system-control
+  rm -f builder/cli/install_root/resources/install_dir/bin/system-control
   rm -f builder/cli/install_root/resources/installer
   echo "Done"
 }

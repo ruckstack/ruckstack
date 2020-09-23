@@ -3,8 +3,10 @@ package environment
 import (
 	"github.com/ruckstack/ruckstack/common/ui"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -14,7 +16,8 @@ var (
 	cacheRoot     string
 	tempDir       string
 
-	OutDir string
+	OutDir     string
+	ProjectDir string
 
 	isRunningTests = false
 )
@@ -48,7 +51,7 @@ func init() {
 	}
 
 	if RuckstackHome == "/" {
-		ui.Fatal("Cannot determine Ruckstack home")
+		panic("Cannot determine Ruckstack home")
 	}
 	ui.VPrintf("Ruckstack home: %s\n", RuckstackHome)
 
@@ -115,8 +118,10 @@ func ResourcePath(path string) (string, error) {
 
 /**
 Returns the given path as a sub-path of the Ruckstack "temporary" directory.
+Any "*" in the path will be replaced with a random value
 */
 func TempPath(pathInTmp string) string {
+	pathInTmp = strings.Replace(pathInTmp, "*", strconv.Itoa(rand.Int()), 1)
 	return filepath.Join(tempDir, pathInTmp)
 }
 

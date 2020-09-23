@@ -57,7 +57,7 @@ func Install(packageConfig *config.PackageConfig, installerArgs *InstallerArgs, 
 
 	fmt.Printf("Installing to %s...\n", installPath)
 
-	if err := global_util.Unzip(installPath, zipReader); err != nil {
+	if err := global_util.Unzip(zipReader, installPath); err != nil {
 		return err
 	}
 

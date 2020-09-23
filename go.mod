@@ -5,6 +5,8 @@ go 1.13
 require (
 	github.com/docker/docker v1.4.2-0.20200203170920-46ec8731fbce
 	github.com/go-playground/assert/v2 v2.0.1
+	github.com/go-playground/locales v0.13.0
+	github.com/go-playground/universal-translator v0.17.0
 	github.com/go-playground/validator/v10 v10.1.0
 	github.com/mitchellh/go-wordwrap v1.0.0
 	github.com/smartystreets/goconvey v1.6.4 // indirect

@@ -2,6 +2,7 @@ package commands
 
 import (
 	"github.com/ruckstack/ruckstack/builder/cli/internal/builder"
+	"github.com/ruckstack/ruckstack/builder/internal/environment"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/spf13/cobra"
 )
@@ -16,7 +17,9 @@ func init() {
 		Long:  `Builds your Ruckstack project into an installable archive`,
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return builder.Build(project, out)
+			environment.OutDir = out
+			environment.ProjectDir = project
+			return builder.Build()
 		},
 	}
 

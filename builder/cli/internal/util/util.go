@@ -4,7 +4,6 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"fmt"
-	"github.com/go-playground/validator/v10"
 	"github.com/ruckstack/ruckstack/builder/internal/environment"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"io"
@@ -13,20 +12,6 @@ import (
 	"path/filepath"
 	"regexp"
 )
-
-var (
-	validate = validator.New()
-)
-
-func ExpectNoError(err error) {
-	if err != nil {
-		ui.Fatalf("Unexpected error %s", err)
-	}
-}
-
-func Validate(obj interface{}) error {
-	return validate.Struct(obj)
-}
 
 func DownloadFile(url string) (string, error) {
 
@@ -85,7 +70,7 @@ func ExtractFromGzip(gzipSource string, wantedFile string) (string, error) {
 
 	tarReader := tar.NewReader(uncompressedStream)
 
-	savePath := environment.TempPath("extract")
+	savePath := environment.TempPath("gzip-extract-*")
 
 	for true {
 		header, err := tarReader.Next()
