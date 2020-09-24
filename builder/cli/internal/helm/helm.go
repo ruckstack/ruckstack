@@ -153,7 +153,7 @@ Latest Version: %s (App Version %s)
 Download the given chart. Returns the path to the downloaded file. Will not re-download.
 */
 func DownloadChart(repo string, chart string, version string) (string, error) {
-	downloadDir := environment.CachePath("helm/download/" + repo)
+	downloadDir := environment.CachePath("download/helm/" + repo)
 	if err := os.MkdirAll(downloadDir, 0755); err != nil {
 		return "", err
 	}
@@ -167,8 +167,16 @@ func DownloadChart(repo string, chart string, version string) (string, error) {
 		Getters:          getter.All(cli.New()),
 	}
 
+	_, err := os.Stat(chartDownloader.RepositoryCache + "/" + repo + "-index.yaml")
+	if os.IsNotExist(err) {
+		ui.VPrintf("No index for repo %s. Forcing re-index", repo)
+		if err := ReIndex(); err != nil {
+			return "", err
+		}
+	}
+
 	savePath := filepath.Join(downloadDir, chart+"-"+version+".tgz")
-	_, err := os.Stat(savePath)
+	_, err = os.Stat(savePath)
 	if os.IsNotExist(err) {
 		ui.Printf("Downloading chart %s...", filepath.Base(savePath))
 

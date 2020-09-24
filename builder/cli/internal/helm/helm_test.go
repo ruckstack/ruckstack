@@ -24,7 +24,6 @@ func TestReIndex(t *testing.T) {
 	stableChartsPath := environment.CachePath("helm/cache/helm/repository/stable-charts.txt")
 	stableIndexPath := environment.CachePath("helm/cache/helm/repository/stable-index.yaml")
 
-	assert.Nil(t, os.RemoveAll(environment.CachePath("helm/cache")))
 	assert.Nil(t, ReIndex())
 	assert.FileExists(t, stableChartsPath)
 	assert.FileExists(t, stableIndexPath)
@@ -42,9 +41,6 @@ func TestSearch(t *testing.T) {
 	if testing.Short() {
 		t.Skip("-short tests do not search the internet")
 	}
-
-	//ensure Search re-indexes when needed
-	assert.Nil(t, os.RemoveAll(environment.CachePath("helm/cache")))
 
 	output := new(bytes.Buffer)
 	ui.SetOutput(output)
@@ -118,9 +114,6 @@ func TestDownloadChart(t *testing.T) {
 	output := new(bytes.Buffer)
 	ui.SetOutput(output)
 	defer ui.SetOutput(os.Stdout)
-
-	//ensure not already downloaded
-	assert.Nil(t, os.RemoveAll(environment.CachePath("helm/download")))
 
 	type args struct {
 		repo    string

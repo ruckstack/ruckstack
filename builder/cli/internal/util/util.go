@@ -17,7 +17,7 @@ func DownloadFile(url string) (string, error) {
 
 	cacheKey := regexp.MustCompile(`https?://.+?/`).ReplaceAllString(url, "")
 
-	savePath := environment.CachePath(cacheKey)
+	savePath := environment.CachePath("download/general/" + cacheKey)
 
 	saveDir, _ := filepath.Split(savePath)
 	if err := os.MkdirAll(saveDir, 0755); err != nil {
