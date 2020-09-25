@@ -2,12 +2,12 @@ package environment
 
 import (
 	"github.com/ruckstack/ruckstack/common/ui"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var (
@@ -24,10 +24,11 @@ var (
 
 func init() {
 	executable, err := os.Executable()
-	if err == nil {
+	if err != nil {
 		ui.VPrintln("Cannot determine if we are running tests: ", err)
+	} else {
+		isRunningTests = strings.HasPrefix(executable, "/tmp/")
 	}
-	isRunningTests = strings.HasPrefix(executable, "/tmp/")
 
 	//find RuckstackHome
 	if isRunningTests {
@@ -64,9 +65,13 @@ func init() {
 	ui.VPrintf("Ruckstack resource root: %s", resourceRoot)
 
 	//find cacheRoot
-	cacheRoot = os.Getenv("RUCKSTACK_CACHE_DIR")
-	if cacheRoot == "" {
+	if isRunningTests {
 		cacheRoot = RuckstackHome + "/cache"
+	} else {
+		cacheRoot = os.Getenv("RUCKSTACK_CACHE_DIR")
+		if cacheRoot == "" {
+			cacheRoot = "/data/cache"
+		}
 	}
 	ui.VPrintf("Ruckstack cache root: %s", cacheRoot)
 
@@ -74,25 +79,10 @@ func init() {
 	if isRunningTests {
 		tempDir = RuckstackHome + "/tmp"
 	} else {
-		tempDir, err = ioutil.TempDir("", "ruckstack")
-		if err != nil {
-			ui.Fatalf("Cannot determine temp directory: %s", err)
-		}
+		tempDir = "/data/tmp/ruckstack-run-" + strconv.FormatInt(time.Now().Unix(), 10)
 	}
 
 	ui.VPrintf("Ruckstack temp dir: %s", tempDir)
-
-	if !isRunningTests {
-		//when running all tests, the init method is called too often and clearing the temp dir interferes with other tests
-		err = os.RemoveAll(tempDir)
-		if err != nil {
-			ui.VPrintf("Cannot clear temp dir: %s", err)
-		}
-		err = os.MkdirAll(tempDir, 0755)
-		if err != nil {
-			ui.VPrintf("Cannot create temp dir: %s", err)
-		}
-	}
 }
 
 /**

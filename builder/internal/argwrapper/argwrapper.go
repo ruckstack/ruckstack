@@ -23,5 +23,8 @@ func GetOriginalValue(key string, fallbackValue string) string {
 Adds a WRAPPED_* environment variable to the passed array
 */
 func SaveOriginalValue(key string, value string, envVariables []string) []string {
-	return append(envVariables, fmt.Sprintf("WRAPPED_%s=%s", strings.ToUpper(key), value))
+	envKey := fmt.Sprintf("WRAPPED_%s", strings.ToUpper(key))
+
+	_ = os.Setenv(envKey, value)
+	return append(envVariables, envKey+"="+value)
 }

@@ -19,16 +19,15 @@ func init() {
 				newProjectType = "example"
 			}
 
-			return new_project.NewProject(newProjectOut, newProjectType)
+			return new_project.NewProject(newProjectType)
 		},
 	}
 
 	cmd.Flags().StringVar(&newProjectType, "type", "empty", "Type of project to create. Possible values: empty or example")
-	cmd.Flags().StringVar(&newProjectOut, "out", "", "Directory to create project in")
+	cmd.Flags().StringVar(&newProjectOut, "out", ".", "Directory to create project in. Defaults to current directory")
 
-	ui.MarkFlagsRequired(cmd, "out")
 	ui.MarkFlagsDirname(cmd, "out")
 
-	rootCmd.AddCommand(cmd)
+	RootCmd.AddCommand(cmd)
 
 }

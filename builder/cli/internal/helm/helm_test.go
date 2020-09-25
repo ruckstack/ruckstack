@@ -138,12 +138,15 @@ func TestDownloadChart(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			//delete it for the original download
+			_ = os.Remove(environment.CachePath("/download/helm/stable/postgresql-8.1.2.tgz"))
+
 			got, err := DownloadChart(tt.args.repo, tt.args.chart, tt.args.version)
 			if tt.wantErr {
 				assert.Equal(t, err, tt.wantErr)
 			} else {
 				assert.NoError(t, err)
-				assert.Contains(t, got, "/cache/helm/download/stable/postgresql-8.1.2.tgz")
+				assert.Contains(t, got, "/cache/download/helm/stable/postgresql-8.1.2.tgz")
 				assert.FileExists(t, got)
 				assert.Contains(t, output.String(), "Downloading chart")
 
@@ -151,7 +154,7 @@ func TestDownloadChart(t *testing.T) {
 				output.Reset()
 				got, err = DownloadChart(tt.args.repo, tt.args.chart, tt.args.version)
 				assert.NoError(t, err)
-				assert.Contains(t, got, "/cache/helm/download/stable/postgresql-8.1.2.tgz")
+				assert.Contains(t, got, "/cache/download/helm/stable/postgresql-8.1.2.tgz")
 				assert.NotContains(t, output.String(), "Downloading chart")
 				assert.Contains(t, output.String(), "Already downloaded")
 

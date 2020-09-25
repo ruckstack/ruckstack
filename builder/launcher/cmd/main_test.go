@@ -24,7 +24,7 @@ func Test_processArguments(t *testing.T) {
 			parsedArgs: map[string]string{},
 			newArgs:    []string{},
 			env:        []string{},
-			mountCount: 0,
+			mountCount: 1,
 		},
 		{
 			name: "Stand along flag",
@@ -34,7 +34,7 @@ func Test_processArguments(t *testing.T) {
 			},
 			newArgs:    []string{"--dangling"},
 			env:        []string{},
-			mountCount: 0,
+			mountCount: 1,
 		},
 		{
 			name:    "Complex processing",
@@ -54,6 +54,17 @@ func Test_processArguments(t *testing.T) {
 				"WRAPPED_OUT=" + pathToOut,
 				"WRAPPED_PROJECT=" + pathToProject,
 			},
+			mountCount: 3,
+		},
+		{
+			name: "Handles default values",
+			args: []string{"new-project", "--type", "example"},
+			parsedArgs: map[string]string{
+				"--type": "example",
+				"--out":  ".",
+			},
+			newArgs:    []string{"new-project", "--type", "example", "--out", "/data/out"},
+			env:        []string{"WRAPPED_OUT=."},
 			mountCount: 2,
 		},
 	}

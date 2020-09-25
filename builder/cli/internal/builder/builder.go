@@ -11,20 +11,20 @@ import (
 )
 
 func Build() error {
-	ui.Printf("Cleaning out directory...")
-	if err := os.RemoveAll(environment.OutDir); err != nil {
-		return err
-	}
-	if err := os.MkdirAll(environment.OutDir, 0755); err != nil {
-		return err
-	}
-
 	projectConfig, err := project.Parse(environment.ProjectDir + "/ruckstack.conf")
 	if err != nil {
 		return fmt.Errorf("error parsing project: %s", err)
 	}
 
-	installFile, err := install_file.StartCreation(environment.OutPath(projectConfig.Id + "_" + projectConfig.Version + ".installer"))
+	installerPath := environment.OutPath(projectConfig.Id + "_" + projectConfig.Version + ".installer")
+	err = os.Remove(installerPath)
+	if os.IsNotExist(err) {
+		ui.VPrintf("No existing %s to delete", installerPath)
+	} else if err != nil {
+		return err
+	}
+
+	installFile, err := install_file.StartCreation(installerPath)
 	if err != nil {
 		return err
 	}

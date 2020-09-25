@@ -13,7 +13,7 @@ func TestInit(t *testing.T) {
 	assert.Equal(t, resourceRoot, RuckstackHome+"/builder/cli/install_root/resources")
 	assert.DirExists(t, resourceRoot)
 
-	assert.Equal(t, cacheRoot, RuckstackHome+"/cache")
+	assert.Equal(t, RuckstackHome+"/cache", cacheRoot)
 	assert.DirExists(t, cacheRoot)
 
 }

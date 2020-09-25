@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func NewProject(outputDirectory string, projectType string) error {
+func NewProject(projectType string) error {
 	sourceDir, err := environment.ResourcePath("new_project/" + projectType)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -29,16 +29,17 @@ func NewProject(outputDirectory string, projectType string) error {
 		}
 	}
 
-	if err := util.CopyDir(sourceDir, outputDirectory); err != nil {
+	ui.VPrintf("Copying template project %s to %s", sourceDir, environment.OutDir)
+	if err := util.CopyDir(sourceDir, environment.OutDir); err != nil {
 		return err
 	}
 
-	outputDirToShow := argwrapper.GetOriginalValue("out", outputDirectory)
+	outputDirToShow := argwrapper.GetOriginalValue("out", environment.OutDir)
 
 	ui.Printf("Created %s project in %s\n", projectType, outputDirToShow)
 	ui.Println("")
 	ui.Printf("Open %s/ruckstack.conf in your favorite text editor to see the generated project file\n", outputDirToShow)
-	ui.Printf("To build it, run `ruckstack build --project %s/ruckstack.conf --out ruckstack-out`\n", outputDirToShow)
+	ui.Printf("To build it, run `ruckstack build` from %s\n", outputDirToShow)
 	ui.Println("")
 	ui.Println("Happy Stacking!")
 	ui.Println("")

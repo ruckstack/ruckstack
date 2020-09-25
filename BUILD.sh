@@ -13,6 +13,14 @@ build_all() {
   echo "Done"
 }
 
+fast() {
+  echo "Building without tests.... Good luck!"
+  compile
+  build_docker
+
+  echo "Done"
+}
+
 compile() {
   echo "Building ruckstack ${VERSION}..."
 

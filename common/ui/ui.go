@@ -15,11 +15,16 @@ var (
 
 func init() {
 	logger = log.New(os.Stdout, "", 0)
+
+	if os.Getenv("RUCKSTACK_VERBOSE") == "true" {
+		SetVerbose(true)
+	}
 }
 
 func SetVerbose(value bool) {
 	if value {
 		logger.SetFlags(log.Ldate | log.Ltime)
+		Println("Enabled verbose output")
 	} else {
 		logger.SetFlags(0)
 	}

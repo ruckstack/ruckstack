@@ -10,6 +10,7 @@ import (
 	"github.com/ruckstack/ruckstack/builder/internal/docker"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"os"
+	"os/user"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -18,6 +19,21 @@ import (
 var (
 	//controls if project/out/etc. directories are auto-crated. Purely for testing purposes.
 	autoMkDirs = true
+
+	/**
+	Copy of what is in builder's RootCommand so we know default mounted directories to pass along.
+	Ideally there would be a test to make sure this is kept in sync.
+	We can't directly depend on RootCommand or it compiles in all of the builder into the launcher
+	*/
+	commandDefaults = map[string]map[string]string{
+		"new-project": {
+			"out": ".",
+		},
+		"build": {
+			"out":     ".",
+			"project": ".",
+		},
+	}
 )
 
 func main() {
@@ -36,6 +52,7 @@ func main() {
 	_, verbose := parsedArgs["--verbose"]
 	if verbose {
 		ui.SetVerbose(verbose)
+		containerConfig.Env = append(containerConfig.Env, "RUCKSTACK_VERBOSE=true")
 	}
 
 	containerConfig.Env = append(containerConfig.Env, "RUCKSTACK_DOCKERIZED=true")
@@ -62,7 +79,7 @@ func main() {
 	ui.VPrintf("LAUNCHER: Image: %s", containerConfig.Image)
 	ui.VPrintf("LAUNCHER: User: %s", containerConfig.User)
 	ui.VPrintf("LAUNCHER: Command: %s", containerConfig.Cmd)
-	ui.VPrintf("LAUNCHER: Environment:\n    %s", strings.Join(env, "\n    "))
+	ui.VPrintf("LAUNCHER: Environment:\n    %s", strings.Join(containerConfig.Env, "\n    "))
 
 	for _, mountPt := range hostConfig.Mounts {
 		ui.VPrintf("LAUNCHER: Mount Point %s -> %s\n", mountPt.Source, mountPt.Target)
@@ -114,6 +131,20 @@ Takes the original process args and replaces any that need to have different val
 and stores the original value in an array for use in environment variables
 */
 func processArguments(originalArgs []string) (map[string]string, []string, []string, []mount.Mount) {
+
+	commandDefaults := getCommandDefaults(originalArgs)
+	for commandArg, defaultValue := range commandDefaults {
+		foundArg := false
+		for _, passedArg := range originalArgs {
+			if passedArg == "--"+commandArg {
+				foundArg = true
+			}
+		}
+		if !foundArg {
+			originalArgs = append(originalArgs, "--"+commandArg, defaultValue)
+		}
+	}
+
 	parsedArgs := make(map[string]string)
 	envVariables := make([]string, 0)
 	newArgs := make([]string, len(originalArgs))
@@ -181,5 +212,28 @@ func processArguments(originalArgs []string) (map[string]string, []string, []str
 		}
 	}
 
+	currentUser, err := user.Current()
+	if err != nil {
+		ui.Fatalf("Error getting current user: %s", err)
+	}
+	localCacheDir := filepath.Join(currentUser.HomeDir, ".ruckstack")
+	_ = os.MkdirAll(localCacheDir, 0755)
+	mountPoints = append(mountPoints, mount.Mount{
+		Type:     mount.TypeBind,
+		Source:   localCacheDir,
+		Target:   "/data/cache",
+		ReadOnly: false,
+	})
+
 	return parsedArgs, newArgs, envVariables, mountPoints
+}
+
+func getCommandDefaults(args []string) map[string]string {
+	for _, arg := range args {
+		commandDefaults, found := commandDefaults[arg]
+		if found {
+			return commandDefaults
+		}
+	}
+	return nil
 }

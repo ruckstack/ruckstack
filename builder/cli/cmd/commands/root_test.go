@@ -8,7 +8,7 @@ import (
 )
 
 func TestFormattingCorrect(t *testing.T) {
-	testCommandFormatting(t, rootCmd)
+	testCommandFormatting(t, RootCmd)
 }
 
 func testCommandFormatting(t *testing.T, command *cobra.Command) {

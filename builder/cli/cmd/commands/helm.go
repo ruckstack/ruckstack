@@ -15,7 +15,7 @@ func init() {
 	initReIndex(helmCommand)
 	initSearch(helmCommand)
 
-	rootCmd.AddCommand(helmCommand)
+	RootCmd.AddCommand(helmCommand)
 }
 
 func initReIndex(parent *cobra.Command) {

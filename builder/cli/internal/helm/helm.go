@@ -28,7 +28,7 @@ func init() {
 	helmHome = environment.CachePath("helm")
 
 	if err := os.MkdirAll(helmHome, 0755); err != nil {
-		ui.Fatalf("Cannot create Helm directory")
+		ui.Fatalf("Cannot create Helm directory: %s", err)
 	}
 
 	if err := os.Setenv(xdg.CacheHomeEnvVar, path.Join(helmHome, "cache")); err != nil {

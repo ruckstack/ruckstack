@@ -2,6 +2,7 @@ package commands
 
 import (
 	"github.com/ruckstack/ruckstack/builder/cli/internal/builder"
+	"github.com/ruckstack/ruckstack/builder/internal/argwrapper"
 	"github.com/ruckstack/ruckstack/builder/internal/environment"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/spf13/cobra"
@@ -17,19 +18,29 @@ func init() {
 		Long:  `Builds your Ruckstack project into an installable archive`,
 
 		RunE: func(cmd *cobra.Command, args []string) error {
+
+			if out == "." && environment.IsRunningLauncher() {
+				out = "/data/out"
+				argwrapper.SaveOriginalValue("out", ".", []string{})
+			}
+
+			if out == "." && environment.IsRunningLauncher() {
+				out = "/data/project"
+				argwrapper.SaveOriginalValue("project", ".", []string{})
+			}
+
 			environment.OutDir = out
 			environment.ProjectDir = project
 			return builder.Build()
 		},
 	}
 
-	cmd.Flags().StringVar(&project, "project", "", "Project file to build")
-	cmd.Flags().StringVar(&out, "out", "", "Directory to save built artifacts to")
+	cmd.Flags().StringVar(&project, "project", ".", "Project directory")
+	cmd.Flags().StringVar(&out, "out", ".", "Directory to save installer to")
 
-	ui.MarkFlagsRequired(cmd, "project", "out")
-	ui.MarkFlagsFilename(cmd, "project")
+	ui.MarkFlagsDirname(cmd, "project")
 	ui.MarkFlagsDirname(cmd, "out")
 
-	rootCmd.AddCommand(cmd)
+	RootCmd.AddCommand(cmd)
 
 }
