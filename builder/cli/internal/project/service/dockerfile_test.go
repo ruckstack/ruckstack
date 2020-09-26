@@ -87,8 +87,9 @@ func TestDockerfileService_Build(t *testing.T) {
 			assert.NoError(t, installFile.CompleteCreation())
 
 			if tt.wantErr != "" {
-				assert.Error(t, err)
-				assert.True(t, strings.HasPrefix(err.Error(), tt.wantErr))
+				if assert.Error(t, err) {
+					assert.True(t, strings.HasPrefix(err.Error(), tt.wantErr))
+				}
 			} else {
 				assert.NoError(t, err)
 

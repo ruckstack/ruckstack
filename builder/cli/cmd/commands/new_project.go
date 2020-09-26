@@ -2,6 +2,7 @@ package commands
 
 import (
 	"github.com/ruckstack/ruckstack/builder/cli/internal/new_project"
+	"github.com/ruckstack/ruckstack/builder/internal/environment"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/spf13/cobra"
 )
@@ -18,6 +19,8 @@ func init() {
 			if newProjectType == "" {
 				newProjectType = "example"
 			}
+
+			environment.OutDir = newProjectOut
 
 			return new_project.NewProject(newProjectType)
 		},

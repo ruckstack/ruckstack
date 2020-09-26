@@ -38,8 +38,14 @@ var (
 
 func main() {
 
+	dockerGroup, err := user.LookupGroup("docker")
+	if err != nil {
+		exitWithError(fmt.Errorf("cannot find docker group: %s", err))
+	}
 	containerConfig := &container.Config{
 		Tty: false,
+		//Using the built in user, but forcing it into the docker group so that it can access the docker.sock
+		User: ":" + dockerGroup.Gid,
 	}
 
 	hostConfig := &container.HostConfig{}
@@ -77,7 +83,7 @@ func main() {
 
 	ui.VPrintf("LAUNCHER: Force Pull: %t", forcePull)
 	ui.VPrintf("LAUNCHER: Image: %s", containerConfig.Image)
-	ui.VPrintf("LAUNCHER: User: %s", containerConfig.User)
+	ui.VPrintf("LAUNCHER: Docker User: '%s'", containerConfig.User)
 	ui.VPrintf("LAUNCHER: Command: %s", containerConfig.Cmd)
 	ui.VPrintf("LAUNCHER: Environment:\n    %s", strings.Join(containerConfig.Env, "\n    "))
 
@@ -103,7 +109,9 @@ func main() {
 
 		if len(imageList) == 0 {
 			ui.VPrintf("No local images found for %s", containerConfig.Image)
-			docker.ImagePull(containerConfig.Image)
+			if err := docker.ImagePull(containerConfig.Image); err != nil {
+				ui.Fatalf("Error pulling %s: %s", containerConfig.Image, err)
+			}
 		} else {
 			ui.VPrintf("Not pulling image %s: already in local image cache", containerConfig.Image)
 		}
@@ -117,7 +125,7 @@ func main() {
 func exitWithError(err error) {
 	errorMessage := fmt.Sprintf("Error launching Ruckstack: %s", err)
 
-	if strings.Contains(err.Error(), "Cannot connect to the Docker daemon") {
+	if err.Error() == "cannot find docker group" || strings.Contains(err.Error(), "Cannot connect to the Docker daemon") {
 		ui.VPrintln("LAUNCHER:", err.Error())
 		errorMessage = "Error launching Ruckstack: Ruckstack requires Docker to run. Please install and/or start the Docker daemon process and re-run Ruckstack"
 	} else {
@@ -222,6 +230,13 @@ func processArguments(originalArgs []string) (map[string]string, []string, []str
 		Type:     mount.TypeBind,
 		Source:   localCacheDir,
 		Target:   "/data/cache",
+		ReadOnly: false,
+	})
+
+	mountPoints = append(mountPoints, mount.Mount{
+		Type:     mount.TypeBind,
+		Source:   "/var/run/docker.sock",
+		Target:   "/var/run/docker.sock",
 		ReadOnly: false,
 	})
 

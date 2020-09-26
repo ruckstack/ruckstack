@@ -30,7 +30,7 @@ func init() {
 
 func ImagePull(imageRef string) error {
 	if strings.HasPrefix(imageRef, "build.local/") {
-		ui.VPrintf("Cannot pull local image %s...", imageRef)
+		ui.VPrintf("Don't pull local image %s", imageRef)
 		return nil
 	}
 

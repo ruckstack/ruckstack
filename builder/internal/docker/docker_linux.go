@@ -31,9 +31,12 @@ func ImageBuild(dockerfile string, tags []string, labels map[string]string) erro
 	buildContext, _ := archive.TarWithOptions(filepath.Dir(dockerfile), &archive.TarOptions{})
 
 	resp, err := cli.ImageBuild(context.Background(), buildContext, types.ImageBuildOptions{
-		Dockerfile: filepath.Base(dockerfile),
-		Tags:       tags,
-		Labels:     labels,
+		//Version: types.BuilderBuildKit,
+		Dockerfile:  filepath.Base(dockerfile),
+		Tags:        tags,
+		Labels:      labels,
+		Remove:      true,
+		ForceRemove: true,
 	})
 
 	if err != nil {

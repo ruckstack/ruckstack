@@ -72,6 +72,7 @@ func ExtractFromGzip(gzipSource string, wantedFile string) (string, error) {
 
 	savePath := environment.TempPath("gzip-extract-*")
 
+	foundFile := false
 	for true {
 		header, err := tarReader.Next()
 
@@ -97,18 +98,26 @@ func ExtractFromGzip(gzipSource string, wantedFile string) (string, error) {
 					return "", err
 				}
 
+				foundFile = true
 				break
 			}
 		}
 	}
 
+	if !foundFile {
+		return "", fmt.Errorf("cannot find %s in %s", wantedFile, gzipSource)
+	}
 	return savePath, nil
 }
 
 func CopyFile(source string, dest string) (err error) {
 	sourcefile, err := os.Open(source)
+	if os.IsNotExist(err) {
+		return fmt.Errorf("cannot copy file %s: file not found", source)
+	}
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error opening file to copy: %s", err)
 	}
 
 	defer sourcefile.Close()
@@ -136,6 +145,9 @@ func CopyDir(source string, dest string) (err error) {
 
 	// get properties of source dir
 	sourceinfo, err := os.Stat(source)
+	if os.IsNotExist(err) {
+		return fmt.Errorf("cannot copy directory %s: not found", source)
+	}
 	if err != nil {
 		return err
 	}

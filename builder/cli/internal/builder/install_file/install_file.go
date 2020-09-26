@@ -197,8 +197,10 @@ func (installFile *InstallFile) AddFile(srcPath string, targetPath string) error
 		return fmt.Errorf("cannot stat %s: %s", srcPath, err)
 	}
 
+	ui.VPrintf("File exists at %s", srcPath)
+
 	if strings.HasPrefix(targetPath, "data/agent/images") && strings.HasSuffix(targetPath, ".tar") {
-		if err := installFile.saveImagesJar(srcPath, targetPath); err != nil {
+		if err := installFile.saveImagesTar(srcPath, targetPath); err != nil {
 			return err
 		}
 	} else {
@@ -336,11 +338,10 @@ func (installFile *InstallFile) saveDockerImages() error {
 	return nil
 }
 
-func (installFile *InstallFile) saveImagesJar(imagesTarPath string, targetPath string) error {
+func (installFile *InstallFile) saveImagesTar(imagesTarPath string, targetPath string) error {
 	targetPath = strings.Replace(targetPath, ".tar", ".untar", 1)
-	if err := os.MkdirAll(targetPath, 0755); err != nil {
-		return err
-	}
+
+	ui.VPrintln("Saving images tar to %s", targetPath)
 
 	imagesTarFile, err := os.Open(imagesTarPath)
 	if err != nil {

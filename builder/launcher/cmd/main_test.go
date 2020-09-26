@@ -1,7 +1,8 @@
 package main
 
 import (
-	"gotest.tools/assert"
+	"github.com/ruckstack/ruckstack/builder/cli/cmd/commands"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -72,10 +73,57 @@ func Test_processArguments(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			parsedArgs, args, env, mounts := processArguments(tt.args)
-			assert.DeepEqual(t, parsedArgs, tt.parsedArgs)
-			assert.DeepEqual(t, args, tt.newArgs)
-			assert.DeepEqual(t, env, tt.env)
+			assert.ElementsMatch(t, parsedArgs, tt.parsedArgs)
+			assert.ElementsMatch(t, args, tt.newArgs)
+			assert.ElementsMatch(t, env, tt.env)
 			assert.Equal(t, tt.mountCount, len(mounts))
 		})
 	}
+}
+
+/**
+makes sure the commandDefaults map matches the RootCommand reality
+*/
+func Test_commandDefaults(t *testing.T) {
+	flagsToCheck := []string{"out", "project"}
+
+	rootCommand := commands.RootCmd
+	for _, command := range rootCommand.Commands() {
+		for _, checkFlag := range flagsToCheck {
+			t.Run("Default is correct "+command.Name()+"."+checkFlag, func(t *testing.T) {
+				flag := command.Flag(checkFlag)
+				mapArgs := commandDefaults[command.Name()]
+
+				if flag == nil {
+					if mapArgs != nil {
+						_, exists := mapArgs[checkFlag]
+						assert.False(t, exists)
+					}
+				} else {
+					if assert.NotNil(t, mapArgs) {
+						mapDefault, exists := mapArgs[checkFlag]
+						assert.True(t, exists)
+						assert.Equal(t, flag.DefValue, mapDefault)
+					}
+				}
+			})
+		}
+	}
+
+	for commandName, commandArgs := range commandDefaults {
+		for _, realCommand := range rootCommand.Commands() {
+			if realCommand.Name() != commandName {
+				continue
+			}
+
+			for commandArg, commandValue := range commandArgs {
+				t.Run("No extra info "+commandName+"."+commandArg, func(t *testing.T) {
+					realFlag := realCommand.Flag(commandArg)
+					assert.NotNil(t, realFlag)
+					assert.Equal(t, realFlag.DefValue, commandValue)
+				})
+			}
+		}
+	}
+
 }

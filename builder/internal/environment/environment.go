@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 )
 
 var (
@@ -75,13 +74,20 @@ func init() {
 	}
 	ui.VPrintf("Ruckstack cache root: %s", cacheRoot)
 
-	//find tempDir
-	if isRunningTests {
-		tempDir = RuckstackHome + "/tmp"
-	} else {
-		tempDir = "/data/tmp/ruckstack-run-" + strconv.FormatInt(time.Now().Unix(), 10)
+	tempDir = os.Getenv("RUCKSTACK_TEMP_DIR")
+	if tempDir == "" {
+		//find tempDir
+		if isRunningTests {
+			tempDir = RuckstackHome + "/tmp"
+		} else {
+			tempDir = "/data/tmp/"
+		}
 	}
+	tempDir = filepath.Join(tempDir, "ruckstack-run-"+strconv.FormatInt(int64(rand.Int()), 10))
 
+	if err := os.MkdirAll(tempDir, 0755); err != nil {
+		ui.Fatalf("Cannot create temp dir: %s", err)
+	}
 	ui.VPrintf("Ruckstack temp dir: %s", tempDir)
 }
 
