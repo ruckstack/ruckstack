@@ -25,6 +25,7 @@ build() {
   echo "Compiling ruckstack..."
   (export GOOS=windows && go build -o out/dist/win/bin/ruckstack.exe cmd/ruckstack/main.go)
   (export GOOS=linux && go build -o out/dist/linux/ruckstack/bin/ruckstack cmd/ruckstack/main.go)
+  (export GOOS=darwin && go build -o out/dist/darwin/ruckstack/bin/ruckstack cmd/ruckstack/main.go)
 
   echo "Creating windows distribution..."
   cp ./LICENSE out/dist/win
@@ -37,6 +38,11 @@ build() {
   chmod 755 out/dist/linux/ruckstack/bin/ruckstack
   (cd out/dist/linux && tar cfz ../../ruckstack-linux-${VERSION}.tgz ruckstack)
 
+  echo "Creating darwin (macos) distribution..."
+  cp ./LICENSE out/dist/darwin/ruckstack
+  cp -r dist out/dist/darwin/ruckstack
+  chmod 755 out/dist/darwin/ruckstack/bin/ruckstack
+  (cd out/dist/darwin && tar cfz ../../ruckstack-darwin-${VERSION}.tgz ruckstack)
 
   echo "Done"
 }
