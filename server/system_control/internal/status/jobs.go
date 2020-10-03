@@ -2,8 +2,8 @@ package status
 
 import (
 	"fmt"
-	common2 "github.com/ruckstack/ruckstack/server/internal/environment"
 	"github.com/ruckstack/ruckstack/server/internal/kubeclient"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/util"
 	batch "k8s.io/api/batch/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,15 +14,12 @@ import (
 var seenJobs = map[string]bool{}
 
 func ShowJobStatus(includeSystemJobs bool, watch bool) error {
-	packageConfig, err := common2.GetPackageConfig()
-	if err != nil {
-		return err
-	}
+	packageConfig := environment.PackageConfig
 
 	fmt.Printf("Jobs in %s\n", packageConfig.Name)
 	fmt.Println("----------------------------------------------------")
 
-	kubeClient, err = kubeclient.KubeClient()
+	kubeClient, err := kubeclient.KubeClient(environment.ServerHome)
 	if err != nil {
 		return err
 	}

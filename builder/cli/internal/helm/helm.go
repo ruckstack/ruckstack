@@ -3,7 +3,7 @@ package helm
 import (
 	"fmt"
 	"github.com/mitchellh/go-wordwrap"
-	"github.com/ruckstack/ruckstack/builder/internal/environment"
+	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/downloader"

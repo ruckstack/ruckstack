@@ -2,11 +2,10 @@ package commands
 
 import (
 	"fmt"
-	common2 "github.com/ruckstack/ruckstack/server/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/util"
 	"github.com/spf13/cobra"
 	"os"
-	"os/user"
 	"path/filepath"
 )
 
@@ -19,12 +18,7 @@ var rootCmd = &cobra.Command{
 
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if cmd.Annotations[REQUIRES_ROOT] == "true" {
-			currentUser, err := user.Current()
-			if err != nil {
-				return fmt.Errorf("Cannot read user: %s", err)
-			}
-
-			if currentUser.Username != "root" {
+			if environment.IsRunningAsRoot {
 				return fmt.Errorf("command %s must be run as sudo or root", cmd.Name())
 			}
 
@@ -38,8 +32,8 @@ func init() {
 	util.ExpectNoError(err)
 	executable = filepath.Base(executable)
 
-	packageConfig, err := common2.GetPackageConfig()
-	util.ExpectNoError(err)
+	packageConfig := environment.PackageConfig
+
 	rootCmd.Use = executable
 	rootCmd.Short = packageConfig.Name + " System Control"
 	rootCmd.Version = packageConfig.Version

@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/ruckstack/ruckstack/common/config"
-	"github.com/ruckstack/ruckstack/server/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"path/filepath"
@@ -14,20 +14,17 @@ import (
 
 func AddNode() error {
 
-	localConfig, err := environment.GetLocalConfig()
-	if err != nil {
-		return err
-	}
+	localConfig := environment.LocalConfig
 	if localConfig.Join.Server != "" {
 		panic("Must run this command from the primary machine in your cluster")
 	}
 
-	tokenFileContent, err := ioutil.ReadFile(filepath.Join(environment.InstallDir(), "/data/server/token"))
+	tokenFileContent, err := ioutil.ReadFile(filepath.Join(environment.ServerHome, "/data/server/token"))
 	if err != nil {
 		return err
 	}
 
-	kubeConfigFileContent, err := ioutil.ReadFile(filepath.Join(environment.InstallDir(), "/config/kubeconfig.yaml"))
+	kubeConfigFileContent, err := ioutil.ReadFile(filepath.Join(environment.ServerHome, "/config/kubeconfig.yaml"))
 	if err != nil {
 		return err
 	}

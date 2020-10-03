@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	common2 "github.com/ruckstack/ruckstack/server/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/util"
 	"os"
 	"os/exec"
@@ -13,13 +13,10 @@ import (
 )
 
 func Uninstall() error {
-	packageConfig, err := common2.GetPackageConfig()
-	if err != nil {
-		return err
-	}
+	packageConfig := environment.PackageConfig
 
 	ui := bufio.NewScanner(os.Stdin)
-	fmt.Printf("Uninstall %s from %s? [y|n] ", packageConfig.Name, common2.InstallDir())
+	fmt.Printf("Uninstall %s from %s? [y|n] ", packageConfig.Name, environment.ServerHome)
 	ui.Scan()
 	if ui.Text() != "y" {
 		return fmt.Errorf("cancelling install")
@@ -30,8 +27,8 @@ func Uninstall() error {
 	fmt.Println("Killing processes...")
 	psOut := bytes.NewBufferString("")
 
-	command := exec.Command("pgrep", "-f", common2.InstallDir())
-	command.Dir = common2.InstallDir()
+	command := exec.Command("pgrep", "-f", environment.ServerHome)
+	command.Dir = environment.ServerHome
 	command.Stdout = psOut
 	command.Stderr = os.Stderr
 	if err := command.Run(); err != nil {
@@ -75,7 +72,7 @@ func Uninstall() error {
 	warn(os.RemoveAll("/root/.kube"))
 	warn(os.RemoveAll("~/.rancher"))
 	warn(os.RemoveAll("/root/.rancher"))
-	warn(os.RemoveAll(common2.InstallDir()))
+	warn(os.RemoveAll(environment.ServerHome))
 
 	fmt.Println("\nUninstall complete")
 

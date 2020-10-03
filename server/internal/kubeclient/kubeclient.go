@@ -3,7 +3,6 @@ package kubeclient
 import (
 	"flag"
 	"fmt"
-	common2 "github.com/ruckstack/ruckstack/server/internal/environment"
 	"os"
 	"path/filepath"
 
@@ -12,18 +11,18 @@ import (
 	"k8s.io/klog"
 )
 
-func KubeClient() (*kubernetes.Clientset, error) {
+func KubeClient(serverHome string) (*kubernetes.Clientset, error) {
 
 	klogFlags := flag.NewFlagSet("klog", flag.ExitOnError)
 	klogFlags.Set("logtostderr", "false")
-	klogFlags.Set("log_file", filepath.Join(common2.InstallDir(), "logs", "k3s-client.log"))
+	klogFlags.Set("log_file", filepath.Join(serverHome, "logs", "k3s-client.log"))
 	klog.InitFlags(klogFlags)
 
-	if !ConfigExists() {
-		panic(fmt.Sprintf("%s does not exist", KubeconfigFile()))
+	if !ConfigExists(serverHome) {
+		panic(fmt.Sprintf("%s does not exist", KubeconfigFile(serverHome)))
 	}
 
-	config, err := clientcmd.BuildConfigFromFlags("", KubeconfigFile())
+	config, err := clientcmd.BuildConfigFromFlags("", KubeconfigFile(serverHome))
 	if err != nil {
 		return nil, err
 	}
@@ -37,12 +36,12 @@ func KubeClient() (*kubernetes.Clientset, error) {
 	return clientset, nil
 }
 
-func ConfigExists() bool {
-	_, err := os.Stat(KubeconfigFile())
+func ConfigExists(serverHome string) bool {
+	_, err := os.Stat(KubeconfigFile(serverHome))
 
 	return err == nil
 }
 
-func KubeconfigFile() string {
-	return common2.InstallDir() + "/config/kubeconfig.yaml"
+func KubeconfigFile(serverHome string) string {
+	return serverHome + "/config/kubeconfig.yaml"
 }

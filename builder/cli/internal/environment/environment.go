@@ -1,6 +1,8 @@
 package environment
 
 import (
+	"fmt"
+	"github.com/ruckstack/ruckstack/common/global_util"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"math/rand"
 	"os"
@@ -17,55 +19,33 @@ var (
 
 	OutDir     string
 	ProjectDir string
-
-	isRunningTests = false
 )
 
 func init() {
-	executable, err := os.Executable()
-	if err != nil {
-		ui.VPrintln("Cannot determine if we are running tests: ", err)
+	if global_util.IsRunningTests() {
+		RuckstackHome = global_util.GetSourceRoot()
 	} else {
-		isRunningTests = strings.HasPrefix(executable, "/tmp/")
-	}
-
-	//find RuckstackHome
-	if isRunningTests {
-		//work from the working directory
-		RuckstackHome, err = os.Getwd()
-
+		executable, err := os.Executable()
 		if err != nil {
-			ui.Fatalf("Cannot determine working directory: %s", err)
+			ui.Fatalf("Cannot determine executable: %s", err)
 		}
-	} else {
-		RuckstackHome = filepath.Dir(executable)
+
+		RuckstackHome = filepath.Dir(filepath.Dir(executable))
 	}
 
-	//search back until we fine the root containing the LICENSE file
-	for RuckstackHome != "/" {
-		if _, err := os.Stat(filepath.Join(RuckstackHome, "LICENSE")); os.IsNotExist(err) {
-			RuckstackHome = filepath.Dir(RuckstackHome)
-			continue
-		}
-		break
-	}
-
-	if RuckstackHome == "/" {
-		panic("Cannot determine Ruckstack home")
-	}
 	ui.VPrintf("Ruckstack home: %s\n", RuckstackHome)
 
 	//find resourceRoot
-	if isRunningTests {
-		resourceRoot = RuckstackHome + "/builder/cli/install_root/resources"
+	if global_util.IsRunningTests() {
+		resourceRoot = global_util.GetSourceRoot() + "/builder/cli/install_root/resources"
 	} else {
 		resourceRoot = RuckstackHome + "/resources"
 	}
 	ui.VPrintf("Ruckstack resource root: %s", resourceRoot)
 
 	//find cacheRoot
-	if isRunningTests {
-		cacheRoot = RuckstackHome + "/cache"
+	if global_util.IsRunningTests() {
+		cacheRoot = global_util.GetSourceRoot() + "/cache"
 	} else {
 		cacheRoot = os.Getenv("RUCKSTACK_CACHE_DIR")
 		if cacheRoot == "" {
@@ -77,8 +57,8 @@ func init() {
 	tempDir = os.Getenv("RUCKSTACK_TEMP_DIR")
 	if tempDir == "" {
 		//find tempDir
-		if isRunningTests {
-			tempDir = RuckstackHome + "/tmp"
+		if global_util.IsRunningTests() {
+			tempDir = global_util.GetSourceRoot() + "/tmp"
 		} else {
 			tempDir = "/data/tmp/"
 		}
@@ -86,7 +66,7 @@ func init() {
 	tempDir = filepath.Join(tempDir, "ruckstack-run-"+strconv.FormatInt(int64(rand.Int()), 10))
 
 	if err := os.MkdirAll(tempDir, 0755); err != nil {
-		ui.Fatalf("Cannot create temp dir: %s", err)
+		panic(fmt.Sprintf("Cannot create temp dir: %s", err))
 	}
 	ui.VPrintf("Ruckstack temp dir: %s", tempDir)
 }

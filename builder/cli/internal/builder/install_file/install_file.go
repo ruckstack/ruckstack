@@ -5,12 +5,14 @@ import (
 	"archive/zip"
 	"bufio"
 	"bytes"
+	"compress/flate"
+	"compress/gzip"
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
+	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/util"
 	"github.com/ruckstack/ruckstack/builder/internal/docker"
-	"github.com/ruckstack/ruckstack/builder/internal/environment"
 	"github.com/ruckstack/ruckstack/common/config"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"gopkg.in/yaml.v2"
@@ -23,8 +25,10 @@ import (
 	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
+	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -104,6 +108,9 @@ func StartCreation(installerPath string) (*InstallFile, error) {
 	startOffset, _ := installFile.file.Seek(0, io.SeekEnd)
 
 	installFile.zipWriter = zip.NewWriter(installFile.file)
+	installFile.zipWriter.RegisterCompressor(zip.Deflate, func(out io.Writer) (io.WriteCloser, error) {
+		return flate.NewWriter(out, flate.BestCompression)
+	})
 	installFile.zipWriter.SetOffset(startOffset)
 
 	return installFile, nil
@@ -226,7 +233,7 @@ func (installFile *InstallFile) AddFileData(data io.Reader, installerPath string
 	hashBytes := hash.Sum(nil)[:20]
 	dataHash := hex.EncodeToString(hashBytes)
 
-	installerPath = strings.Replace(installerPath, "./", "", 1)
+	installerPath = regexp.MustCompile("^.?/").ReplaceAllString(installerPath, "")
 
 	uncompressedSize := uint64(len(dataBytes))
 	header := &zip.FileHeader{
@@ -341,7 +348,7 @@ func (installFile *InstallFile) saveDockerImages() error {
 func (installFile *InstallFile) saveImagesTar(imagesTarPath string, targetPath string) error {
 	targetPath = strings.Replace(targetPath, ".tar", ".untar", 1)
 
-	ui.VPrintln("Saving images tar to %s", targetPath)
+	ui.VPrintf("Saving images tar to %s", targetPath)
 
 	imagesTarFile, err := os.Open(imagesTarPath)
 	if err != nil {
@@ -369,8 +376,32 @@ func (installFile *InstallFile) saveImagesTar(imagesTarPath string, targetPath s
 		switch header.Typeflag {
 
 		case tar.TypeReg:
-			if err := installFile.AddFileData(tarReader, target, header.ModTime); err != nil {
-				return err
+			if strings.HasSuffix(target, ".tar") {
+				pipeReader, pipeWriter := io.Pipe()
+
+				gzipWriter, err := gzip.NewWriterLevel(pipeWriter, gzip.BestCompression)
+				if err != nil {
+					return err
+				}
+
+				buffTarReader := bufio.NewReader(tarReader)
+
+				go func() {
+					_, err := buffTarReader.WriteTo(gzipWriter)
+					if err != nil {
+						log.Fatal(err)
+					}
+					gzipWriter.Close()
+					pipeWriter.Close()
+				}()
+
+				if err := installFile.AddFileData(pipeReader, target+".gz", header.ModTime); err != nil {
+					return err
+				}
+			} else {
+				if err := installFile.AddFileData(tarReader, target, header.ModTime); err != nil {
+					return err
+				}
 			}
 
 		}

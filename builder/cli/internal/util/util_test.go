@@ -1,7 +1,7 @@
 package util
 
 import (
-	"github.com/ruckstack/ruckstack/builder/internal/environment"
+	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"path/filepath"
@@ -162,6 +162,9 @@ func TestCopyDir(t *testing.T) {
 	type args struct {
 		source string
 	}
+	newProjectPath, err := environment.ResourcePath("new_project")
+	assert.NoError(t, err)
+
 	tests := []struct {
 		name    string
 		args    args
@@ -170,7 +173,7 @@ func TestCopyDir(t *testing.T) {
 		{
 			name: "Can copy files",
 			args: args{
-				source: "..",
+				source: newProjectPath,
 			},
 		},
 		{
@@ -188,9 +191,9 @@ func TestCopyDir(t *testing.T) {
 			err := CopyDir(tt.args.source, targetDir)
 			if tt.wantErr == "" {
 				assert.NoError(t, err)
-				assert.FileExists(t, filepath.Join(targetDir, "builder/builder.go"))
-				assert.FileExists(t, filepath.Join(targetDir, "builder/install_file/install_file_test.go"))
-				assert.FileExists(t, filepath.Join(targetDir, "util/util.go"))
+				assert.FileExists(t, filepath.Join(targetDir, "empty/ruckstack.conf"))
+				assert.FileExists(t, filepath.Join(targetDir, "example/ruckstack.conf"))
+				assert.FileExists(t, filepath.Join(targetDir, "example/cart/Dockerfile"))
 			} else {
 				assert.Error(t, err)
 				assert.Equal(t, tt.wantErr, err.Error())

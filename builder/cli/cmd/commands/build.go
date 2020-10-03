@@ -2,8 +2,8 @@ package commands
 
 import (
 	"github.com/ruckstack/ruckstack/builder/cli/internal/builder"
+	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
 	"github.com/ruckstack/ruckstack/builder/internal/argwrapper"
-	"github.com/ruckstack/ruckstack/builder/internal/environment"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/spf13/cobra"
 )

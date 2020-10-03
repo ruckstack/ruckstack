@@ -2,8 +2,8 @@ package status
 
 import (
 	"fmt"
-	common2 "github.com/ruckstack/ruckstack/server/internal/environment"
 	"github.com/ruckstack/ruckstack/server/internal/kubeclient"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	core "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -12,15 +12,12 @@ import (
 )
 
 func ShowNodeStatus(watch bool) error {
-	packageConfig, err := common2.GetPackageConfig()
-	if err != nil {
-		return err
-	}
+	packageConfig := environment.PackageConfig
 
 	fmt.Printf("Nodes in %s Cluster\n", packageConfig.Name)
 	fmt.Println("----------------------------------------------------")
 
-	kubeClient, err := kubeclient.KubeClient()
+	kubeClient, err := kubeclient.KubeClient(environment.ServerHome)
 	if err != nil {
 		return err
 	}

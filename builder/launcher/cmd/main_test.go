@@ -25,7 +25,7 @@ func Test_processArguments(t *testing.T) {
 			parsedArgs: map[string]string{},
 			newArgs:    []string{},
 			env:        []string{},
-			mountCount: 1,
+			mountCount: 2,
 		},
 		{
 			name: "Stand along flag",
@@ -35,7 +35,7 @@ func Test_processArguments(t *testing.T) {
 			},
 			newArgs:    []string{"--dangling"},
 			env:        []string{},
-			mountCount: 1,
+			mountCount: 2,
 		},
 		{
 			name:    "Complex processing",
@@ -55,7 +55,7 @@ func Test_processArguments(t *testing.T) {
 				"WRAPPED_OUT=" + pathToOut,
 				"WRAPPED_PROJECT=" + pathToProject,
 			},
-			mountCount: 3,
+			mountCount: 4,
 		},
 		{
 			name: "Handles default values",
@@ -66,17 +66,17 @@ func Test_processArguments(t *testing.T) {
 			},
 			newArgs:    []string{"new-project", "--type", "example", "--out", "/data/out"},
 			env:        []string{"WRAPPED_OUT=."},
-			mountCount: 2,
+			mountCount: 3,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			parsedArgs, args, env, mounts := processArguments(tt.args)
-			assert.ElementsMatch(t, parsedArgs, tt.parsedArgs)
-			assert.ElementsMatch(t, args, tt.newArgs)
-			assert.ElementsMatch(t, env, tt.env)
-			assert.Equal(t, tt.mountCount, len(mounts))
+			assert.Equal(t, parsedArgs, tt.parsedArgs)
+			assert.Equal(t, args, tt.newArgs)
+			assert.Equal(t, env, tt.env)
+			assert.Equal(t, tt.mountCount, len(mounts), mounts)
 		})
 	}
 }

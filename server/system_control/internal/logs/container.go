@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/ruckstack/ruckstack/server/internal/kubeclient"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	core "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"math"
@@ -23,7 +24,7 @@ func ShowContainerLogs(systemContainer bool, containerId string, watch bool, pre
 		namespace = "kube-system"
 	}
 
-	client, err := kubeclient.KubeClient()
+	client, err := kubeclient.KubeClient(environment.ServerHome)
 	if err != nil {
 		return err
 	}

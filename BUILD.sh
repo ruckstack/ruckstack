@@ -7,8 +7,8 @@ VERSION=0.9.0
 
 build_all() {
   compile
-  test
   build_docker
+  test
 
   echo "Done"
 }
@@ -47,6 +47,12 @@ compile() {
 }
 
 test() {
+  if [ ! -f tmp/test-installer/example_1.0.5.installer ]; then
+    echo "Building test installer package..."
+    mkdir -p tmp/test-installer
+    out/artifacts/linux/ruckstack --launch-version local new-project --type example --out tmp/test-installer/project
+    out/artifacts/linux/ruckstack --launch-version local build --project tmp/test-installer/project --out tmp/test-installer/out
+  fi
   echo "Running tests..."
   go test ./...
 }

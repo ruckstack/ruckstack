@@ -3,8 +3,8 @@ package builder
 import (
 	"fmt"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/builder/install_file"
+	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/project"
-	"github.com/ruckstack/ruckstack/builder/internal/environment"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"net/url"
 	"os"

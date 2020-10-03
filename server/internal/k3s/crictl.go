@@ -1,14 +1,13 @@
 package k3s
 
 import (
-	common2 "github.com/ruckstack/ruckstack/server/internal/environment"
 	"os"
 	"os/exec"
 )
 
-func ExecCrictl(args ...string) error {
-	command := exec.Command(common2.InstallDir()+"/lib/k3s", append([]string{"crictl"}, args...)...)
-	command.Dir = common2.InstallDir()
+func ExecCrictl(serverHome string, args ...string) error {
+	command := exec.Command(serverHome+"/lib/k3s", append([]string{"crictl"}, args...)...)
+	command.Dir = serverHome
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
 	return command.Run()

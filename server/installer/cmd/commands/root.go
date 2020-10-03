@@ -1,71 +1,72 @@
 package commands
 
 import (
-	"archive/zip"
 	"fmt"
 	"github.com/ruckstack/ruckstack/common/config"
-	"github.com/ruckstack/ruckstack/server/installer/internal"
+	"github.com/ruckstack/ruckstack/common/ui"
+	"github.com/ruckstack/ruckstack/server/installer/internal/install_file"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
 	"os"
 )
 
-var packageConfig *config.PackageConfig
-var zipReader *zip.ReadCloser
-var installerArgs *internal.InstallerArgs
+var (
+	verboseMode        bool
+	installPackagePath string
+
+	installOptions install_file.InstallOptions
+	installFile    *install_file.InstallFile
+)
 
 var rootCmd = &cobra.Command{
 	Use:   os.Args[0],
 	Short: "Installs application",
 
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return internal.Install(packageConfig, installerArgs, zipReader)
+		if installOptions.TargetDir != "" {
+			_, err := config.LoadPackageConfig(installOptions.TargetDir)
+			if err == nil {
+				ui.VPrintf("%s is an existing install. Upgrading...", installOptions.TargetDir)
+				return installFile.Upgrade(installOptions)
+			} else {
+				ui.Fatalf("Error checking path %s: %s", installOptions.TargetDir, err)
+			}
+		}
+
+		return installFile.Install(installOptions)
 	},
 }
 
 func init() {
-	if len(os.Args) == 3 && os.Args[1] == "--upgrade" {
-		return
+	cobra.OnInitialize(initConfig)
+
+	rootCmd.Flags().BoolVar(&verboseMode, "verbose", false, "Enable more detailed output")
+	rootCmd.Flags().StringVar(&installOptions.TargetDir, "install-path", "", "Install path")
+	rootCmd.Flags().StringVar(&installOptions.AdminGroup, "admin-group", "", "Administrator group")
+	rootCmd.Flags().StringVar(&installOptions.BindAddress, "bind-address", "", "IP address to bind to")
+	rootCmd.Flags().StringVar(&installOptions.JoinToken, "join-token", "", "Token for joining cluster")
+}
+
+func initConfig() {
+	if verboseMode {
+		ui.SetVerbose(true)
 	}
-
-	installPackage := os.Getenv("RUCKSTACK_INSTALL_PACKAGE")
-	if installPackage == "" {
-		installPackage = os.Args[0]
-	}
-
-	var err error
-	zipReader, err = zip.OpenReader(installPackage)
-	if err != nil {
-		panic(err)
-	}
-
-	for _, zipFile := range zipReader.File {
-		if zipFile.Name == ".package.config" {
-			fileReader, err := zipFile.Open()
-			if err != nil {
-				panic(err)
-			}
-
-			decoder := yaml.NewDecoder(fileReader)
-			packageConfig = &config.PackageConfig{}
-			err = decoder.Decode(packageConfig)
-			if err != nil {
-				panic(err)
-			}
-		}
-	}
-
-	installerArgs = new(internal.InstallerArgs)
-
-	rootCmd.Short = fmt.Sprintf("Installs %s %s", packageConfig.Name, packageConfig.Version)
-	rootCmd.Version = packageConfig.Version
-
-	rootCmd.Flags().StringVar(&installerArgs.InstallPath, "install-path", "", "Install path")
-	rootCmd.Flags().StringVar(&installerArgs.AdminGroup, "admin-group", "", "Administrator group")
-	rootCmd.Flags().StringVar(&installerArgs.BindAddress, "bind-address", "", "IP address to bind to")
 }
 
 func Execute(args []string) error {
+	installPackagePath = os.Getenv("RUCKSTACK_INSTALL_PACKAGE")
+	if installPackagePath == "" {
+		installPackagePath = os.Args[0]
+	}
+
+	var err error
+	installFile, err = install_file.Parse(installPackagePath)
+	if err != nil {
+		return err
+	}
+
+	rootCmd.Short = fmt.Sprintf("Installs %s %s", installFile.PackageConfig.Name, installFile.PackageConfig.Version)
+	rootCmd.Version = installFile.PackageConfig.Version
+
 	rootCmd.SetArgs(args)
 	return rootCmd.Execute()
 }

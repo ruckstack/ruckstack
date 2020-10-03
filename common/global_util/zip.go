@@ -20,9 +20,9 @@ func UnzipFile(zipFile string, outputDir string) (err error) {
 }
 
 func Unzip(zipContent *zip.ReadCloser, outputDir string) (err error) {
-	ui.Print(".....")
+	ui.Println(".....")
 
-	for i, file := range zipContent.File {
+	for _, file := range zipContent.File {
 		fullname := path.Join(outputDir, file.Name)
 		fileInfo := file.FileInfo()
 		if fileInfo.IsDir() {
@@ -53,10 +53,6 @@ func Unzip(zipContent *zip.ReadCloser, outputDir string) (err error) {
 			mtime := fileInfo.ModTime()
 			if err := os.Chtimes(fullname, mtime, mtime); err != nil {
 				return err
-			}
-
-			if i%10 == 0 {
-				ui.Print(".")
 			}
 		}
 	}

@@ -2,7 +2,7 @@ package helm
 
 import (
 	"bytes"
-	"github.com/ruckstack/ruckstack/builder/internal/environment"
+	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -44,7 +44,6 @@ func TestSearch(t *testing.T) {
 
 	output := new(bytes.Buffer)
 	ui.SetOutput(output)
-	defer ui.SetOutput(os.Stdout)
 
 	type args struct {
 		chartRepo string
@@ -113,7 +112,6 @@ func TestDownloadChart(t *testing.T) {
 
 	output := new(bytes.Buffer)
 	ui.SetOutput(output)
-	defer ui.SetOutput(os.Stdout)
 
 	type args struct {
 		repo    string

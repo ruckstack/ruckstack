@@ -2,7 +2,7 @@ package monitor
 
 import (
 	"fmt"
-	common2 "github.com/ruckstack/ruckstack/server/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"io/ioutil"
 	"log"
 	"path/filepath"
@@ -11,7 +11,7 @@ import (
 )
 
 func watchOverall() {
-	monitorFile := filepath.Join(common2.InstallDir(), "logs", "monitor.status")
+	monitorFile := filepath.Join(environment.ServerHome, "logs", "monitor.status")
 
 	//start with saying it's not healthy
 	log.Println("HEALTH: System is not healthy (starting up)")

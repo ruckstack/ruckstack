@@ -8,6 +8,7 @@ import (
 	"github.com/docker/docker/api/types/mount"
 	"github.com/ruckstack/ruckstack/builder/internal/argwrapper"
 	"github.com/ruckstack/ruckstack/builder/internal/docker"
+	"github.com/ruckstack/ruckstack/builder/launcher/internal/environment"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"os"
 	"os/user"
@@ -45,7 +46,7 @@ func main() {
 	containerConfig := &container.Config{
 		Tty: false,
 		//Using the built in user, but forcing it into the docker group so that it can access the docker.sock
-		User: ":" + dockerGroup.Gid,
+		User: environment.CurrentUser.Uid + ":" + dockerGroup.Gid,
 	}
 
 	hostConfig := &container.HostConfig{}
@@ -222,8 +223,9 @@ func processArguments(originalArgs []string) (map[string]string, []string, []str
 
 	currentUser, err := user.Current()
 	if err != nil {
-		ui.Fatalf("Error getting current user: %s", err)
+		ui.Fatalf("Cannot determine current user: %s", err)
 	}
+
 	localCacheDir := filepath.Join(currentUser.HomeDir, ".ruckstack")
 	_ = os.MkdirAll(localCacheDir, 0755)
 	mountPoints = append(mountPoints, mount.Mount{

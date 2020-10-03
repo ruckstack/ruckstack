@@ -2,9 +2,9 @@ package new_project
 
 import (
 	"fmt"
+	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/util"
 	"github.com/ruckstack/ruckstack/builder/internal/argwrapper"
-	"github.com/ruckstack/ruckstack/builder/internal/environment"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"io/ioutil"
 	"os"

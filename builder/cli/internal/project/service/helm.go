@@ -3,8 +3,8 @@ package service
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/builder/install_file"
+	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/helm"
-	"github.com/ruckstack/ruckstack/builder/internal/environment"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"os"
 	"strings"

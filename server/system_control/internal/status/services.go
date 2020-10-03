@@ -2,7 +2,7 @@ package status
 
 import (
 	"fmt"
-	common2 "github.com/ruckstack/ruckstack/server/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"sort"
 	"sync"
 
@@ -30,15 +30,12 @@ var ownerTree = map[string]*meta.OwnerReference{}
 var allServices = map[string]*serviceInfo{}
 
 func ShowServiceStatus(includeSystemService bool, watch bool) error {
-	packageConfig, err := common2.GetPackageConfig()
-	if err != nil {
-		return err
-	}
+	packageConfig := environment.PackageConfig
 
 	fmt.Printf("Services in %s\n", packageConfig.Name)
 	fmt.Println("----------------------------------------------------")
 
-	kubeClient, err = kubeclient.KubeClient()
+	kubeClient, err := kubeclient.KubeClient(environment.ServerHome)
 	if err != nil {
 		return err
 	}

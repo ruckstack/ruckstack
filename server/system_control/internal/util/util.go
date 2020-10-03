@@ -2,7 +2,7 @@ package util
 
 import (
 	"fmt"
-	common2 "github.com/ruckstack/ruckstack/server/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"os/exec"
@@ -18,7 +18,7 @@ func ExpectNoError(err error) {
 
 func ExecBash(bashCommand string) {
 	command := exec.Command("bash", "-c", bashCommand)
-	command.Dir = common2.InstallDir()
+	command.Dir = environment.ServerHome
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
 	if err := command.Run(); err != nil {

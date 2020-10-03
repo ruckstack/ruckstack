@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
-	"github.com/ruckstack/ruckstack/builder/internal/environment"
+	"github.com/ruckstack/ruckstack/common/global_util"
+	"github.com/ruckstack/ruckstack/common/test_util"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/stretchr/testify/assert"
-	"os"
 	"testing"
 )
 
@@ -21,7 +21,6 @@ func TestImagePull(t *testing.T) {
 	}
 	output := new(bytes.Buffer)
 	ui.SetOutput(output)
-	defer ui.SetOutput(os.Stdout)
 
 	type args struct {
 		imageRef string
@@ -87,7 +86,6 @@ func TestRunContainer(t *testing.T) {
 
 	output := new(bytes.Buffer)
 	ui.SetOutput(output)
-	defer ui.SetOutput(os.Stdout)
 
 	type args struct {
 		removeWhenDone bool
@@ -146,9 +144,8 @@ func TestSaveImages(t *testing.T) {
 
 	output := new(bytes.Buffer)
 	ui.SetOutput(output)
-	defer ui.SetOutput(os.Stdout)
 
-	outputPath := environment.TempPath("test_docker_save.tar")
+	outputPath := test_util.TempPath("test_docker_save-*.tar")
 	type args struct {
 		outputPath string
 		imageRefs  []string
@@ -194,7 +191,6 @@ func TestImageRemove(t *testing.T) {
 	}
 	output := new(bytes.Buffer)
 	ui.SetOutput(output)
-	defer ui.SetOutput(os.Stdout)
 
 	//use different image so we can safely delete it
 	alpineImageToDelete := "alpine:3.11"
@@ -242,9 +238,8 @@ func TestImageBuild(t *testing.T) {
 	}
 	output := new(bytes.Buffer)
 	ui.SetOutput(output)
-	defer ui.SetOutput(os.Stdout)
 
-	dockerfile := environment.RuckstackHome + "/builder/cli/install_root/Dockerfile"
+	dockerfile := global_util.GetSourceRoot() + "/builder/cli/install_root/Dockerfile"
 
 	type args struct {
 		dockerfile string

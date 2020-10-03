@@ -3,12 +3,13 @@ package logs
 import (
 	"fmt"
 	"github.com/ruckstack/ruckstack/server/internal/kubeclient"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func ShowJobLogs(systemJob bool, jobName string, watch bool) error {
-	client, err := kubeclient.KubeClient()
+	client, err := kubeclient.KubeClient(environment.ServerHome)
 	if err != nil {
 		return err
 	}

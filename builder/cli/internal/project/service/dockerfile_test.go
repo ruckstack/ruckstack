@@ -3,7 +3,7 @@ package service
 import (
 	"bytes"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/builder/install_file"
-	"github.com/ruckstack/ruckstack/builder/internal/environment"
+	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
 	"github.com/ruckstack/ruckstack/common/global_util"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/stretchr/testify/assert"
@@ -21,7 +21,6 @@ func TestDockerfileService_Build(t *testing.T) {
 
 	output := new(bytes.Buffer)
 	ui.SetOutput(output)
-	defer ui.SetOutput(os.Stdout)
 
 	environment.ProjectDir = "."
 

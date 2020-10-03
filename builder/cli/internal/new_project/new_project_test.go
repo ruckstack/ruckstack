@@ -2,10 +2,9 @@ package new_project
 
 import (
 	"bytes"
-	"github.com/ruckstack/ruckstack/builder/internal/environment"
+	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/stretchr/testify/assert"
-	"os"
 	"path/filepath"
 	"testing"
 )
@@ -13,7 +12,6 @@ import (
 func TestNewProject_example(t *testing.T) {
 	output := new(bytes.Buffer)
 	ui.SetOutput(output)
-	defer ui.SetOutput(os.Stdout)
 
 	environment.OutDir = environment.TempPath("test_new_example_project-*")
 

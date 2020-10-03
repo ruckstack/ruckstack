@@ -2,9 +2,9 @@ package commands
 
 import (
 	k3s2 "github.com/ruckstack/ruckstack/server/internal/k3s"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/helm"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 func init() {
@@ -32,7 +32,7 @@ func initSystemCrictl(parent *cobra.Command) {
 NOTE: normally this is not a command that should be run, but can be a useful escape hatch.`,
 		DisableFlagParsing: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return k3s2.ExecCrictl(args...)
+			return k3s2.ExecCrictl(environment.ServerHome, args...)
 		},
 	})
 }
@@ -48,7 +48,7 @@ func initSystemCtr(parent *cobra.Command) {
 NOTE: normally this is not a command that should be run, but can be a useful escape hatch.`,
 		DisableFlagParsing: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return k3s2.ExecCtr(os.Stdout, os.Stderr, args...)
+			return k3s2.ExecCtr(environment.ServerHome, args...)
 		},
 	})
 }
@@ -61,7 +61,7 @@ func initSystemKubectl(parent *cobra.Command) {
 NOTE: normally this is not a command that should be run, but can be a useful escape hatch.`,
 		DisableFlagParsing: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return k3s2.ExecKubectl(args...)
+			return k3s2.ExecKubectl(environment.ServerHome, args...)
 		},
 	})
 }

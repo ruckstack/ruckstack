@@ -9,8 +9,8 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	common2 "github.com/ruckstack/ruckstack/server/internal/environment"
 	"github.com/ruckstack/ruckstack/server/internal/kubeclient"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/server/monitor"
 	"io"
 	core "k8s.io/api/core/v1"
@@ -43,8 +43,8 @@ func StartWebserver() error {
 
 	go func() {
 		if err := http.ListenAndServeTLS(":443",
-			common2.InstallDir()+"/data/ssl-cert.pem",
-			common2.InstallDir()+"/data/ssl-key.pem",
+			environment.ServerHome+"/data/ssl-cert.pem",
+			environment.ServerHome+"/data/ssl-key.pem",
 			nil); err != nil {
 			log.Printf("ERROR: %s", err)
 		}
@@ -60,14 +60,14 @@ func StartWebserver() error {
 var traefikIp string
 
 func watchTraefikService() {
-	for !kubeclient.ConfigExists() {
-		log.Printf("Webserver waiting for %s", kubeclient.KubeconfigFile())
+	for !kubeclient.ConfigExists(environment.ServerHome) {
+		log.Printf("Webserver waiting for %s", kubeclient.KubeconfigFile(environment.ServerHome))
 
 		time.Sleep(10 * time.Second)
 	}
 
 	var err error
-	kubeClient, err := kubeclient.KubeClient()
+	kubeClient, err := kubeclient.KubeClient(environment.ServerHome)
 	if err != nil {
 		log.Printf("ERROR: %s", err)
 	}
@@ -160,7 +160,7 @@ func serveOpsPage(res http.ResponseWriter, req *http.Request) error {
 }
 
 func serveLocalFile(res http.ResponseWriter, url string) error {
-	siteDownFile, err := os.Open(common2.InstallDir() + "/data/web" + url)
+	siteDownFile, err := os.Open(environment.ServerHome + "/data/web" + url)
 	if err == nil {
 		defer siteDownFile.Close()
 
@@ -185,7 +185,7 @@ func proxyToKubernetes(res http.ResponseWriter, req *http.Request) error {
 }
 
 func generateKeys() error {
-	sslCertFilePath := common2.InstallDir() + "/data/ssl-cert.pem"
+	sslCertFilePath := environment.ServerHome + "/data/ssl-cert.pem"
 
 	_, err := os.Stat(sslCertFilePath)
 	if err == nil {
@@ -248,7 +248,7 @@ func generateKeys() error {
 		return err
 	}
 
-	keyOut, err := os.OpenFile(common2.InstallDir()+"/data/ssl-key.pem", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	keyOut, err := os.OpenFile(environment.ServerHome+"/data/ssl-key.pem", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return err
 	}

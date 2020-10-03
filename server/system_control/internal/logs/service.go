@@ -3,6 +3,7 @@ package logs
 import (
 	"fmt"
 	"github.com/ruckstack/ruckstack/server/internal/kubeclient"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"math"
@@ -11,7 +12,7 @@ import (
 )
 
 func ShowServiceLogs(systemService bool, serviceName string, watch bool, since string, node string) error {
-	client, err := kubeclient.KubeClient()
+	client, err := kubeclient.KubeClient(environment.ServerHome)
 	if err != nil {
 		return err
 	}

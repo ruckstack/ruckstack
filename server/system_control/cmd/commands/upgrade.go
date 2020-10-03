@@ -1,19 +1,14 @@
 package commands
 
 import (
-	"fmt"
-	common2 "github.com/ruckstack/ruckstack/server/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/upgrade"
 	"github.com/spf13/cobra"
 )
 
 func init() {
 	var file string
-	packageConfig, err := common2.GetPackageConfig()
-	if err != nil {
-		fmt.Printf("Error loading package config: %s", err)
-		return
-	}
+	packageConfig := environment.PackageConfig
 
 	var upgradeCmd = &cobra.Command{
 		Use:   "upgrade",

@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	common2 "github.com/ruckstack/ruckstack/server/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"io/ioutil"
 	"log"
 	"os"
@@ -20,17 +20,14 @@ func Start() error {
 	//serverReady = make(chan bool, 1)
 	//
 
-	packageConfig, err := common2.GetPackageConfig()
-	if err != nil {
-		return err
-	}
+	packageConfig := environment.PackageConfig
 
 	fmt.Printf("Starting %s version %s\n", packageConfig.Name, packageConfig.Version)
 
-	if err := os.MkdirAll(filepath.Join(common2.InstallDir(), "logs"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(environment.ServerHome, "logs"), 0755); err != nil {
 		return err
 	}
-	serverLog, err := os.OpenFile(filepath.Join(common2.InstallDir(), "logs", "server.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	serverLog, err := os.OpenFile(filepath.Join(environment.ServerHome, "logs", "server.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
@@ -38,9 +35,9 @@ func Start() error {
 	log.SetOutput(serverLog)
 
 	fmt.Printf("    Server log: %s\n", serverLog.Name())
-	fmt.Printf("    K3S log: %s\n", filepath.Join(common2.InstallDir(), "logs", "k3s.log"))
+	fmt.Printf("    K3S log: %s\n", filepath.Join(environment.ServerHome, "logs", "k3s.log"))
 
-	if err := ioutil.WriteFile(filepath.Join(common2.InstallDir(), "data", "server.pid"), []byte(strconv.Itoa(os.Getpid())), 0644); err != nil {
+	if err := ioutil.WriteFile(filepath.Join(environment.ServerHome, "data", "server.pid"), []byte(strconv.Itoa(os.Getpid())), 0644); err != nil {
 		return err
 	}
 

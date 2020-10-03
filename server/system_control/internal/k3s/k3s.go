@@ -2,9 +2,8 @@ package k3s
 
 import (
 	"fmt"
-	common2 "github.com/ruckstack/ruckstack/server/internal/environment"
-	"github.com/ruckstack/ruckstack/server/internal/files"
 	"github.com/ruckstack/ruckstack/server/internal/kubeclient"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"log"
 	"net"
 	"os"
@@ -17,20 +16,17 @@ var k3sStartCommand *exec.Cmd
 func Start() error {
 	log.Println("Starting K3S...")
 
-	os.MkdirAll(common2.InstallDir()+"/logs", os.FileMode(0755))
+	os.MkdirAll(environment.ServerHome+"/logs", os.FileMode(0755))
 
-	k3sLogs, err := os.OpenFile(common2.InstallDir()+"/logs/k3s.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	k3sLogs, err := os.OpenFile(environment.ServerHome+"/logs/k3s.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
 
 	defer k3sLogs.Close()
 
-	kubecConfigFile := kubeclient.KubeconfigFile()
-	localConfig, err := common2.GetLocalConfig()
-	if err != nil {
-		return err
-	}
+	kubecConfigFile := kubeclient.KubeconfigFile(environment.ServerHome)
+	localConfig := environment.LocalConfig
 
 	ifaces, err := net.Interfaces()
 	if err != nil {
@@ -72,9 +68,9 @@ func Start() error {
 	k3sArgs := []string{
 		k3sCommand,
 		"--node-external-ip", localConfig.BindAddress,
-		"--data-dir", common2.InstallDir() + "/data",
-		"--kubelet-arg", "root-dir=" + common2.InstallDir() + "/data/kubelet",
-		//"--flannel-conf", common.InstallDir() + "/config/flannel.env",
+		"--data-dir", environment.ServerHome + "/data",
+		"--kubelet-arg", "root-dir=" + environment.ServerHome + "/data/kubelet",
+		//"--flannel-conf", common.ServerHome() + "/config/flannel.env",
 		"--flannel-iface", bindAddressIface,
 	}
 
@@ -82,7 +78,7 @@ func Start() error {
 		k3sArgs = append(k3sArgs,
 			"--bind-address", localConfig.BindAddress,
 			"--no-deploy", "traefik",
-			"--default-local-storage-path", common2.InstallDir()+"/data/local-storage",
+			"--default-local-storage-path", environment.ServerHome+"/data/local-storage",
 			"--write-kubeconfig", kubecConfigFile,
 			"--write-kubeconfig-mode", "640",
 		)
@@ -93,7 +89,7 @@ func Start() error {
 			"--node-ip", localConfig.BindAddress,
 		)
 	}
-	k3sStartCommand = exec.Command(common2.InstallDir()+"/lib/k3s", k3sArgs...)
+	k3sStartCommand = exec.Command(environment.ServerHome+"/lib/k3s", k3sArgs...)
 	k3sStartCommand.Stdout = k3sLogs
 	k3sStartCommand.Stderr = k3sLogs
 	if err := k3sStartCommand.Start(); err != nil {
@@ -110,7 +106,7 @@ func Start() error {
 		stat, err = os.Stat(kubecConfigFile)
 	}
 
-	if err := files.CheckFilePermissions(common2.InstallDir(), "config/kubeconfig.yaml"); err != nil {
+	if err := environment.PackageConfig.CheckFilePermissions("config/kubeconfig.yaml", environment.LocalConfig, environment.ServerHome); err != nil {
 		return err
 	}
 

@@ -2,20 +2,20 @@ package helm
 
 import (
 	"fmt"
-	common2 "github.com/ruckstack/ruckstack/server/internal/environment"
 	"github.com/ruckstack/ruckstack/server/internal/kubeclient"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"os"
 	"os/exec"
 	"path/filepath"
 )
 
 func ExecHelm(args ...string) error {
-	command := exec.Command(common2.InstallDir()+"/lib/helm", args...)
+	command := exec.Command(environment.ServerHome+"/lib/helm", args...)
 	command.Env = append(command.Env,
-		fmt.Sprintf("KUBECONFIG=%s", kubeclient.KubeconfigFile()),
-		fmt.Sprintf("HELM_HOME=%s", filepath.Join(common2.InstallDir(), "data", "helm_home")),
+		fmt.Sprintf("KUBECONFIG=%s", kubeclient.KubeconfigFile(environment.ServerHome)),
+		fmt.Sprintf("HELM_HOME=%s", filepath.Join(environment.ServerHome, "data", "helm_home")),
 	)
-	command.Dir = common2.InstallDir()
+	command.Dir = environment.ServerHome
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
 	return command.Run()

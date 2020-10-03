@@ -2,7 +2,7 @@ package install_file
 
 import (
 	"bytes"
-	"github.com/ruckstack/ruckstack/builder/internal/environment"
+	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
 	"github.com/ruckstack/ruckstack/common/global_util"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/stretchr/testify/assert"
@@ -19,7 +19,6 @@ func TestCreatingInstallFile(t *testing.T) {
 
 	output := new(bytes.Buffer)
 	ui.SetOutput(output)
-	defer ui.SetOutput(os.Stdout)
 
 	testTempRoot := environment.TempPath("install_file_test-*")
 	environment.OutDir = testTempRoot + "/out"
@@ -61,7 +60,7 @@ func TestCreatingInstallFile(t *testing.T) {
 	packageConfigContents, _ := ioutil.ReadFile(filepath.Join(unzipPath, ".package.config"))
 	assert.Contains(t, string(packageConfigContents), "id: test-project")
 
-	assert.FileExists(t, filepath.Join(unzipPath, "config/config.go"))
+	assert.FileExists(t, filepath.Join(unzipPath, "config/package_config.go"))
 	assert.FileExists(t, filepath.Join(unzipPath, "ui/ui.go"))
 	assert.FileExists(t, filepath.Join(unzipPath, "was-build.sh"))
 	assert.FileExists(t, filepath.Join(unzipPath, "example.html"))
@@ -69,6 +68,9 @@ func TestCreatingInstallFile(t *testing.T) {
 
 	assert.FileExists(t, filepath.Join(unzipPath, "data/agent/images/images.untar/manifest.json"))
 	assert.FileExists(t, filepath.Join(unzipPath, "data/agent/images/images.untar/repositories"))
+	assert.FileExists(t, filepath.Join(unzipPath, "data/agent/images/images.untar/614088555b5b2f43a677aa33c55c7f9ccc5e2bd4d2d88bee4c127ec0f658c3df/json"))
+	assert.FileExists(t, filepath.Join(unzipPath, "data/agent/images/images.untar/614088555b5b2f43a677aa33c55c7f9ccc5e2bd4d2d88bee4c127ec0f658c3df/layer.tar.gz"))
+	assert.NoFileExists(t, filepath.Join(unzipPath, "data/agent/images/images.untar/614088555b5b2f43a677aa33c55c7f9ccc5e2bd4d2d88bee4c127ec0f658c3df/layer.tar"))
 
 	manifestContent, err := ioutil.ReadFile(filepath.Join(unzipPath, "data/agent/images/images.untar/manifest.json"))
 	assert.NoError(t, err)

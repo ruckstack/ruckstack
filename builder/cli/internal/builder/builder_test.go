@@ -2,8 +2,8 @@ package builder
 
 import (
 	"bytes"
+	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/util"
-	"github.com/ruckstack/ruckstack/builder/internal/environment"
 	"github.com/ruckstack/ruckstack/common/global_util"
 	"github.com/stretchr/testify/assert"
 	"os"

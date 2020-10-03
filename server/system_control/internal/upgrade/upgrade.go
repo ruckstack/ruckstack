@@ -1,15 +1,15 @@
 package upgrade
 
 import (
-	common2 "github.com/ruckstack/ruckstack/server/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"os"
 	"os/exec"
 )
 
 func Upgrade(upgradeFile string) error {
 
-	command := exec.Command(upgradeFile, "--upgrade", common2.InstallDir())
-	command.Dir = common2.InstallDir()
+	command := exec.Command(upgradeFile, "--upgrade", environment.ServerHome)
+	command.Dir = environment.ServerHome
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
 	return command.Run()
