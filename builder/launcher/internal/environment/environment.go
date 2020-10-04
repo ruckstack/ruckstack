@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var (
@@ -18,6 +19,8 @@ var (
 )
 
 func init() {
+	rand.Seed(time.Now().UTC().UnixNano())
+
 	var err error
 	CurrentUser, err = user.Current()
 	if err != nil {

@@ -27,19 +27,21 @@ func Parse(source interface{}) (*Project, error) {
 	projectConfigFile.NameMapper = ini.TitleUnderscore
 
 	projectConfig := &Project{
-		K3sVersion:  "1.18.6+k3s1",
+		K3sVersion:  "1.19.2+k3s1",
 		HelmVersion: "3.2.4",
 	}
 
-	projectConfigFile.Section("ruckstack-project").MapTo(projectConfig)
+	if err := projectConfigFile.Section("ruckstack-project").MapTo(projectConfig); err != nil {
+		return nil, err
+	}
 
 	matched, _ := regexp.MatchString(`^[a-z0-9-_]+$`, projectConfig.Id)
 	if !matched {
 		return nil, fmt.Errorf("project id must be lower case, alphanumeric, with no whitespace")
 	}
 
-	for _, service := range projectConfigFile.Section("services").Keys() {
-		err := parseServiceFile(service.Value(), projectConfig)
+	for _, serviceConfig := range projectConfigFile.Section("services").Keys() {
+		err := parseServiceFile(serviceConfig.Value(), projectConfig)
 		if err != nil {
 			return nil, err
 		}

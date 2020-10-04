@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var (
@@ -14,6 +15,8 @@ var (
 )
 
 func init() {
+	rand.Seed(time.Now().UTC().UnixNano())
+
 	TestTempDir = filepath.Join(global_util.GetSourceRoot(), "tmp")
 	ui.VPrintf("Test temp: %s\n", TestTempDir)
 }

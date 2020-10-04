@@ -4,7 +4,6 @@ import (
 	"github.com/go-playground/assert/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"strings"
 	"testing"
 )
 
@@ -14,14 +13,10 @@ All CLIs should run this against their root command
 */
 func RunCommandFormattingTest(t *testing.T, command *cobra.Command) {
 	t.Run("Testing command "+command.Name(), func(t *testing.T) {
-		if !strings.HasPrefix(command.Use, "/tmp") {
-			//tests for installer rootCommand set the Use by default to be the test name
-			assert.MatchRegex(t, command.Use, "^[a-z-]+$")
-		}
-		assert.MatchRegex(t, command.Short, "^[A-Z].*")
+		assert.MatchRegex(t, command.Short, "^[A-Z].*") //starts with a capital letter
 
 		if command.Long != "" {
-			assert.MatchRegex(t, command.Long, "^[A-Z].*")
+			assert.MatchRegex(t, command.Long, "(?m)^[A-Z].*") //starts with a capital letter
 		}
 
 		command.Flags().VisitAll(func(flag *pflag.Flag) {

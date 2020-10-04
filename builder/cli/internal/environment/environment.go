@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var (
@@ -22,6 +23,8 @@ var (
 )
 
 func init() {
+	rand.Seed(time.Now().UTC().UnixNano())
+
 	if global_util.IsRunningTests() {
 		RuckstackHome = global_util.GetSourceRoot()
 	} else {

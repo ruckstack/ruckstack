@@ -2,9 +2,9 @@ package helm
 
 import (
 	"fmt"
+	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/ruckstack/ruckstack/server/internal/kubeclient"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
-	"os"
 	"os/exec"
 	"path/filepath"
 )
@@ -16,7 +16,8 @@ func ExecHelm(args ...string) error {
 		fmt.Sprintf("HELM_HOME=%s", filepath.Join(environment.ServerHome, "data", "helm_home")),
 	)
 	command.Dir = environment.ServerHome
-	command.Stdout = os.Stdout
-	command.Stderr = os.Stderr
+	command.Stdout = ui.GetOutput()
+	command.Stderr = ui.GetOutput()
+
 	return command.Run()
 }

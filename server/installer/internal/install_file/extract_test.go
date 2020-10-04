@@ -31,19 +31,19 @@ func TestExtract(t *testing.T) {
 	if assert.NoError(t, err) {
 		assert.FileExists(t, serverHome+"/.package.config")
 		assert.FileExists(t, serverHome+"/bin/system-control")
-		assert.FileExists(t, serverHome+"/config/cluster.config")
-		assert.FileExists(t, serverHome+"/config/local.config")
+		assert.NoFileExists(t, serverHome+"/config/cluster.config") //created by install, not packaged
+		assert.NoFileExists(t, serverHome+"/config/local.config")   //created by install, not packaged
 		assert.FileExists(t, serverHome+"/lib/helm")
 		assert.FileExists(t, serverHome+"/lib/k3s")
 		assert.FileExists(t, serverHome+"/data/server/manifests/traefik.yaml")
 		assert.FileExists(t, serverHome+"/data/server/static/charts/cart.tgz")
 		assert.FileExists(t, serverHome+"/data/web/site-down.html")
 
-		assert.FileExists(t, serverHome+"/data/agent/images/images.tar")
-		assert.NoFileExists(t, serverHome+"/data/agent/images/images.untar")
+		assert.NoFileExists(t, serverHome+"/data/agent/images/images.tar")
+		assert.DirExists(t, serverHome+"/data/agent/images/images.untar")
 
-		assert.FileExists(t, serverHome+"/data/agent/images/k3s.tar")
-		assert.NoFileExists(t, serverHome+"/data/agent/images/k3s.untar")
+		assert.NoFileExists(t, serverHome+"/data/agent/images/k3s.tar")
+		assert.DirExists(t, serverHome+"/data/agent/images/k3s.untar")
 
 		for _, file := range []string{"/bin/system-control", "/lib/helm", "/lib/k3s"} {
 			file = serverHome + file

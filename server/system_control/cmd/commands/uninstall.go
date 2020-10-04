@@ -10,7 +10,7 @@ func init() {
 		Use:   "uninstall",
 		Short: "Uninstall from this machine",
 		Annotations: map[string]string{
-			REQUIRES_ROOT: "true",
+			RequiresRoot: "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return uninstall.Uninstall()

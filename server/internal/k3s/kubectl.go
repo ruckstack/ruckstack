@@ -2,6 +2,7 @@ package k3s
 
 import (
 	"fmt"
+	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/ruckstack/ruckstack/server/internal/kubeclient"
 	"os"
 	"os/exec"
@@ -14,8 +15,8 @@ func ExecKubectl(serverHome string, args ...string) error {
 		fmt.Sprintf("KUBECONFIG=%s", kubeclient.KubeconfigFile(serverHome)),
 	)
 	command.Dir = serverHome
-	command.Stdout = os.Stdout
-	command.Stderr = os.Stderr
+	command.Stdout = ui.GetOutput()
+	command.Stderr = ui.GetOutput()
 	return command.Run()
 
 }

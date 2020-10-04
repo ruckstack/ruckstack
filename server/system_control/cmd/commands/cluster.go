@@ -20,7 +20,7 @@ func initAddNode(parent *cobra.Command) {
 	parent.AddCommand(&cobra.Command{
 		Use: "add-node",
 		Annotations: map[string]string{
-			REQUIRES_ROOT: "true",
+			RequiresRoot: "true",
 		},
 		Short: "Adds a node to the cluster",
 		Long:  `Used during installation of additional server nodes`,

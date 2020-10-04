@@ -25,7 +25,7 @@ func initSystemCrictl(parent *cobra.Command) {
 	parent.AddCommand(&cobra.Command{
 		Use: "crictl",
 		Annotations: map[string]string{
-			REQUIRES_ROOT: "true",
+			RequiresRoot: "true",
 		},
 		Short: "CRI CLI",
 		Long: `Crictl is a low-level Containerd command.
@@ -41,7 +41,7 @@ func initSystemCtr(parent *cobra.Command) {
 	parent.AddCommand(&cobra.Command{
 		Use: "ctr",
 		Annotations: map[string]string{
-			REQUIRES_ROOT: "true",
+			RequiresRoot: "true",
 		},
 		Short: "Containerd CLI",
 		Long: `Ctr is a low-level Containerd command.

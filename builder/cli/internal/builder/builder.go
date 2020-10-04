@@ -1,6 +1,7 @@
 package builder
 
 import (
+	"compress/flate"
 	"fmt"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/builder/install_file"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
@@ -24,7 +25,7 @@ func Build() error {
 		return err
 	}
 
-	installFile, err := install_file.StartCreation(installerPath)
+	installFile, err := install_file.StartCreation(installerPath, flate.BestCompression)
 	if err != nil {
 		return err
 	}

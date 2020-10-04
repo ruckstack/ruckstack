@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
@@ -19,8 +20,8 @@ func ExpectNoError(err error) {
 func ExecBash(bashCommand string) {
 	command := exec.Command("bash", "-c", bashCommand)
 	command.Dir = environment.ServerHome
-	command.Stdout = os.Stdout
-	command.Stderr = os.Stderr
+	command.Stdout = ui.GetOutput()
+	command.Stderr = ui.GetOutput()
 	if err := command.Run(); err != nil {
 		panic(err)
 	}

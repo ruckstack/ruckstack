@@ -39,7 +39,9 @@ func (installFile *InstallFile) Install(installOptions InstallOptions) error {
 	}
 
 	shouldJoinCluster := false
-	if installOptions.JoinToken == "" {
+	if installOptions.JoinToken == "none" {
+		shouldJoinCluster = false
+	} else if installOptions.JoinToken == "" {
 		shouldJoinCluster = ui.PromptForBoolean("Join an existing cluster", nil)
 	} else {
 		shouldJoinCluster = true

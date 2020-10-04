@@ -16,7 +16,9 @@ var k3sStartCommand *exec.Cmd
 func Start() error {
 	log.Println("Starting K3S...")
 
-	os.MkdirAll(environment.ServerHome+"/logs", os.FileMode(0755))
+	if err := os.MkdirAll(environment.ServerHome+"/logs", os.FileMode(0755)); err != nil {
+		return fmt.Errorf("cannot create logs directory: %s", err)
+	}
 
 	k3sLogs, err := os.OpenFile(environment.ServerHome+"/logs/k3s.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {

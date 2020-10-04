@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"compress/flate"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/builder/install_file"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
 	"github.com/ruckstack/ruckstack/common/global_util"
@@ -78,7 +79,7 @@ func TestManifestService_Build(t *testing.T) {
 				Manifest:       "test-manifest.yaml",
 			}
 
-			installFile, err := install_file.StartCreation(outFile)
+			installFile, err := install_file.StartCreation(outFile, flate.BestSpeed)
 			assert.NoError(t, err)
 
 			err = service.Build(installFile)

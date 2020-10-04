@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/upgrade"
 	"github.com/spf13/cobra"
@@ -14,7 +15,7 @@ func init() {
 		Use:   "upgrade",
 		Short: "Upgrades " + packageConfig.Name,
 		Annotations: map[string]string{
-			REQUIRES_ROOT: "true",
+			RequiresRoot: "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return upgrade.Upgrade(file)
@@ -22,8 +23,9 @@ func init() {
 	}
 
 	upgradeCmd.Flags().StringVar(&file, "file", "", "Path to upgrade file (required)")
-	upgradeCmd.MarkFlagFilename("file")
-	upgradeCmd.MarkFlagRequired("file")
+
+	ui.MarkFlagsRequired(upgradeCmd, "file")
+	ui.MarkFlagsFilename(upgradeCmd, "file")
 
 	rootCmd.AddCommand(upgradeCmd)
 }

@@ -30,7 +30,7 @@ func Uninstall() error {
 	command := exec.Command("pgrep", "-f", environment.ServerHome)
 	command.Dir = environment.ServerHome
 	command.Stdout = psOut
-	command.Stderr = os.Stderr
+	command.Stderr = psOut
 	if err := command.Run(); err != nil {
 		if err.Error() == "exit status 1" {
 			//nothing matched, that is ok

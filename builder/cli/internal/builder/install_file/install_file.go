@@ -34,7 +34,8 @@ import (
 )
 
 type InstallFile struct {
-	PackageConfig *config.PackageConfig
+	PackageConfig    *config.PackageConfig
+	CompressionLevel int
 
 	dockerImages map[string]bool
 
@@ -50,9 +51,10 @@ Begins creating the install file.
 The install file is the installer binary followed by a zip of what to install.
 This method will create the file with the installer and open a zip write for the remaining contents.
 */
-func StartCreation(installerPath string) (*InstallFile, error) {
+func StartCreation(installerPath string, compressionLevel int) (*InstallFile, error) {
 
 	installFile := &InstallFile{
+		CompressionLevel: compressionLevel,
 		PackageConfig: &config.PackageConfig{
 			BuildTime: time.Now().Unix(),
 
@@ -109,7 +111,7 @@ func StartCreation(installerPath string) (*InstallFile, error) {
 
 	installFile.zipWriter = zip.NewWriter(installFile.file)
 	installFile.zipWriter.RegisterCompressor(zip.Deflate, func(out io.Writer) (io.WriteCloser, error) {
-		return flate.NewWriter(out, flate.BestCompression)
+		return flate.NewWriter(out, installFile.CompressionLevel)
 	})
 	installFile.zipWriter.SetOffset(startOffset)
 
@@ -379,7 +381,7 @@ func (installFile *InstallFile) saveImagesTar(imagesTarPath string, targetPath s
 			if strings.HasSuffix(target, ".tar") {
 				pipeReader, pipeWriter := io.Pipe()
 
-				gzipWriter, err := gzip.NewWriterLevel(pipeWriter, gzip.BestCompression)
+				gzipWriter, err := gzip.NewWriterLevel(pipeWriter, installFile.CompressionLevel)
 				if err != nil {
 					return err
 				}

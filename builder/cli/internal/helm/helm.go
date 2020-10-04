@@ -159,7 +159,7 @@ func DownloadChart(repo string, chart string, version string) (string, error) {
 	}
 
 	chartDownloader := &downloader.ChartDownloader{
-		Out: os.Stdout,
+		Out: ui.GetOutput(),
 		//Keyring:  f.keyring,
 		Verify:           downloader.VerifyNever,
 		RepositoryConfig: helmpath.ConfigPath("repositories.yaml"),

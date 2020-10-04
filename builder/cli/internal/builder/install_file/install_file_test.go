@@ -2,6 +2,7 @@ package install_file
 
 import (
 	"bytes"
+	"compress/flate"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
 	"github.com/ruckstack/ruckstack/common/global_util"
 	"github.com/ruckstack/ruckstack/common/ui"
@@ -26,7 +27,7 @@ func TestCreatingInstallFile(t *testing.T) {
 
 	assert.FileExists(t, environment.RuckstackHome+"/builder/cli/install_root/resources/installer", "compiled installer does not exist. Should be created by BUILD.sh")
 
-	installFile, err := StartCreation(environment.OutPath("test-project.installer"))
+	installFile, err := StartCreation(environment.OutPath("test-project.installer"), flate.BestSpeed)
 	assert.NoError(t, err)
 	installFile.PackageConfig.Id = "test-project"
 	installFile.PackageConfig.Version = "5.6.7"

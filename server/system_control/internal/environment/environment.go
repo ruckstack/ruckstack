@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var (
@@ -25,6 +26,8 @@ var (
 )
 
 func init() {
+	rand.Seed(time.Now().UTC().UnixNano())
+
 	var err error
 	CurrentUser, err = user.Current()
 	if err != nil {
@@ -70,7 +73,17 @@ func init() {
 	}
 	ui.VPrintf("Temp dir: %s", tempDir)
 
-	if !global_util.IsRunningTests() {
+	if global_util.IsRunningTests() {
+		PackageConfig = &config.PackageConfig{
+			Id:                "test-config",
+			Name:              "Test Package",
+			Version:           "0.1",
+			BuildTime:         0,
+			SystemControlName: "system-control",
+			FilePermissions:   map[string]config.PackagedFileConfig{},
+			Files:             map[string]string{},
+		}
+	} else {
 		PackageConfig, err = config.LoadPackageConfig(ServerHome)
 		if err != nil {
 			ui.Fatal(err)
