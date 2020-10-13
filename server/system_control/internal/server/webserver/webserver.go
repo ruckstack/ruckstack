@@ -9,8 +9,8 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"github.com/ruckstack/ruckstack/server/internal/kubeclient"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/kubeclient"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/server/monitor"
 	"io"
 	core "k8s.io/api/core/v1"
@@ -60,8 +60,8 @@ func StartWebserver() error {
 var traefikIp string
 
 func watchTraefikService() {
-	for !kubeclient.ConfigExists(environment.ServerHome) {
-		log.Printf("Webserver waiting for %s", kubeclient.KubeconfigFile(environment.ServerHome))
+	for !kubeclient.ConfigExists() {
+		log.Printf("Webserver waiting for %s", kubeclient.KubeconfigFile)
 
 		time.Sleep(10 * time.Second)
 	}

@@ -1,9 +1,10 @@
 package logs
 
 import (
+	"context"
 	"fmt"
-	"github.com/ruckstack/ruckstack/server/internal/kubeclient"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/kubeclient"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"math"
@@ -47,7 +48,7 @@ func ShowServiceLogs(systemService bool, serviceName string, watch bool, since s
 	if systemService {
 		namespace = "kube-system"
 	}
-	pods, err := client.CoreV1().Pods(namespace).List(meta.ListOptions{})
+	pods, err := client.CoreV1().Pods(namespace).List(context.Background(), meta.ListOptions{})
 	if err != nil {
 		return err
 	}

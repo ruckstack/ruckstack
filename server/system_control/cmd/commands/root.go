@@ -21,7 +21,7 @@ var rootCmd = &cobra.Command{
 
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if cmd.Annotations[RequiresRoot] == "true" {
-			if environment.IsRunningAsRoot {
+			if !environment.IsRunningAsRoot {
 				return fmt.Errorf("command %s must be run as sudo or root", cmd.Name())
 			}
 

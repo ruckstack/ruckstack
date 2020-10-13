@@ -2,9 +2,10 @@ package logs
 
 import (
 	"bufio"
+	"context"
 	"fmt"
-	"github.com/ruckstack/ruckstack/server/internal/kubeclient"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/kubeclient"
 	core "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"math"
@@ -69,7 +70,7 @@ func ShowContainerLogs(systemContainer bool, containerId string, watch bool, pre
 
 func outputLogs(namespace string, containerId string, includeContainerId bool, logOptions *core.PodLogOptions, client *kubernetes.Clientset) error {
 	logs := client.CoreV1().Pods(namespace).GetLogs(containerId, logOptions)
-	logStream, err := logs.Stream()
+	logStream, err := logs.Stream(context.Background())
 	if err != nil {
 		return err
 	}

@@ -1,8 +1,8 @@
 package monitor
 
 import (
-	"github.com/ruckstack/ruckstack/server/internal/kubeclient"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/kubeclient"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"log"
@@ -26,8 +26,8 @@ var ServerStatus = struct {
 func StartMonitor() error {
 	log.Println("Starting monitor...")
 
-	for !kubeclient.ConfigExists(environment.ServerHome) {
-		log.Printf("Monitor waiting for %s", kubeclient.KubeconfigFile(environment.ServerHome))
+	for !kubeclient.ConfigExists() {
+		log.Printf("Monitor waiting for %s", kubeclient.KubeconfigFile)
 
 		time.Sleep(10 * time.Second)
 	}

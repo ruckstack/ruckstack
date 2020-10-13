@@ -1,9 +1,10 @@
 package restart
 
 import (
+	"context"
 	"fmt"
-	"github.com/ruckstack/ruckstack/server/internal/kubeclient"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/kubeclient"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
 )
@@ -21,7 +22,7 @@ func Service(systemService bool, serviceName string) error {
 		serviceType = "System"
 	}
 
-	pods, err := kubeClient.CoreV1().Pods(namespace).List(meta.ListOptions{})
+	pods, err := kubeClient.CoreV1().Pods(namespace).List(context.Background(), meta.ListOptions{})
 	if err != nil {
 		return err
 	}
@@ -29,7 +30,7 @@ func Service(systemService bool, serviceName string) error {
 	for _, pod := range pods.Items {
 		for _, owner := range pod.OwnerReferences {
 			if owner.Name == serviceName {
-				if err := kubeClient.CoreV1().Pods(namespace).Delete(pod.Name, &meta.DeleteOptions{}); err != nil {
+				if err := kubeClient.CoreV1().Pods(namespace).Delete(context.Background(), pod.Name, meta.DeleteOptions{}); err != nil {
 					return err
 				}
 				foundPod = true

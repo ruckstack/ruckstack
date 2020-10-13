@@ -2,7 +2,10 @@ package server
 
 import (
 	"fmt"
+	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/server/agent"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/server/containerd"
 	"io/ioutil"
 	"log"
 	"os"
@@ -11,9 +14,7 @@ import (
 	"strconv"
 	"syscall"
 
-	"github.com/ruckstack/ruckstack/server/system_control/internal/k3s"
-	"github.com/ruckstack/ruckstack/server/system_control/internal/server/monitor"
-	"github.com/ruckstack/ruckstack/server/system_control/internal/server/webserver"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/server/k3s"
 )
 
 func Start() error {
@@ -47,19 +48,37 @@ func Start() error {
 	go func() {
 		sig := <-sigs
 		log.Printf("Recieved sig %s", sig.String())
-		k3s.Stop()
+		Stop()
 		done <- true
 	}()
 
 	log.Println("Starting Server...")
 
-	go monitor.StartMonitor()
+	if err := containerd.Start(); err != nil {
+		ui.Fatalf("error starting containerd: %s", err)
+	}
+	ui.Println("Containerd started successfully")
 
-	go webserver.StartWebserver()
-	go k3s.Start()
+	//go monitor.StartMonitor()
+
+	//go webserver.StartWebserver()
+
+	if err := k3s.Start(); err != nil {
+		ui.Fatalf("error starting k8s server: %s", err)
+	}
+	ui.Println("K3s server started successfully")
+
+	if err := agent.Start(); err != nil {
+		ui.Fatalf("error starting k3s agent: %s", err)
+	}
+	ui.Println("K3s agent started successfully")
 
 	<-done
 	log.Println("Exiting")
 
 	return nil
+}
+
+func Stop() {
+	k3s.Stop()
 }

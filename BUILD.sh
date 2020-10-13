@@ -55,6 +55,10 @@ test() {
 
     echo "-- Building example project in tmp/test-installer/out..."
     out/artifacts/linux/ruckstack --launch-version local build --project tmp/test-installer/project --out tmp/test-installer/out
+
+    echo "-- Extracting to tmp/test-installer/extracted..."
+    ADMIN_GROUP=`id -gn`
+    tmp/test-installer/out/example_1.0.5.installer --extract-only --install-path tmp/test-installer/extracted --admin-group ${ADMIN_GROUP}
   fi
   echo "Running tests..."
   go test ./...

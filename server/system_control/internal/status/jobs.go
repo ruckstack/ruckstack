@@ -1,9 +1,10 @@
 package status
 
 import (
+	"context"
 	"fmt"
-	"github.com/ruckstack/ruckstack/server/internal/kubeclient"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/kubeclient"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/util"
 	batch "k8s.io/api/batch/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,7 +37,7 @@ func ShowJobStatus(includeSystemJobs bool, watch bool) error {
 		fmt.Println(namespaceDesc)
 		fmt.Println("----------------------------------------------------")
 
-		jobList, err := kubeClient.BatchV1().Jobs(namespace).List(meta.ListOptions{})
+		jobList, err := kubeClient.BatchV1().Jobs(namespace).List(context.Background(), meta.ListOptions{})
 		if err != nil {
 			return err
 		}

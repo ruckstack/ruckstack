@@ -7,11 +7,13 @@ import (
 	"github.com/ruckstack/ruckstack/server/installer/internal/install_file"
 	"github.com/spf13/cobra"
 	"os"
+	"os/user"
 )
 
 var (
 	verboseMode        bool
 	installPackagePath string
+	extractOnly        bool
 
 	installOptions install_file.InstallOptions
 	installFile    *install_file.InstallFile
@@ -22,6 +24,34 @@ var rootCmd = &cobra.Command{
 	Short: "Installs application",
 
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if extractOnly {
+			ui.Println("EXTRACT ONLY SELECTED")
+			ui.Println("------------------------------------")
+
+			if installOptions.TargetDir == "" {
+				ui.Fatal("--install-path is required for extract-only")
+			}
+			if installOptions.TargetDir == "" {
+				ui.Fatal("--admin-group is required for extract-only")
+			}
+
+			localConfig := &config.LocalConfig{
+				AdminGroup:  installOptions.AdminGroup,
+				BindAddress: "127.0.0.1",
+			}
+
+			return installFile.Extract(installOptions.TargetDir, localConfig)
+		}
+
+		currentUser, err := user.Current()
+		if err != nil {
+			ui.Fatalf("Cannot determine current user: %s", err)
+		}
+
+		if currentUser.Name != "root" {
+			ui.Fatalf("This installer must be ran as root")
+		}
+
 		if installOptions.TargetDir != "" {
 			_, err := config.LoadPackageConfig(installOptions.TargetDir)
 			if err == nil {
@@ -44,6 +74,9 @@ func init() {
 	rootCmd.Flags().StringVar(&installOptions.AdminGroup, "admin-group", "", "Administrator group")
 	rootCmd.Flags().StringVar(&installOptions.BindAddress, "bind-address", "", "IP address to bind to")
 	rootCmd.Flags().StringVar(&installOptions.JoinToken, "join-token", "", "Token for joining cluster")
+
+	rootCmd.Flags().BoolVar(&extractOnly, "extract-only", false, "INTERNAL: only extract the files, don't install")
+	rootCmd.Flag("extract-only").Hidden = true
 }
 
 func initConfig() {

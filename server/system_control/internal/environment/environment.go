@@ -40,7 +40,7 @@ func init() {
 
 	if ServerHome == "" {
 		if global_util.IsRunningTests() {
-			ServerHome = global_util.GetSourceRoot()
+			ServerHome = global_util.GetSourceRoot() + "/tmp/test-installer/extracted"
 		} else {
 			executable, err := os.Executable()
 			if err != nil {
@@ -74,6 +74,9 @@ func init() {
 	ui.VPrintf("Temp dir: %s", tempDir)
 
 	if global_util.IsRunningTests() {
+		currentUser, _ := user.Current()
+		currentUserGroup, _ := user.LookupGroupId(currentUser.Gid)
+
 		PackageConfig = &config.PackageConfig{
 			Id:                "test-config",
 			Name:              "Test Package",
@@ -82,6 +85,11 @@ func init() {
 			SystemControlName: "system-control",
 			FilePermissions:   map[string]config.PackagedFileConfig{},
 			Files:             map[string]string{},
+		}
+
+		LocalConfig = &config.LocalConfig{
+			AdminGroup:  currentUserGroup.Name,
+			BindAddress: "192.168.1.27",
 		}
 	} else {
 		PackageConfig, err = config.LoadPackageConfig(ServerHome)

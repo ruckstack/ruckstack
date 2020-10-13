@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io"
+	"net"
 	"os"
 )
 
 type LocalConfig struct {
-	AdminGroup  string `yaml:"adminGroup"`
-	BindAddress string `yaml:"bindAddress"`
-	Join        struct {
+	AdminGroup           string `yaml:"adminGroup"`
+	BindAddress          string `yaml:"bindAddress"`
+	BindAddressInterface string
+	Join                 struct {
 		Server string `yaml:"server"`
 		Token  string `yaml:"token"`
 	} `yaml:"join"`
@@ -23,6 +25,36 @@ func ReadLocalConfig(content io.ReadCloser) (*LocalConfig, error) {
 
 	if err := decoder.Decode(localConfig); err != nil {
 		return nil, fmt.Errorf("error parsing local.config: %s, ", err)
+	}
+
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, iface := range ifaces {
+		addrs, err := iface.Addrs()
+		if err != nil {
+			return nil, err
+		}
+
+		for _, addr := range addrs {
+			var ip net.IP
+			switch v := addr.(type) {
+			case *net.IPNet:
+				ip = v.IP
+			case *net.IPAddr:
+				ip = v.IP
+			}
+
+			if ip.To4().String() == localConfig.BindAddress {
+				localConfig.BindAddressInterface = iface.Name
+			}
+		}
+	}
+
+	if localConfig.BindAddressInterface == "" {
+		panic(fmt.Sprintf("Cannot find network interface with IP %s", localConfig.BindAddress))
 	}
 
 	return localConfig, nil

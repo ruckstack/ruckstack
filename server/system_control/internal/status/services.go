@@ -1,12 +1,13 @@
 package status
 
 import (
+	"context"
 	"fmt"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"sort"
 	"sync"
 
-	"github.com/ruckstack/ruckstack/server/internal/kubeclient"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/kubeclient"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/util"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
@@ -45,6 +46,7 @@ func ShowServiceStatus(includeSystemService bool, watch bool) error {
 		namespaces = []string{"kube-system", "default"}
 	}
 	namespaceDetails := map[string]string{"kube-system": "System Services", "default": "Application Services"}
+	ctx := context.Background()
 
 	for _, namespace := range namespaces {
 		namespaceDesc := namespaceDetails[namespace]
@@ -52,7 +54,7 @@ func ShowServiceStatus(includeSystemService bool, watch bool) error {
 		fmt.Println(namespaceDesc)
 		fmt.Println("----------------------------------------------------")
 
-		replicaSetList, err := kubeClient.AppsV1().ReplicaSets(namespace).List(meta.ListOptions{})
+		replicaSetList, err := kubeClient.AppsV1().ReplicaSets(namespace).List(ctx, meta.ListOptions{})
 		if err != nil {
 			return err
 		}
@@ -63,7 +65,7 @@ func ShowServiceStatus(includeSystemService bool, watch bool) error {
 			}
 		}
 
-		daemonSetList, err := kubeClient.AppsV1().DaemonSets(namespace).List(meta.ListOptions{})
+		daemonSetList, err := kubeClient.AppsV1().DaemonSets(namespace).List(ctx, meta.ListOptions{})
 		if err != nil {
 			return err
 		}
@@ -77,7 +79,7 @@ func ShowServiceStatus(includeSystemService bool, watch bool) error {
 			}
 		}
 
-		deploymentList, err := kubeClient.AppsV1().Deployments(namespace).List(meta.ListOptions{})
+		deploymentList, err := kubeClient.AppsV1().Deployments(namespace).List(ctx, meta.ListOptions{})
 		if err != nil {
 			return err
 		}
@@ -91,7 +93,7 @@ func ShowServiceStatus(includeSystemService bool, watch bool) error {
 			}
 		}
 
-		statefulSetList, err := kubeClient.AppsV1().StatefulSets(namespace).List(meta.ListOptions{})
+		statefulSetList, err := kubeClient.AppsV1().StatefulSets(namespace).List(ctx, meta.ListOptions{})
 		if err != nil {
 			return err
 		}
@@ -105,7 +107,7 @@ func ShowServiceStatus(includeSystemService bool, watch bool) error {
 			}
 		}
 
-		podList, err := kubeClient.CoreV1().Pods(namespace).List(meta.ListOptions{})
+		podList, err := kubeClient.CoreV1().Pods(namespace).List(ctx, meta.ListOptions{})
 		if err != nil {
 			return err
 		}

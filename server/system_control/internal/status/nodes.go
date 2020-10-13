@@ -1,9 +1,10 @@
 package status
 
 import (
+	"context"
 	"fmt"
-	"github.com/ruckstack/ruckstack/server/internal/kubeclient"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/kubeclient"
 	core "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,7 +23,7 @@ func ShowNodeStatus(watch bool) error {
 		return err
 	}
 
-	list, err := kubeClient.CoreV1().Nodes().List(metav1.ListOptions{})
+	list, err := kubeClient.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
