@@ -3,7 +3,7 @@ package restart
 import (
 	"context"
 	"fmt"
-	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
+	"github.com/ruckstack/ruckstack/server/internal/environment"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/kubeclient"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"

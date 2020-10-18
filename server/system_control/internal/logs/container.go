@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
+	"github.com/ruckstack/ruckstack/server/internal/environment"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/kubeclient"
 	core "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"

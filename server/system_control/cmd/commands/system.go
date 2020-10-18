@@ -1,9 +1,9 @@
 package commands
 
 import (
-	k3s2 "github.com/ruckstack/ruckstack/server/internal/k3s"
-	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
+	"github.com/ruckstack/ruckstack/server/internal/environment"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/helm"
+	k3s2 "github.com/ruckstack/ruckstack/server/system_control/internal/k3s"
 	"github.com/spf13/cobra"
 )
 

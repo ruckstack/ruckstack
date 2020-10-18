@@ -24,11 +24,14 @@ fast() {
 compile() {
   echo "Building ruckstack ${VERSION}..."
 
+  echo "Compiling daemon..."
+  (export GOOS=linux && go build -o builder/cli/install_root/resources/install_dir/bin/system-daemon server/daemon/cmd/main.go)
+
   echo "Compiling system-control..."
   (export GOOS=linux && go build -o builder/cli/install_root/resources/install_dir/bin/system-control server/system_control/cmd/main.go)
 
   echo "Compiling installer..."
-  (export GOOS=linux && go build -o builder/cli/install_root/resources/installer server/installer/cmd/main.go)
+  (export GOOS=linux && go build -o builder/cli/install_root/resources/installer installer/cmd/main.go)
 
   echo "Compiling builder..."
   (export GOOS=linux && export CGO_ENABLED=0 && go build -o out/builder_image/bin/ruckstack builder/cli/cmd/main.go)

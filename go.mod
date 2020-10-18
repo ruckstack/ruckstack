@@ -83,7 +83,7 @@ require (
 	go.etcd.io/etcd v0.5.0-alpha.5.0.20200819165624-17cef6e3e9d5
 	golang.org/x/net v0.0.0-20200822124328-c89045814202 // indirect
 	golang.org/x/sys v0.0.0-20200826173525-f9321e4c35a6
-	google.golang.org/grpc v1.31.1 // indirect
+	google.golang.org/grpc v1.31.1
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/ini.v1 v1.51.1
 	gopkg.in/yaml.v2 v2.3.0
@@ -92,6 +92,7 @@ require (
 	k8s.io/api v0.19.0
 	k8s.io/apimachinery v0.19.0
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
-	k8s.io/component-base v0.19.0 // indirect
+	k8s.io/component-base v0.19.0
 	k8s.io/klog v1.0.0
+	k8s.io/klog/v2 v2.2.0
 )

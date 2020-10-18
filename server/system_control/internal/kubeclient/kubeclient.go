@@ -3,7 +3,7 @@ package kubeclient
 import (
 	"flag"
 	"fmt"
-	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
+	"github.com/ruckstack/ruckstack/server/internal/environment"
 	"os"
 	"path/filepath"
 
