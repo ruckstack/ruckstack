@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/ruckstack/ruckstack/server/internal/environment"
+	"go.etcd.io/etcd/clientv3"
 	"go.etcd.io/etcd/embed"
 	"time"
 )
@@ -73,6 +74,16 @@ func Start(parent context.Context) error {
 		ui.Fatalf("Timeout starting etcd...DONE")
 	}
 
+	client, err := clientv3.NewFromURL("http://localhost:2379")
+	if err != nil {
+		return err
+	}
+	status, err := client.Status(parent, "http://localhost:2379/health")
+	if err != nil {
+		return err
+	}
+
+	ui.Println(status)
 	//ui.Fatal(<-etcdServer.Err())
 	return nil
 }

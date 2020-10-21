@@ -74,6 +74,7 @@ require (
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/onsi/ginkgo v1.14.0 // indirect
 	github.com/rancher/k3s v1.19.3-0.20200918165019-d38505b124c9
+	github.com/rancher/kine v0.4.0
 	github.com/sirupsen/logrus v1.6.0
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/spf13/cobra v1.0.0
@@ -95,4 +96,6 @@ require (
 	k8s.io/component-base v0.19.0
 	k8s.io/klog v1.0.0
 	k8s.io/klog/v2 v2.2.0
+	k8s.io/kubectl v0.18.8
+	k8s.io/kubernetes v1.19.0
 )

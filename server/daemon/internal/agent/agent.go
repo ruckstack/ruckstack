@@ -4,42 +4,54 @@ import (
 	"context"
 	"github.com/rancher/k3s/pkg/agent"
 	"github.com/rancher/k3s/pkg/cli/cmds"
+	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/ruckstack/ruckstack/server/daemon/internal/containerd"
 	"github.com/ruckstack/ruckstack/server/internal/environment"
 )
 
-func Start() error {
+func Start(parent context.Context) error {
 	agentConfig := cmds.Agent{
-		Token:                    "",
-		TokenFile:                "",
-		ClusterSecret:            "",
-		ServerURL:                "https://localhost:6443",
-		DisableLoadBalancer:      false,
-		ResolvConf:               "",
+		ServerURL:                "https://127.0.0.1:6443",
 		DataDir:                  environment.ServerHome + "/data",
-		NodeIP:                   "",
 		NodeExternalIP:           environment.LocalConfig.BindAddress,
-		NodeName:                 "",
-		PauseImage:               "",
-		Snapshotter:              "",
-		Docker:                   false,
 		ContainerRuntimeEndpoint: containerd.SocketFile,
-		NoFlannel:                false,
 		FlannelIface:             environment.LocalConfig.BindAddressInterface,
 		FlannelConf:              environment.ServerHome + "/config/flannel.env",
-		Debug:                    false,
-		Rootless:                 false,
-		RootlessAlreadyUnshared:  false,
-		WithNodeID:               false,
-		EnableSELinux:            false,
-		ProtectKernelDefaults:    false,
-		AgentShared:              cmds.AgentShared{},
 		ExtraKubeletArgs:         []string{"root-dir=" + environment.ServerHome + "/data/kubelet"},
-		ExtraKubeProxyArgs:       nil,
-		Labels:                   nil,
-		Taints:                   nil,
-		PrivateRegistry:          "",
+		Debug:                    true,
+
+		Token:                   "",
+		TokenFile:               "",
+		ClusterSecret:           "",
+		DisableLoadBalancer:     false,
+		ResolvConf:              "",
+		NodeIP:                  "",
+		NodeName:                "",
+		PauseImage:              "",
+		Snapshotter:             "",
+		Docker:                  false,
+		NoFlannel:               false,
+		Rootless:                false,
+		RootlessAlreadyUnshared: false,
+		WithNodeID:              false,
+		EnableSELinux:           false,
+		ProtectKernelDefaults:   false,
+		AgentShared:             cmds.AgentShared{},
+		ExtraKubeProxyArgs:      nil,
+		Labels:                  nil,
+		Taints:                  nil,
+		PrivateRegistry:         "",
 	}
 
-	return agent.Run(context.Background(), agentConfig)
+	cmds.LogConfig.LogFile = environment.ServerHome + "/logs/k3s.agent.log"
+	cmds.LogConfig.AlsoLogToStderr = false
+
+	ui.Println("Starting agent...")
+	defer ui.Println("Starting agent...DONE")
+	go func() {
+		err := agent.Run(parent, agentConfig)
+		ui.Fatalf("agent exited: %s, ", err)
+	}()
+
+	return nil
 }

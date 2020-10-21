@@ -37,7 +37,7 @@ var rootCmd = &cobra.Command{
 
 			localConfig := &config.LocalConfig{
 				AdminGroup:  installOptions.AdminGroup,
-				BindAddress: "127.0.0.1",
+				BindAddress: "0.0.0.0",
 			}
 
 			return installFile.Extract(installOptions.TargetDir, localConfig)

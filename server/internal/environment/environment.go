@@ -89,7 +89,7 @@ func init() {
 
 		LocalConfig = &config.LocalConfig{
 			AdminGroup:  currentUserGroup.Name,
-			BindAddress: "192.168.1.27",
+			BindAddress: "0.0.0.0",
 		}
 	} else {
 		PackageConfig, err = config.LoadPackageConfig(ServerHome)

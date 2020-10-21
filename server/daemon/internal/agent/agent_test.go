@@ -6,5 +6,5 @@ import (
 )
 
 func TestStart(t *testing.T) {
-	assert.NoError(t, Start())
+	assert.NoError(t, Start(nil))
 }

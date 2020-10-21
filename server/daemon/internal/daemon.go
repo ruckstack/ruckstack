@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/ruckstack/ruckstack/common/ui"
+	"github.com/ruckstack/ruckstack/server/daemon/internal/agent"
 	"github.com/ruckstack/ruckstack/server/daemon/internal/containerd"
 	"github.com/ruckstack/ruckstack/server/daemon/internal/etcd"
 	"github.com/ruckstack/ruckstack/server/daemon/internal/k3s"
@@ -40,7 +41,7 @@ func Start() error {
 	if err := os.MkdirAll(filepath.Join(environment.ServerHome, "logs"), 0755); err != nil {
 		return err
 	}
-	serverLog, err := os.OpenFile(filepath.Join(environment.ServerHome, "logs", "server.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	serverLog, err := os.OpenFile(filepath.Join(environment.ServerHome, "logs", "daemon.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
@@ -72,13 +73,11 @@ func Start() error {
 		return fmt.Errorf("error starting k8s server: %s", err)
 	}
 
-	//go monitor.StartMonitor()
+	if err := agent.Start(ctx); err != nil {
+		ui.Fatalf("error starting k3s agent: %s", err)
+	}
 
-	//
-	//if err := agent.Start(); err != nil {
-	//	ui.Fatalf("error starting k3s agent: %s", err)
-	//}
-	//ui.Println("K3s agent started successfully")
+	//go monitor.StartMonitor()
 
 	select {
 	case <-ctx.Done():
@@ -86,8 +85,4 @@ func Start() error {
 		ui.VPrintf("Shutdown reason: ", ctx.Err())
 		return nil
 	}
-}
-
-func Stop() {
-	k3s.Stop()
 }

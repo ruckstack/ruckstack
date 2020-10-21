@@ -5,6 +5,8 @@ import (
 	"github.com/ruckstack/ruckstack/server/system_control/internal/helm"
 	k3s2 "github.com/ruckstack/ruckstack/server/system_control/internal/k3s"
 	"github.com/spf13/cobra"
+	kubectl "k8s.io/kubernetes/pkg/kubectl/cmd"
+	"os"
 )
 
 func init() {
@@ -61,7 +63,18 @@ func initSystemKubectl(parent *cobra.Command) {
 NOTE: normally this is not a command that should be run, but can be a useful escape hatch.`,
 		DisableFlagParsing: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return k3s2.ExecKubectl(environment.ServerHome, args...)
+			os.Args = append([]string{"kubectl"}, args...)
+
+			kubeCommand := kubectl.NewDefaultKubectlCommand()
+
+			if err := os.Setenv("KUBECONFIG", environment.ServerHome+"/config/kubeconfig.yaml"); err != nil {
+				return err
+			}
+
+			if err := kubeCommand.Execute(); err != nil {
+				return err
+			}
+			return nil
 		},
 	})
 }
