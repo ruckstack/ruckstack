@@ -6,6 +6,7 @@ import (
 	"github.com/rancher/k3s/pkg/cli/cmds"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/ruckstack/ruckstack/server/daemon/internal/containerd"
+	"github.com/ruckstack/ruckstack/server/daemon/internal/k3s"
 	"github.com/ruckstack/ruckstack/server/internal/environment"
 )
 
@@ -19,11 +20,11 @@ func Start(parent context.Context) error {
 		FlannelConf:              environment.ServerHome + "/config/flannel.env",
 		ExtraKubeletArgs:         []string{"root-dir=" + environment.ServerHome + "/data/kubelet"},
 		Debug:                    true,
+		Token:                    k3s.ServerToken,
+		DisableLoadBalancer:      true,
 
-		Token:                   "",
 		TokenFile:               "",
 		ClusterSecret:           "",
-		DisableLoadBalancer:     false,
 		ResolvConf:              "",
 		NodeIP:                  "",
 		NodeName:                "",

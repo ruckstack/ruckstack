@@ -7,17 +7,21 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"github.com/BurntSushi/toml"
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/log"
 	"github.com/containerd/containerd/namespaces"
 	"github.com/containerd/containerd/services/server"
 	"github.com/containerd/containerd/services/server/config"
-	"github.com/containerd/containerd/sys"
+	"github.com/opencontainers/runc/libcontainer/system"
+	"github.com/rancher/k3s/pkg/agent/templates"
+	daemons_config "github.com/rancher/k3s/pkg/daemons/config"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/ruckstack/ruckstack/server/internal/environment"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/grpclog"
 	"io"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -40,6 +44,7 @@ import (
 	_ "github.com/containerd/containerd/services/version"
 
 	_ "github.com/containerd/containerd/metrics/cgroups"
+	_ "github.com/containerd/containerd/metrics/cgroups/v2"
 	_ "github.com/containerd/containerd/runtime/v1/linux"
 	_ "github.com/containerd/containerd/runtime/v2"
 	_ "github.com/containerd/containerd/runtime/v2/runc/options"
@@ -112,40 +117,132 @@ func Start(parent context.Context) error {
 		}
 	}()
 
-	containerdConfig := &config.Config{
-		Root:      environment.ServerHome + "/data/containerd/root",
-		State:     environment.ServerHome + "/data/containerd/state",
-		PluginDir: environment.ServerHome + "/data/containerd/plugins",
-		GRPC: config.GRPCConfig{
-			Address: SocketFile,
-			UID:     1000,
-			GID:     1000,
+	containerdTemplateConfig := templates.ContainerdConfig{
+		NodeConfig: &daemons_config.Node{
+			Docker:                   false,
+			ContainerRuntimeEndpoint: "",
+			NoFlannel:                false,
+			SELinux:                  false,
+			FlannelBackend:           "",
+			FlannelConf:              "",
+			FlannelConfOverride:      false,
+			FlannelIface:             nil,
+			Containerd: daemons_config.Containerd{
+				Address:  SocketFile,
+				Log:      environment.ServerHome + "/logs/containerd.log",
+				Root:     environment.ServerHome + "/data/containerd/root",
+				State:    environment.ServerHome + "/data/containerd/state",
+				Config:   "",
+				Opt:      environment.ServerHome + "/data/containerd/opt",
+				Template: "",
+				SELinux:  false,
+			},
+			Images: "",
+			AgentConfig: daemons_config.Agent{
+				PodManifests:            "",
+				NodeName:                "",
+				NodeConfigPath:          "",
+				ServingKubeletCert:      "",
+				ServingKubeletKey:       "",
+				ClusterCIDR:             net.IPNet{},
+				ClusterDNS:              nil,
+				ClusterDomain:           "",
+				ResolvConf:              "",
+				RootDir:                 "",
+				KubeConfigKubelet:       "",
+				KubeConfigKubeProxy:     "",
+				KubeConfigK3sController: "",
+				NodeIP:                  "",
+				NodeExternalIP:          "",
+				RuntimeSocket:           "",
+				ListenAddress:           "",
+				ClientCA:                "",
+				CNIBinDir:               "",
+				CNIConfDir:              "",
+				ExtraKubeletArgs:        nil,
+				ExtraKubeProxyArgs:      nil,
+				PauseImage:              "",
+				Snapshotter:             "overlayfs",
+				CNIPlugin:               false,
+				NodeTaints:              nil,
+				NodeLabels:              nil,
+				IPSECPSK:                "",
+				StrongSwanDir:           "",
+				PrivateRegistry:         "",
+				DisableCCM:              false,
+				DisableNPC:              false,
+				DisableKubeProxy:        false,
+				Rootless:                false,
+				ProtectKernelDefaults:   false,
+			},
+			CACerts:     nil,
+			Certificate: nil,
 		},
-		Metrics: config.MetricsConfig{
-			GRPCHistogram: false,
-		},
-		OOMScore: 0,
-		//RequiredPlugins: []string{
-		//	"leases",
-		//},
+		IsRunningInUserNS:     system.RunningInUserNS(),
+		PrivateRegistryConfig: nil,
 	}
-	containerdServer, _ = server.New(ctx, containerdConfig)
 
-	listener, err := sys.GetLocalListener(containerdConfig.GRPC.Address, containerdConfig.GRPC.UID, containerdConfig.GRPC.GID)
+	parsedTemplate, err := templates.ParseTemplateFromConfig(templates.ContainerdConfigTemplate, containerdTemplateConfig)
+
+	containerConfig := config.Config{}
+	decode, err := toml.Decode(parsedTemplate, &containerConfig)
 	if err != nil {
-		return fmt.Errorf("error creating containerd socket: %s", err)
+		return err
 	}
 
-	go func() {
-		defer listener.Close()
+	containerConfig.GRPC = config.GRPCConfig{
+		Address: SocketFile,
+		UID:     0,
+		GID:     0,
+	}
 
-		containerdLog.Infof("Starting etcd listener at %s", listener.Addr().String())
-		err := containerdServer.ServeGRPC(listener)
-		if err != nil {
-			containerdLog.Errorf("Error starting containerd listener: %s", err)
-			ui.Fatalf("Error starting containerd listener: %s", err)
-		}
-	}()
+	//containerdConfig := &config.Config{
+	//	Root:      environment.ServerHome + "/data/containerd/root",
+	//	State:     environment.ServerHome + "/data/containerd/state",
+	//	PluginDir: environment.ServerHome + "/data/containerd/plugins",
+	//	GRPC: config.GRPCConfig{
+	//		Address: SocketFile,
+	//		UID:     1000,
+	//		GID:     1000,
+	//	},
+	//	Metrics: config.MetricsConfig{
+	//		GRPCHistogram: false,
+	//	},
+	//
+	//	Version:   0,
+	//	TTRPC: config.TTRPCConfig{},
+	//	Debug: config.Debug{},
+	//	DisabledPlugins:  nil,
+	//	RequiredPlugins:  nil,
+	//	Plugins:          map[string]toml.Primitive{
+	//		"cri": toml.Primitive{
+	//
+	//		}
+	//	},
+	//	OOMScore:         0,
+	//	Cgroup:           config.CgroupConfig{},
+	//	ProxyPlugins:     nil,
+	//	Timeouts:         nil,
+	//	Imports:          nil,
+	//	StreamProcessors: nil,
+	//}
+	containerdServer, _ = server.New(ctx, &containerConfig)
+
+	//listener, err := sys.GetLocalListener(containerConfig.GRPC.Address, containerConfig.GRPC.UID, containerConfig.GRPC.GID)
+	//if err != nil {
+	//	return fmt.Errorf("error creating containerd socket: %s", err)
+	//}
+
+	//go func() {
+	//	defer listener.Close()
+	//
+	//	containerdLog.Infof("Starting etcd listener at %s", listener.Addr().String())
+	//	err := containerdServer.ServeGRPC(listener)
+	//	if err != nil {
+	//		containerdLog.Errorf("Error starting containerd listener: %s", err)
+	//		ui.Fatalf("Error starting containerd listener: %s", err)
+	//	}
+	//}()
 
 	client, err = containerd.New(SocketFile)
 

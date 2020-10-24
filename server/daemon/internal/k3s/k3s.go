@@ -15,6 +15,10 @@ import (
 	"path/filepath"
 )
 
+var (
+	ServerToken string
+)
+
 func Start(parent context.Context) error {
 
 	k3sLogFile, err := os.OpenFile(filepath.Join(environment.ServerHome, "logs", "k3s.server.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -31,7 +35,7 @@ func Start(parent context.Context) error {
 	_, serviceIPNet, _ := net.ParseCIDR("10.43.0.0/16")
 
 	serverConfig := server.Config{
-		DisableAgent: true,
+		DisableAgent: false,
 		ControlConfig: config.Control{
 			AdvertiseIP:          environment.LocalConfig.BindAddress,
 			HTTPSPort:            6443,
@@ -43,6 +47,7 @@ func Start(parent context.Context) error {
 			KubeConfigOutput:     filepath.Join(environment.ServerHome, "/config/kubeconfig.yaml"),
 			KubeConfigMode:       "0640",
 			DataDir:              environment.ServerHome + "/data/k3s",
+			FlannelBackend:       "vxlan",
 			Skips: map[string]bool{
 				"traefik":        true,
 				"metrics-server": true,
@@ -73,7 +78,7 @@ func Start(parent context.Context) error {
 				Listener:   "",
 				Config:     tls.Config{},
 			},
-			BindAddress: "127.0.0.1",
+			//BindAddress: "127.0.0.1",
 			SANs: []string{
 				"127.0.0.1",
 				"192.168.1.27",
@@ -83,7 +88,6 @@ func Start(parent context.Context) error {
 			//APIServerPort:        6444,
 
 			//unset (so far) fields
-			SupervisorPort:          0,
 			AgentToken:              "",
 			Token:                   "",
 			NoCoreDNS:               false,
@@ -91,7 +95,6 @@ func Start(parent context.Context) error {
 			NoScheduler:             false,
 			NoLeaderElect:           false,
 			JoinURL:                 "",
-			FlannelBackend:          "",
 			IPSECPSK:                "",
 			DisableCCM:              false,
 			DisableNPC:              false,
@@ -115,6 +118,8 @@ func Start(parent context.Context) error {
 		StartupHooks:     nil,
 	}
 
+	serverConfig.ControlConfig.SupervisorPort = serverConfig.ControlConfig.HTTPSPort
+
 	if err := server.StartServer(parent, &serverConfig); err != nil {
 		ui.Fatal(err)
 	}
@@ -129,6 +134,11 @@ func Start(parent context.Context) error {
 
 	<-serverConfig.ControlConfig.Runtime.APIServerReady
 	ui.VPrintln("APIServer is ready")
+
+	ServerToken, err = server.FormatToken(serverConfig.ControlConfig.Runtime.AgentToken, serverConfig.ControlConfig.Runtime.ServerCA)
+	if err != nil {
+		return err
+	}
 
 	return nil
 
