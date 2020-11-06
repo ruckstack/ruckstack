@@ -12,6 +12,15 @@ var isRunningTests *bool
 
 func IsRunningTests() bool {
 	if isRunningTests == nil {
+		for _, val := range os.Args {
+			if val == "--server-home" {
+				newValue := false
+				isRunningTests = &newValue
+
+				return *isRunningTests
+			}
+		}
+
 		var newValue bool
 		executable, err := os.Executable()
 		if err != nil {

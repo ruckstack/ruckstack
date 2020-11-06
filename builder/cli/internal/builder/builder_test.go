@@ -51,7 +51,6 @@ func TestBuild(t *testing.T) {
 
 					assert.FileExists(t, filepath.Join(unzipPath, "bin/system-control"))
 					assert.FileExists(t, filepath.Join(unzipPath, "lib/helm"))
-					assert.FileExists(t, filepath.Join(unzipPath, "lib/k3s"))
 					assert.FileExists(t, filepath.Join(unzipPath, "data/agent/images/images.untar/repositories"))
 					assert.FileExists(t, filepath.Join(unzipPath, "data/agent/images/k3s.untar/repositories"))
 					assert.FileExists(t, filepath.Join(unzipPath, "data/server/manifests/cart.yaml"))

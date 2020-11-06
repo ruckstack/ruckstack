@@ -6,6 +6,7 @@ set -e
 VERSION=0.9.0
 
 build_all() {
+  cni
   compile
   build_docker
   test
@@ -15,10 +16,34 @@ build_all() {
 
 fast() {
   echo "Building without tests.... Good luck!"
+  cni
   compile
   build_docker
 
   echo "Done"
+}
+
+cni() {
+  INSTALL_DIR=$(pwd)/builder/cli/install_root/resources/install_dir/lib
+  VERSION_CNIPLUGINS="v0.8.6-k3s1"
+  if [ -f ${INSTALL_DIR}/host-local ]; then
+    echo "CNI already built in $INSTALL_DIR"
+  else
+    (
+      echo Building cni
+      mkdir -p $INSTALL_DIR
+      TMPDIR=$(mktemp -d)
+
+      WORKDIR=$TMPDIR/src/github.com/containernetworking/plugins
+      git clone -b $VERSION_CNIPLUGINS https://github.com/rancher/plugins.git $WORKDIR
+      cd $WORKDIR
+      ./build_linux.sh
+      cp bin/* $INSTALL_DIR
+
+      rm -rf $TMPDIR
+    )
+  fi
+
 }
 
 compile() {
@@ -60,7 +85,7 @@ test() {
     out/artifacts/linux/ruckstack --launch-version local build --project tmp/test-installer/project --out tmp/test-installer/out
 
     echo "-- Extracting to tmp/test-installer/extracted..."
-    ADMIN_GROUP=`id -gn`
+    ADMIN_GROUP=$(id -gn)
     tmp/test-installer/out/example_1.0.5.installer --extract-only --install-path tmp/test-installer/extracted --admin-group ${ADMIN_GROUP}
   fi
   echo "Running tests..."
@@ -81,9 +106,8 @@ clean() {
   echo "Done"
 }
 
-if [ $# -eq 0 ]
-then
-    build_all
+if [ $# -eq 0 ]; then
+  build_all
 else
-    "$@"
+  "$@"
 fi

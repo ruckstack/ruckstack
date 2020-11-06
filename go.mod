@@ -75,6 +75,7 @@ require (
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/onsi/ginkgo v1.14.0 // indirect
 	github.com/opencontainers/runc v1.0.0-rc92
+	github.com/prometheus/common v0.10.0
 	github.com/rancher/k3s v1.19.4-0.20201014232806-974ad30be7b7
 	github.com/rancher/kine v0.4.0
 	github.com/sirupsen/logrus v1.6.0

@@ -2,10 +2,12 @@ package etcd
 
 import (
 	"context"
+	"fmt"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/ruckstack/ruckstack/server/internal/environment"
 	"go.etcd.io/etcd/clientv3"
 	"go.etcd.io/etcd/embed"
+	"net/url"
 	"time"
 )
 
@@ -21,29 +23,6 @@ func Start(parent context.Context) error {
 
 	ui.Println("Starting etcd...")
 
-	//Name:                e.name,
-	//	InitialOptions:      options,
-	//		ForceNewCluster:     forceNew,
-	//		ListenClientURLs:    fmt.Sprintf(e.clientURL() + ",https://127.0.0.1:2379"),
-	//		ListenMetricsURLs:   "http://127.0.0.1:2381",
-	//		ListenPeerURLs:      e.peerURL(),
-	//		AdvertiseClientURLs: e.clientURL(),
-	//		DataDir:             dataDir(e.config),
-	//		ServerTrust: executor.ServerTrust{
-	//		CertFile:       e.config.Runtime.ServerETCDCert,
-	//		KeyFile:        e.config.Runtime.ServerETCDKey,
-	//		ClientCertAuth: true,
-	//		TrustedCAFile:  e.config.Runtime.ETCDServerCA,
-	//	},
-	//		PeerTrust: executor.PeerTrust{
-	//		CertFile:       e.config.Runtime.PeerServerClientETCDCert,
-	//		KeyFile:        e.config.Runtime.PeerServerClientETCDKey,
-	//		ClientCertAuth: true,
-	//		TrustedCAFile:  e.config.Runtime.ETCDPeerCA,
-	//	},
-	//		ElectionTimeout:   5000,
-	//		HeartbeatInterval: 500,
-
 	go func() {
 		select {
 		case <-parent.Done():
@@ -55,11 +34,38 @@ func Start(parent context.Context) error {
 		}
 	}()
 
+	etcdClientUrl, err := url.Parse("http://" + environment.LocalConfig.BindAddress + ":2379")
+	if err != nil {
+		return err
+	}
+
+	etcdPeerUrl, err := url.Parse("http://" + environment.LocalConfig.BindAddress + ":2380")
+	if err != nil {
+		return err
+	}
+
 	cfg := embed.NewConfig()
 	cfg.Name = environment.PackageConfig.Id
 	cfg.Dir = environment.ServerHome + "/data/etcd"
 	cfg.Logger = "zap"
+	//cfg.ClientAutoTLS = true
+	//cfg.PeerAutoTLS = true
 	cfg.LogOutputs = []string{environment.ServerHome + "/logs/etcd.log"}
+	cfg.ACUrls = []url.URL{
+		*etcdClientUrl,
+	}
+	cfg.LCUrls = []url.URL{
+		*etcdClientUrl,
+	}
+	cfg.APUrls = []url.URL{
+		*etcdPeerUrl,
+	}
+	cfg.LPUrls = []url.URL{
+		*etcdPeerUrl,
+	}
+	cfg.InitialClusterToken = "todo"
+	cfg.InitialCluster = environment.PackageConfig.Id + "=http://" + environment.LocalConfig.BindAddress + ":2380"
+	cfg.ClusterState = "new"
 
 	etcdServer, err = embed.StartEtcd(cfg)
 	if err != nil {
@@ -74,11 +80,11 @@ func Start(parent context.Context) error {
 		ui.Fatalf("Timeout starting etcd...DONE")
 	}
 
-	client, err := clientv3.NewFromURL("http://localhost:2379")
+	client, err := clientv3.NewFromURL(fmt.Sprintf("http://%s:2379", environment.LocalConfig.BindAddress))
 	if err != nil {
 		return err
 	}
-	status, err := client.Status(parent, "http://localhost:2379/health")
+	status, err := client.Status(parent, fmt.Sprintf("http://%s:2379/health", environment.LocalConfig.BindAddress))
 	if err != nil {
 		return err
 	}

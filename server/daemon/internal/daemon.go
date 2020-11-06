@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/ruckstack/ruckstack/common/ui"
-	"github.com/ruckstack/ruckstack/server/daemon/internal/agent"
-	"github.com/ruckstack/ruckstack/server/daemon/internal/containerd"
 	"github.com/ruckstack/ruckstack/server/daemon/internal/etcd"
 	"github.com/ruckstack/ruckstack/server/daemon/internal/k3s"
 	"github.com/ruckstack/ruckstack/server/daemon/internal/webserver"
@@ -17,11 +15,17 @@ import (
 	"path/filepath"
 	"strconv"
 	"syscall"
+	"time"
 )
+
+var starts int
 
 func Start() error {
 	//serverReady = make(chan bool, 1)
 	//
+
+	starts = starts + 1
+	fmt.Printf("Starts %d %s", starts, time.Now().Unix())
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -61,10 +65,6 @@ func Start() error {
 		return fmt.Errorf("error starting webserver: %s", err)
 	}
 
-	if err := containerd.Start(ctx); err != nil {
-		return fmt.Errorf("error starting containerd: %s", err)
-	}
-
 	if err := etcd.Start(ctx); err != nil {
 		return fmt.Errorf("error starting etcd: %s", err)
 	}
@@ -73,9 +73,13 @@ func Start() error {
 		return fmt.Errorf("error starting k8s server: %s", err)
 	}
 
-	if err := agent.Start(ctx); err != nil {
-		ui.Fatalf("error starting k3s agent: %s", err)
-	}
+	//if err := containerd.LoadPackagedImages(); err != nil {
+	//	return fmt.Errorf("error loading images: %s", err)
+	//}
+
+	//if err := agent.Start(ctx); err != nil {
+	//	ui.Fatalf("error starting k3s agent: %s", err)
+	//}
 
 	//go monitor.StartMonitor()
 

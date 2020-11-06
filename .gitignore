@@ -11,3 +11,4 @@ TODO.txt
 builder/cli/install_root/resources/installer
 builder/cli/install_root/resources/install_dir/bin/system-control
 builder/cli/install_root/resources/install_dir/bin/system-daemon
+builder/cli/install_root/resources/install_dir/lib

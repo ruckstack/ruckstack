@@ -15,6 +15,7 @@ import (
 
 var (
 	ServerHome string
+	OtherHome  string
 	tempDir    string
 
 	CurrentUser     *user.User
@@ -36,7 +37,11 @@ func init() {
 	}
 	IsRunningAsRoot = CurrentUser.Name == "root"
 
-	ServerHome = os.Getenv("RUCKSTACK_HOME")
+	for i, val := range os.Args {
+		if val == "--server-home" && i < (len(os.Args)-1) {
+			ServerHome = os.Args[i+1] + "/"
+		}
+	}
 
 	if ServerHome == "" {
 		if global_util.IsRunningTests() {

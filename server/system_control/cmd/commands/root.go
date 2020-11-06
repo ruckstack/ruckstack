@@ -43,7 +43,11 @@ func init() {
 	rootCmd.Short = packageConfig.Name + " System Control"
 	rootCmd.Version = packageConfig.Version
 
+	var serverHome string
+
 	rootCmd.Flags().BoolVar(&verboseMode, "verbose", false, "Enable more detailed output")
+	rootCmd.Flags().StringVar(&serverHome, "server-home", "", "Enable more detailed output")
+
 }
 
 func initConfig() {

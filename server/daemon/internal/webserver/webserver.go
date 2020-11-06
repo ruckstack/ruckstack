@@ -52,22 +52,22 @@ func StartWebserver(parent context.Context) error {
 
 	go func() {
 		logger.Println("Starting listener on port 80")
-		if err := http.ListenAndServe(":80", nil); err != nil {
+		if err := http.ListenAndServe("127.0.0.1:80", nil); err != nil {
 			e := fmt.Errorf("error starting webserver listener on port 80: %s", err)
 			logger.Println(e)
-			ui.Fatal(e)
+			//ui.Fatal(e)
 		}
 	}()
 
 	go func() {
-		logger.Println("Starting listener on port 80")
-		if err := http.ListenAndServeTLS(":443",
+		logger.Println("Starting listener on port 443")
+		if err := http.ListenAndServeTLS("127.0.0.1:443",
 			environment.ServerHome+"/data/ssl-cert.pem",
 			environment.ServerHome+"/data/ssl-key.pem",
 			nil); err != nil {
 			e := fmt.Errorf("error starting webserver listener on port 443: %s", err)
 			logger.Println(e)
-			ui.Fatal(e)
+			//ui.Fatal(e)
 		}
 	}()
 
