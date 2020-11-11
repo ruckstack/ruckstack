@@ -2,7 +2,7 @@ package k3s
 
 import (
 	"context"
-	"github.com/ruckstack/ruckstack/server/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

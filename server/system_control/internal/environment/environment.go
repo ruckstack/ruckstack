@@ -59,7 +59,7 @@ func init() {
 	_, err = os.Stat(ServerHome)
 	if err != nil {
 		if os.IsNotExist(err) {
-			ui.VPrintf("Server home %s does not exist", ServerHome)
+			ui.Fatalf("Server home %s does not exist", ServerHome)
 			return
 		} else {
 			ui.VPrintf("Error checking server home %s: %s", ServerHome, err)

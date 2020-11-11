@@ -3,7 +3,7 @@ package util
 import (
 	"fmt"
 	"github.com/ruckstack/ruckstack/common/ui"
-	"github.com/ruckstack/ruckstack/server/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"os/exec"

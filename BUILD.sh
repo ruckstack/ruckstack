@@ -6,7 +6,6 @@ set -e
 VERSION=0.9.0
 
 build_all() {
-  cni
   compile
   build_docker
   test
@@ -16,41 +15,14 @@ build_all() {
 
 fast() {
   echo "Building without tests.... Good luck!"
-  cni
   compile
   build_docker
 
   echo "Done"
 }
 
-cni() {
-  INSTALL_DIR=$(pwd)/builder/cli/install_root/resources/install_dir/lib
-  VERSION_CNIPLUGINS="v0.8.6-k3s1"
-  if [ -f ${INSTALL_DIR}/host-local ]; then
-    echo "CNI already built in $INSTALL_DIR"
-  else
-    (
-      echo Building cni
-      mkdir -p $INSTALL_DIR
-      TMPDIR=$(mktemp -d)
-
-      WORKDIR=$TMPDIR/src/github.com/containernetworking/plugins
-      git clone -b $VERSION_CNIPLUGINS https://github.com/rancher/plugins.git $WORKDIR
-      cd $WORKDIR
-      ./build_linux.sh
-      cp bin/* $INSTALL_DIR
-
-      rm -rf $TMPDIR
-    )
-  fi
-
-}
-
 compile() {
   echo "Building ruckstack ${VERSION}..."
-
-  echo "Compiling daemon..."
-  (export GOOS=linux && go build -o builder/cli/install_root/resources/install_dir/bin/system-daemon server/daemon/cmd/main.go)
 
   echo "Compiling system-control..."
   (export GOOS=linux && go build -o builder/cli/install_root/resources/install_dir/bin/system-control server/system_control/cmd/main.go)

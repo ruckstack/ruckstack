@@ -3,8 +3,8 @@ package commands
 import (
 	"fmt"
 	"github.com/ruckstack/ruckstack/common/ui"
-	"github.com/ruckstack/ruckstack/server/internal/environment"
-	"github.com/ruckstack/ruckstack/server/internal/util"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/util"
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"

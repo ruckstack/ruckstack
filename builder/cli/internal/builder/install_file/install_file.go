@@ -66,12 +66,16 @@ func StartCreation(installerPath string, compressionLevel int) (*InstallFile, er
 				"config/*": {
 					AdminGroupReadable: true,
 				},
+				"logs/*": {
+					AdminGroupReadable: true,
+				},
 				"bin/*": {
 					AdminGroupReadable: true,
 					Executable:         true,
 				},
-				"lib/*": {
+				"lib/k3s": {
 					AdminGroupReadable: true,
+					Executable:         true,
 				},
 				"lib/helm": {
 					AdminGroupReadable: true,

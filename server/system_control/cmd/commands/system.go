@@ -1,9 +1,10 @@
 package commands
 
 import (
-	"github.com/ruckstack/ruckstack/server/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/helm"
 	k3s2 "github.com/ruckstack/ruckstack/server/system_control/internal/k3s"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/kube"
 	"github.com/spf13/cobra"
 	kubectl "k8s.io/kubernetes/pkg/kubectl/cmd"
 	"os"
@@ -67,7 +68,7 @@ NOTE: normally this is not a command that should be run, but can be a useful esc
 
 			kubeCommand := kubectl.NewDefaultKubectlCommand()
 
-			if err := os.Setenv("KUBECONFIG", environment.ServerHome+"/config/kubeconfig.yaml"); err != nil {
+			if err := os.Setenv("KUBECONFIG", kube.KubeconfigFile); err != nil {
 				return err
 			}
 

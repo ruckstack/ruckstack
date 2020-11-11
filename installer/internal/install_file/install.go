@@ -89,7 +89,7 @@ func (installFile *InstallFile) Install(installOptions InstallOptions) error {
 	}
 
 	if addNodeToken != nil {
-		if err := ioutil.WriteFile(installOptions.TargetDir+"/config/kubeconfig.yaml", []byte(addNodeToken.KubeConfig), 0640); err != nil {
+		if err := ioutil.WriteFile(installOptions.TargetDir+"/config/kubeconfig-admin.yaml", []byte(addNodeToken.KubeConfig), 0640); err != nil {
 			return err
 		}
 	}

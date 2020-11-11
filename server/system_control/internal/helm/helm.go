@@ -3,8 +3,8 @@ package helm
 import (
 	"fmt"
 	"github.com/ruckstack/ruckstack/common/ui"
-	"github.com/ruckstack/ruckstack/server/internal/environment"
-	"github.com/ruckstack/ruckstack/server/system_control/internal/kubeclient"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/kube"
 	"os/exec"
 	"path/filepath"
 )
@@ -12,7 +12,7 @@ import (
 func ExecHelm(args ...string) error {
 	command := exec.Command(environment.ServerHome+"/lib/helm", args...)
 	command.Env = append(command.Env,
-		fmt.Sprintf("KUBECONFIG=%s", kubeclient.KubeconfigFile),
+		fmt.Sprintf("KUBECONFIG=%s", kube.KubeconfigFile),
 		fmt.Sprintf("HELM_HOME=%s", filepath.Join(environment.ServerHome, "data", "helm_home")),
 	)
 	command.Dir = environment.ServerHome

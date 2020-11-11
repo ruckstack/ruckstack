@@ -11,10 +11,14 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ruckstack/ruckstack/common/ui"
-	"github.com/ruckstack/ruckstack/server/daemon/internal/monitor"
-	"github.com/ruckstack/ruckstack/server/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/kube"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/server/k3s"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/server/monitor"
 	"io"
 	core "k8s.io/api/core/v1"
+	"k8s.io/client-go/informers"
+	"k8s.io/client-go/tools/cache"
 	"log"
 	"math/big"
 	"net/http"
@@ -30,7 +34,7 @@ var reverseProxy *httputil.ReverseProxy
 
 var logger *log.Logger
 
-func StartWebserver(parent context.Context) error {
+func Start(parent context.Context) error {
 
 	logFile, err := os.OpenFile(filepath.Join(environment.ServerHome, "logs", "webserver.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -46,13 +50,12 @@ func StartWebserver(parent context.Context) error {
 	}
 
 	ui.Println("Starting webserver...")
-	defer ui.Println("Starting webserver..DONE.")
 
 	http.HandleFunc("/", handleRequest)
 
 	go func() {
 		logger.Println("Starting listener on port 80")
-		if err := http.ListenAndServe("127.0.0.1:80", nil); err != nil {
+		if err := http.ListenAndServe(":80", nil); err != nil {
 			e := fmt.Errorf("error starting webserver listener on port 80: %s", err)
 			logger.Println(e)
 			//ui.Fatal(e)
@@ -61,7 +64,7 @@ func StartWebserver(parent context.Context) error {
 
 	go func() {
 		logger.Println("Starting listener on port 443")
-		if err := http.ListenAndServeTLS("127.0.0.1:443",
+		if err := http.ListenAndServeTLS(":443",
 			environment.ServerHome+"/data/ssl-cert.pem",
 			environment.ServerHome+"/data/ssl-key.pem",
 			nil); err != nil {
@@ -79,61 +82,51 @@ func StartWebserver(parent context.Context) error {
 		}
 	}()
 
-	//go watchTraefikService()
+	go watchTraefikService()
 
 	return nil
 }
 
 var traefikIp string
 
-//func watchTraefikService() {
-//	for !kubeclient.ConfigExists() {
-//		logger.Printf("Webserver waiting for %s", kubeclient.KubeconfigFile)
-//
-//		time.Sleep(10 * time.Second)
-//	}
-//
-//	var err error
-//	kubeClient, err := kubeclient.KubeClient(environment.ServerHome)
-//	if err != nil {
-//		logger.Printf("ERROR: %s", err)
-//	}
-//
-//	factory := informers.NewSharedInformerFactory(kubeClient, 0)
-//	informer := factory.Core().V1().Services().Informer()
-//	stopper := make(chan struct{})
-//	defer close(stopper)
-//
-//	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
-//		UpdateFunc: func(oldObj interface{}, newObj interface{}) {
-//			newService := newObj.(*core.Service)
-//
-//			checkTraefikService(newService)
-//		},
-//
-//		AddFunc: func(obj interface{}) {
-//			checkTraefikService(obj.(*core.Service))
-//
-//		},
-//
-//		DeleteFunc: func(obj interface{}) {
-//			delService := obj.(*core.Service)
-//
-//			if delService.ObjectMeta.Namespace == "kube-system" && delService.ObjectMeta.Name == "traefik" {
-//				traefikIp = ""
-//				reverseProxy = nil
-//				logger.Printf("Traefik service removed")
-//			}
-//		},
-//	})
-//	informer.Run(stopper)
-//
-//}
+func watchTraefikService() {
+	kubeClient := kube.Client()
 
-func checkTraefikService(newService *core.Service) {
-	if newService.ObjectMeta.Namespace == "kube-system" && newService.ObjectMeta.Name == "traefik" {
-		if traefikIp != newService.Spec.ClusterIP {
-			traefikIp = newService.Spec.ClusterIP
+	factory := informers.NewSharedInformerFactory(kubeClient, 0)
+	informer := factory.Core().V1().Services().Informer()
+	stopper := make(chan struct{})
+	defer close(stopper)
+
+	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		UpdateFunc: func(oldObj interface{}, newObj interface{}) {
+			newService := newObj.(*core.Service)
+
+			checkTraefikService(newService)
+		},
+
+		AddFunc: func(obj interface{}) {
+			checkTraefikService(obj.(*core.Service))
+
+		},
+
+		DeleteFunc: func(obj interface{}) {
+			delService := obj.(*core.Service)
+
+			if k3s.IsTraefik(delService) {
+				traefikIp = ""
+				reverseProxy = nil
+				logger.Printf("Traefik service removed")
+			}
+		},
+	})
+	informer.Run(stopper)
+
+}
+
+func checkTraefikService(service *core.Service) {
+	if k3s.IsTraefik(service) {
+		if traefikIp != service.Spec.ClusterIP {
+			traefikIp = service.Spec.ClusterIP
 
 			logger.Printf("Traefik IP is now %s. Configuring proxy...", traefikIp)
 

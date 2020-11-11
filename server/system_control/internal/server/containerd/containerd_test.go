@@ -2,7 +2,7 @@ package containerd
 
 import (
 	"context"
-	"github.com/ruckstack/ruckstack/server/daemon/internal/k3s"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/server/k3s"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

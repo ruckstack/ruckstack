@@ -1,13 +1,14 @@
-package internal
+package server
 
 import (
 	"context"
 	"fmt"
 	"github.com/ruckstack/ruckstack/common/ui"
-	"github.com/ruckstack/ruckstack/server/daemon/internal/etcd"
-	"github.com/ruckstack/ruckstack/server/daemon/internal/k3s"
-	"github.com/ruckstack/ruckstack/server/daemon/internal/webserver"
-	"github.com/ruckstack/ruckstack/server/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/server/containerd"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/server/k3s"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/server/monitor"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/server/webserver"
 	"io/ioutil"
 	"log"
 	"os"
@@ -15,17 +16,9 @@ import (
 	"path/filepath"
 	"strconv"
 	"syscall"
-	"time"
 )
 
-var starts int
-
 func Start() error {
-	//serverReady = make(chan bool, 1)
-	//
-
-	starts = starts + 1
-	fmt.Printf("Starts %d %s", starts, time.Now().Unix())
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -42,10 +35,7 @@ func Start() error {
 
 	fmt.Printf("Starting %s version %s\n", packageConfig.Name, packageConfig.Version)
 
-	if err := os.MkdirAll(filepath.Join(environment.ServerHome, "logs"), 0755); err != nil {
-		return err
-	}
-	serverLog, err := os.OpenFile(filepath.Join(environment.ServerHome, "logs", "daemon.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	serverLog, err := os.OpenFile(filepath.Join(environment.ServerHome, "logs", "server.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
@@ -61,16 +51,24 @@ func Start() error {
 
 	log.Println("Starting server components...")
 
-	if err := webserver.StartWebserver(ctx); err != nil {
+	if err := monitor.Start(ctx); err != nil {
+		return fmt.Errorf("error starting monitor: %s", err)
+	}
+
+	if err := webserver.Start(ctx); err != nil {
 		return fmt.Errorf("error starting webserver: %s", err)
 	}
 
-	if err := etcd.Start(ctx); err != nil {
-		return fmt.Errorf("error starting etcd: %s", err)
+	if err := containerd.Start(ctx); err != nil {
+		return fmt.Errorf("error starting containerd: %s", err)
 	}
 
+	//if err := etcd.Start(ctx); err != nil {
+	//	return fmt.Errorf("error starting etcd: %s", err)
+	//}
+
 	if err := k3s.Start(ctx); err != nil {
-		return fmt.Errorf("error starting k8s server: %s", err)
+		return fmt.Errorf("error starting k3s server: %s", err)
 	}
 
 	//if err := containerd.LoadPackagedImages(); err != nil {
@@ -82,6 +80,8 @@ func Start() error {
 	//}
 
 	//go monitor.StartMonitor()
+
+	ui.Println("Server started")
 
 	select {
 	case <-ctx.Done():

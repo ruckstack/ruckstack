@@ -3,9 +3,9 @@ package status
 import (
 	"context"
 	"fmt"
-	"github.com/ruckstack/ruckstack/server/internal/environment"
-	"github.com/ruckstack/ruckstack/server/internal/util"
-	"github.com/ruckstack/ruckstack/server/system_control/internal/kubeclient"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/kube"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/util"
 	batch "k8s.io/api/batch/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
@@ -20,10 +20,7 @@ func ShowJobStatus(includeSystemJobs bool, watch bool) error {
 	fmt.Printf("Jobs in %s\n", packageConfig.Name)
 	fmt.Println("----------------------------------------------------")
 
-	kubeClient, err := kubeclient.KubeClient(environment.ServerHome)
-	if err != nil {
-		return err
-	}
+	kubeClient := kube.Client()
 
 	namespaces := []string{"default"}
 	if includeSystemJobs {

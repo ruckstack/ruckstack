@@ -2,7 +2,7 @@ package upgrade
 
 import (
 	"github.com/ruckstack/ruckstack/common/ui"
-	"github.com/ruckstack/ruckstack/server/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"os/exec"
 )
 

@@ -3,17 +3,14 @@ package restart
 import (
 	"context"
 	"fmt"
-	"github.com/ruckstack/ruckstack/server/internal/environment"
-	"github.com/ruckstack/ruckstack/server/system_control/internal/kubeclient"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/kube"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
 )
 
 func Service(systemService bool, serviceName string) error {
-	var kubeClient, err = kubeclient.KubeClient(environment.ServerHome)
-	if err != nil {
-		return err
-	}
+	var kubeClient = kube.Client()
 
 	serviceType := "Application"
 	namespace := "default"

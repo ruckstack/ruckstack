@@ -5,7 +5,8 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/ruckstack/ruckstack/common/config"
-	"github.com/ruckstack/ruckstack/server/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/kube"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"path/filepath"
@@ -24,7 +25,7 @@ func AddNode() error {
 		return err
 	}
 
-	kubeConfigFileContent, err := ioutil.ReadFile(filepath.Join(environment.ServerHome, "/config/kubeconfig.yaml"))
+	kubeConfigFileContent, err := ioutil.ReadFile(kube.KubeconfigFile)
 	if err != nil {
 		return err
 	}
