@@ -123,6 +123,17 @@ func Start(ctx context.Context) error {
 		Check: checkNodes,
 	})
 
+	client := kube.Client()
+	version, err := client.ServerVersion()
+	if err != nil {
+		return fmt.Errorf("error checking server: %s", err)
+	}
+	ui.Printf("Server version %s started", version.String())
+
+	if err := os.Chown(kube.KubeconfigFile, 0, int(environment.LocalConfig.AdminGroupId)); err != nil {
+		ui.Fatalf("Cannot set %s ownership: %s", kube.KubeconfigFile, err)
+	}
+
 	go func() {
 		select {
 		case <-ctx.Done():

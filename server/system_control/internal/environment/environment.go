@@ -113,6 +113,17 @@ func init() {
 		}
 	}
 
+	adminGroup, err := user.LookupGroup(LocalConfig.AdminGroup)
+	if err != nil {
+		ui.Fatalf("Cannot find admin group %s", adminGroup)
+		return
+	}
+
+	LocalConfig.AdminGroupId, err = strconv.ParseInt(adminGroup.Gid, 10, 0)
+	if err != nil {
+		ui.Fatalf("Error parsing admin group id %s", adminGroup.Gid)
+	}
+
 }
 
 /**

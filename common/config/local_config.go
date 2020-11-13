@@ -16,6 +16,8 @@ type LocalConfig struct {
 		Server string `yaml:"server"`
 		Token  string `yaml:"token"`
 	} `yaml:"join"`
+
+	AdminGroupId int64
 }
 
 func ReadLocalConfig(content io.ReadCloser) (*LocalConfig, error) {
