@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/ruckstack/ruckstack/common/ui"
-	"github.com/ruckstack/ruckstack/server/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"go.etcd.io/etcd/clientv3"
 	"go.etcd.io/etcd/embed"
 	"net/url"
