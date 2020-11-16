@@ -3,12 +3,14 @@ package ui
 import (
 	"bufio"
 	"fmt"
+	"github.com/briandowns/spinner"
 	"github.com/spf13/cobra"
 	"io"
 	"log"
 	"os"
 	"runtime/debug"
 	"strings"
+	"time"
 )
 
 var (
@@ -192,4 +194,13 @@ func PromptForBoolean(prompt string, defaultValue *bool) bool {
 		Printf("Invalid value '%s'. Enter 'y' or 'n'", input)
 		return PromptForBoolean(prompt, defaultValue)
 	}
+}
+
+func StartProgressMonitor(message string) *spinner.Spinner {
+	progressMonitor := spinner.New(spinner.CharSets[11], 100*time.Millisecond, spinner.WithWriter(os.Stderr))
+	progressMonitor.Suffix = " " + message + "..."
+	progressMonitor.FinalMSG = message + "...DONE\n"
+	progressMonitor.Start()
+
+	return progressMonitor
 }

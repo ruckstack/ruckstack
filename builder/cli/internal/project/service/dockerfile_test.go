@@ -69,14 +69,13 @@ func TestDockerfileService_Build(t *testing.T) {
 
 			service := &DockerfileService{
 				Id:             "test-service",
-				Type:           "dockerfile",
 				Port:           8000,
 				ProjectId:      "test-project",
 				ProjectVersion: "1.2.3",
 
 				Dockerfile:     tt.args.dockerfile,
 				ServiceVersion: "0.5.2",
-				UrlPath:        "/my-url",
+				BaseUrl:        "/my-url",
 			}
 
 			installFile, err := install_file.StartCreation(outFile, flate.BestSpeed)

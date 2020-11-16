@@ -44,7 +44,11 @@ func main() {
 		exitWithError(fmt.Errorf("cannot find docker group: %s", err))
 	}
 	containerConfig := &container.Config{
-		Tty: false,
+		Tty:          false,
+		AttachStdin:  false,
+		AttachStdout: true,
+		AttachStderr: true,
+		OpenStdin:    false,
 		//Using the built in user, but forcing it into the docker group so that it can access the docker.sock
 		User: environment.CurrentUser.Uid + ":" + dockerGroup.Gid,
 	}
@@ -118,7 +122,7 @@ func main() {
 		}
 	}
 
-	if err := docker.ContainerRun(containerConfig, hostConfig, nil, "ruckstack-run", true); err != nil {
+	if err := docker.ContainerRun(containerConfig, hostConfig, nil, "ruckstack_cli", true); err != nil {
 		exitWithError(err)
 	}
 }

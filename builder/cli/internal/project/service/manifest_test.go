@@ -72,7 +72,6 @@ func TestManifestService_Build(t *testing.T) {
 
 			service := &ManifestService{
 				Id:             "test-service",
-				Type:           "manifest",
 				Port:           8000,
 				ProjectId:      "test-project",
 				ProjectVersion: "1.2.3",

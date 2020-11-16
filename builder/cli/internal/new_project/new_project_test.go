@@ -17,7 +17,7 @@ func TestNewProject_example(t *testing.T) {
 
 	err := NewProject("example")
 	assert.NoError(t, err)
-	assert.FileExists(t, filepath.Join(environment.OutDir, "ruckstack.conf"))
+	assert.FileExists(t, filepath.Join(environment.OutDir, "ruckstack.yaml"))
 	assert.FileExists(t, filepath.Join(environment.OutDir, "cart", "Dockerfile"))
 	assert.FileExists(t, filepath.Join(environment.OutDir, "homepage", "src", "index.jsp"))
 
@@ -29,7 +29,7 @@ func TestNewProject_starter(t *testing.T) {
 
 	err := NewProject("empty")
 	assert.NoError(t, err)
-	assert.FileExists(t, filepath.Join(environment.OutDir, "ruckstack.conf"))
+	assert.FileExists(t, filepath.Join(environment.OutDir, "ruckstack.yaml"))
 	assert.NoFileExists(t, filepath.Join(environment.OutDir, "cart"))
 }
 

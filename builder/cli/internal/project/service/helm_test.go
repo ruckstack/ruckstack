@@ -63,7 +63,6 @@ func TestHelmService_Build(t *testing.T) {
 
 			service := &HelmService{
 				Id:             "test-service",
-				Type:           "helm",
 				Port:           8000,
 				ProjectId:      "test-project",
 				ProjectVersion: "1.2.3",

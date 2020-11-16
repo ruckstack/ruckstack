@@ -7,5 +7,5 @@ import (
 
 func TestInit(t *testing.T) {
 	assert.NotEqual(t, "/", ServerHome)
-	assert.FileExists(t, ServerHome+"/LICENSE")
+	assert.FileExists(t, ServerHome+"/.package.config")
 }

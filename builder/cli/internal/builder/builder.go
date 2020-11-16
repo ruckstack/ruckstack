@@ -12,7 +12,7 @@ import (
 )
 
 func Build() error {
-	projectConfig, err := project.Parse(environment.ProjectDir + "/ruckstack.conf")
+	projectConfig, err := project.Parse(environment.ProjectDir + "/ruckstack.yaml")
 	if err != nil {
 		return fmt.Errorf("error parsing project: %s", err)
 	}
@@ -54,7 +54,7 @@ func Build() error {
 		return err
 	}
 
-	for _, serviceConfig := range projectConfig.Services {
+	for _, serviceConfig := range projectConfig.GetServices() {
 		serviceConfig.SetProjectId(projectConfig.Id)
 		serviceConfig.SetProjectVersion(projectConfig.Version)
 		if err := serviceConfig.Build(installFile); err != nil {

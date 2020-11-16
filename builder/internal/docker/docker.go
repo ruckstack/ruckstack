@@ -17,12 +17,12 @@ import (
 	"strings"
 )
 
-var cli *client.Client
+var dockerClient *client.Client
 
 func init() {
 	var err error
 
-	cli, err = client.NewClientWithOpts(client.FromEnv)
+	dockerClient, err = client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		ui.Fatalf("cannot create docker client: %s", cleanErrorMessage(err))
 	}
@@ -35,7 +35,7 @@ func ImagePull(imageRef string) error {
 	}
 
 	ui.VPrintf("Pulling %s...", imageRef)
-	reader, err := cli.ImagePull(context.Background(), imageRef, types.ImagePullOptions{})
+	reader, err := dockerClient.ImagePull(context.Background(), imageRef, types.ImagePullOptions{})
 	if err != nil {
 		if strings.Contains(err.Error(), "manifest unknown") {
 			return fmt.Errorf("Cannot pull image %s. May be an invalid version?", imageRef)
@@ -50,13 +50,13 @@ func ImagePull(imageRef string) error {
 	return nil
 }
 func ImageList(options types.ImageListOptions) ([]types.ImageSummary, error) {
-	return cli.ImageList(context.Background(), options)
+	return dockerClient.ImageList(context.Background(), options)
 }
 
 func ContainerRun(containerConfig *container.Config, hostConfig *container.HostConfig, networkConfig *network.NetworkingConfig, containerName string, removeWhenDone bool) error {
 	ctx := context.Background()
 
-	resp, err := cli.ContainerCreate(
+	createdContainer, err := dockerClient.ContainerCreate(
 		ctx,
 		containerConfig,
 		hostConfig,
@@ -66,15 +66,31 @@ func ContainerRun(containerConfig *container.Config, hostConfig *container.HostC
 		return fmt.Errorf("cannot create CLI container: %s", cleanErrorMessage(err))
 	}
 
-	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+	if err := dockerClient.ContainerStart(ctx, createdContainer.ID, types.ContainerStartOptions{}); err != nil {
 		return fmt.Errorf("cannot start CLI container: %s", cleanErrorMessage(err))
 	}
 
 	if removeWhenDone {
-		defer ContainerRemove(resp.ID)
+		defer ContainerRemove(createdContainer.ID)
 	}
 
-	waitOk, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
+	containerResponse, err := dockerClient.ContainerAttach(ctx, createdContainer.ID, types.ContainerAttachOptions{
+		Stream: true,
+		Stdout: true,
+		Stdin:  false,
+		Stderr: true,
+	})
+
+	if err != nil {
+		return fmt.Errorf("cannot attach to container: %s", err)
+	}
+
+	_, err = stdcopy.StdCopy(ui.GetOutput(), os.Stderr, containerResponse.Reader)
+	if err != nil {
+		return fmt.Errorf("error reading docker output: %s", err)
+	}
+
+	waitOk, errCh := dockerClient.ContainerWait(ctx, createdContainer.ID, container.WaitConditionNotRunning)
 	select {
 	case err := <-errCh:
 		if err != nil {
@@ -84,37 +100,24 @@ func ContainerRun(containerConfig *container.Config, hostConfig *container.HostC
 		//ran correctly
 	}
 
-	out, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true})
-	if err != nil {
-		return fmt.Errorf("error getting container logs: %s", cleanErrorMessage(err))
-	}
-
-	_, err = stdcopy.StdCopy(ui.GetOutput(), ui.GetOutput(), out)
-	if err != nil {
-		return err
-	}
+	ui.Println("Docker done")
 
 	return nil
 }
 
 func SaveImages(outputPath string, imageRefs ...string) error {
-	ui.Printf("Saving images...")
-	defer ui.Printf("Saving images...DONE")
+	progressMonitor := ui.StartProgressMonitor("Saving images")
+	defer progressMonitor.Stop()
 
 	outputFile, err := os.Create(outputPath)
 	if err != nil {
 		return err
 	}
 
-	tarStream, err := cli.ImageSave(context.Background(), imageRefs)
+	tarStream, err := dockerClient.ImageSave(context.Background(), imageRefs)
 	if err != nil {
 		return fmt.Errorf("Error saving images %s: %s", strings.Join(imageRefs, ", "), cleanErrorMessage(err))
 	}
-
-	//tarReader := tar.NewReader(tarStream)
-	//if _, err := tarReader.Next(); err != nil {
-	//	return err
-	//}
 
 	_, err = io.Copy(outputFile, tarStream)
 	if err != nil {
@@ -131,7 +134,7 @@ func cleanErrorMessage(err error) error {
 }
 
 func ImageRemove(imageId string) error {
-	_, err := cli.ImageRemove(context.Background(), imageId, types.ImageRemoveOptions{
+	_, err := dockerClient.ImageRemove(context.Background(), imageId, types.ImageRemoveOptions{
 		Force: true,
 	})
 	if err != nil {
@@ -151,7 +154,7 @@ func GetContainerId(containerName string) (string, error) {
 	listFilters := filters.NewArgs()
 	listFilters.Add("name", containerName)
 
-	containerList, err := cli.ContainerList(context.Background(), types.ContainerListOptions{
+	containerList, err := dockerClient.ContainerList(context.Background(), types.ContainerListOptions{
 		All:     true,
 		Filters: listFilters,
 	})
@@ -173,7 +176,7 @@ func GetImageId(imageRef string) (string, error) {
 	listFilters := filters.NewArgs()
 	listFilters.Add("reference", imageRef)
 
-	imageList, err := cli.ImageList(context.Background(), types.ImageListOptions{
+	imageList, err := dockerClient.ImageList(context.Background(), types.ImageListOptions{
 		All:     true,
 		Filters: listFilters,
 	})
@@ -191,7 +194,7 @@ func GetImageId(imageRef string) (string, error) {
 }
 
 func ContainerRemove(containerId string) error {
-	err := cli.ContainerRemove(
+	err := dockerClient.ContainerRemove(
 		context.Background(),
 		containerId,
 		types.ContainerRemoveOptions{

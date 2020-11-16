@@ -2,37 +2,34 @@ package project
 
 import (
 	"fmt"
-	"github.com/ruckstack/ruckstack/builder/cli/internal/project/service"
-	"gopkg.in/ini.v1"
+	"gopkg.in/yaml.v2"
+	"io"
 	"os"
-	"path/filepath"
 	"regexp"
-	"strings"
 )
 
-func Parse(source interface{}) (*Project, error) {
-	projectPath := "in-memory"
-	if stringPath, ok := source.(string); ok {
-		projectPath = stringPath
-	}
+func Parse(projectPath string) (*Project, error) {
+	content, err := os.Open(projectPath)
 
-	projectConfigFile, err := ini.InsensitiveLoad(source)
-	if os.IsNotExist(err) {
-		return nil, fmt.Errorf("project file %s not found", projectPath)
-	}
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot open file %s: %s", projectPath, err)
 	}
+	defer content.Close()
 
-	projectConfigFile.NameMapper = ini.TitleUnderscore
+	return ParseData(content, projectPath)
+
+}
+
+func ParseData(data io.Reader, projectPath string) (*Project, error) {
+	decoder := yaml.NewDecoder(data)
+	decoder.SetStrict(true)
 
 	projectConfig := &Project{
 		K3sVersion:  "1.19.2+k3s1",
 		HelmVersion: "3.2.4",
 	}
-
-	if err := projectConfigFile.Section("ruckstack-project").MapTo(projectConfig); err != nil {
-		return nil, err
+	if err := decoder.Decode(projectConfig); err != nil {
+		return nil, fmt.Errorf("error parsing %s: %s", projectPath, err)
 	}
 
 	matched, _ := regexp.MatchString(`^[a-z0-9-_]+$`, projectConfig.Id)
@@ -40,25 +37,7 @@ func Parse(source interface{}) (*Project, error) {
 		return nil, fmt.Errorf("project id must be lower case, alphanumeric, with no whitespace")
 	}
 
-	for _, serviceConfig := range projectConfigFile.Section("services").Keys() {
-		err := parseServiceFile(serviceConfig.Value(), projectConfig)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	for _, section := range projectConfigFile.Sections() {
-		sectionName := section.Name()
-		if strings.HasPrefix(sectionName, "service-") {
-			err = parseServiceSection(strings.TrimPrefix(sectionName, "service-"), section, projectConfig, projectPath)
-			if err != nil {
-				return nil, err
-			}
-
-		}
-	}
-
-	if len(projectConfig.Services) == 0 {
+	if len(projectConfig.GetServices()) == 0 {
 		return nil, fmt.Errorf("No services are defined in %s", projectPath)
 	}
 
@@ -71,61 +50,5 @@ func Parse(source interface{}) (*Project, error) {
 	}
 
 	return projectConfig, nil
-
-}
-
-func parseServiceFile(serviceConfigPath string, projectConfig *Project) error {
-	serviceConfigFile, err := ini.InsensitiveLoad(serviceConfigPath)
-	if err != nil {
-		return nil
-	}
-	serviceConfigFile.NameMapper = ini.TitleUnderscore
-
-	serviceSection := serviceConfigFile.Section("service")
-	if serviceSection == nil {
-		return fmt.Errorf("no 'service' section in %s", serviceConfigPath)
-	}
-
-	err = parseServiceSection(filepath.Base(filepath.Dir(serviceConfigPath)), serviceSection, projectConfig, serviceConfigPath)
-
-	return err
-}
-
-func parseServiceSection(defaultId string, serviceSection *ini.Section, projectConfig *Project, filePath string) error {
-	if !serviceSection.HasKey("type") {
-		if serviceSection.Name() == "service" {
-			return fmt.Errorf("no service type in %s", filePath)
-		} else {
-			return fmt.Errorf("no service type in %s section [%s] ", filePath, serviceSection.Name())
-		}
-	}
-
-	var serviceConfig Service
-
-	switch serviceType := serviceSection.Key("type").Value(); serviceType {
-	case "dockerfile":
-		dockerServiceConfig := &service.DockerfileService{
-			Dockerfile:      "Dockerfile",
-			PathPrefixStrip: false,
-		}
-
-		serviceConfig = dockerServiceConfig
-	case "helm":
-		serviceConfig = &service.HelmService{}
-
-	case "manifest":
-		serviceConfig = &service.ManifestService{}
-	default:
-		return fmt.Errorf("unknown service type: %s", serviceType)
-	}
-
-	serviceConfig.SetId(defaultId)
-	if err := serviceSection.MapTo(serviceConfig); err != nil {
-		return err
-	}
-
-	projectConfig.Services = append(projectConfig.Services, serviceConfig)
-
-	return nil
 
 }

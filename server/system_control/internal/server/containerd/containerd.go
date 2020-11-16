@@ -44,7 +44,7 @@ func Start(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			logger.Println("Server shutting down...")
-			logger.Printf("shutdown reason: ", ctx.Err())
+			logger.Printf("shutdown reason: %s", ctx.Err())
 		}
 	}()
 

@@ -189,7 +189,7 @@ func DownloadChart(repo string, chart string, version string) (string, error) {
 		ui.Printf("Downloading chart %s...DONE", filepath.Base(savePath))
 
 	} else {
-		ui.Printf("Already downloaded chart %s", savePath)
+		ui.VPrintf("Already downloaded chart %s", filepath.Base(savePath))
 	}
 
 	return savePath, nil

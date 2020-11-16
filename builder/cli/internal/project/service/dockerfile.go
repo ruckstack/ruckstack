@@ -19,16 +19,15 @@ import (
 type DockerfileService struct {
 	//Common fields
 	Id             string `validate:"required"`
-	Type           string `validate:"required,oneof=dockerfile helm manifest"`
 	Port           int    `validate:"required"`
 	ProjectId      string
 	ProjectVersion string
 
 	//Unique Fields
 	Dockerfile      string `validate:"required"`
-	ServiceVersion  string `ini:"service_version"`
-	UrlPath         string `ini:"base_url"`
-	PathPrefixStrip bool   `ini:"path_prefix_strip"`
+	ServiceVersion  string `yaml:"serviceVersion"`
+	BaseUrl         string `yaml:"baseUrl"`
+	PathPrefixStrip bool   `yaml:"pathPrefixStrip"`
 
 	serviceWorkDir string
 }
@@ -42,7 +41,7 @@ func (serviceConfig *DockerfileService) SetId(id string) {
 }
 
 func (serviceConfig *DockerfileService) GetType() string {
-	return serviceConfig.Type
+	return "dockerfile"
 }
 
 func (serviceConfig *DockerfileService) GetPort() int {
@@ -94,7 +93,7 @@ func (service *DockerfileService) Build(app *install_file.InstallFile) error {
 		return err
 	}
 
-	if service.UrlPath != "" {
+	if service.BaseUrl != "" {
 		if err := service.writeIngress(); err != nil {
 			return err
 		}
@@ -256,7 +255,7 @@ func (service *DockerfileService) writeIngress() error {
 					"http": map[string]interface{}{
 						"paths": []map[string]interface{}{
 							{
-								"path": service.UrlPath,
+								"path": service.BaseUrl,
 								"backend": map[string]interface{}{
 									"serviceName": service.Id,
 									"servicePort": service.Port,

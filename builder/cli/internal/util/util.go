@@ -26,7 +26,7 @@ func DownloadFile(url string) (string, error) {
 
 	_, err := os.Stat(savePath)
 	if err == nil {
-		ui.Println(savePath + " already exists. Not re-downloading")
+		ui.VPrintf("Already downloaded %s", filepath.Base(savePath))
 		return savePath, nil
 	}
 

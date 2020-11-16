@@ -38,7 +38,7 @@ func NewProject(projectType string) error {
 
 	ui.Printf("Created %s project in %s\n", projectType, outputDirToShow)
 	ui.Println("")
-	ui.Printf("Open %s/ruckstack.conf in your favorite text editor to see the generated project file\n", outputDirToShow)
+	ui.Printf("Open %s/ruckstack.yaml in your favorite text editor to see the generated project file\n", outputDirToShow)
 	ui.Printf("To build it, run `ruckstack build` from %s\n", outputDirToShow)
 	ui.Println("")
 	ui.Println("Happy Stacking!")

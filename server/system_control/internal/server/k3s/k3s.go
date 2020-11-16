@@ -138,7 +138,7 @@ func Start(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			ui.Println("Server shutting down...")
-			ui.VPrintf("Shutdown reason: ", ctx.Err())
+			ui.VPrintf("Shutdown reason: %s", ctx.Err())
 		}
 	}()
 

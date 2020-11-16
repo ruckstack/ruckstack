@@ -13,7 +13,6 @@ import (
 type ManifestService struct {
 	//Common fields
 	Id             string `validate:"required"`
-	Type           string `validate:"required,oneof=dockerfile helm manifest"`
 	Port           int    `validate:"required"`
 	ProjectId      string
 	ProjectVersion string
@@ -31,7 +30,7 @@ func (serviceConfig *ManifestService) SetId(id string) {
 }
 
 func (serviceConfig *ManifestService) GetType() string {
-	return serviceConfig.Type
+	return "manifest"
 }
 
 func (serviceConfig *ManifestService) GetPort() int {

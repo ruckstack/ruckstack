@@ -98,6 +98,10 @@ func StartCreation(installerPath string, compressionLevel int) (*InstallFile, er
 		return nil, err
 	}
 
+	err = os.MkdirAll(filepath.Dir(installerPath), 755)
+	if err != nil {
+		return nil, err
+	}
 	if err := ioutil.WriteFile(installerPath, installerBytes, 0755); err != nil {
 		return nil, err
 	}
@@ -317,7 +321,10 @@ func (installFile *InstallFile) AddDirectory(assetBase string, targetBase string
 }
 
 func (installFile *InstallFile) AddImage(tag string) error {
-	installFile.dockerImages[tag] = true
+	if !installFile.dockerImages[tag] {
+		ui.Printf("Including image %s", tag)
+		installFile.dockerImages[tag] = true
+	}
 
 	return nil
 }
@@ -348,6 +355,9 @@ func (installFile *InstallFile) saveDockerImages() error {
 }
 
 func (installFile *InstallFile) saveImagesTar(imagesTarPath string, targetPath string) error {
+	monitor := ui.StartProgressMonitor("Compressing " + filepath.Base(imagesTarPath))
+	defer monitor.Stop()
+
 	targetPath = strings.Replace(targetPath, ".tar", ".untar", 1)
 
 	ui.VPrintf("Saving images tar to %s", targetPath)
@@ -487,7 +497,6 @@ func (installFile *InstallFile) AddImagesInManifest(descriptorContent []byte) er
 
 		if podSpec != nil {
 			for _, container := range podSpec.Containers {
-				ui.Printf("Including image %s\n", container.Image)
 				if err := installFile.AddImage(container.Image); err != nil {
 					return err
 				}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/builder/install_file"
+	"github.com/ruckstack/ruckstack/builder/cli/internal/project/service"
 )
 
 type Project struct {
@@ -11,11 +12,30 @@ type Project struct {
 	Name    string `validate:"required"`
 	Version string `validate:"required"`
 
-	HelmVersion       string `ini:"helm_version"`
-	K3sVersion        string `ini:"k3s_version"`
-	SystemControlName string `ini:"system_control_name"`
+	HelmVersion       string
+	K3sVersion        string
+	SystemControlName string
 
-	Services []Service
+	ManifestServices   []service.ManifestService   `yaml:"manifestServices"`
+	HelmServices       []service.HelmService       `yaml:"helmServices"`
+	DockerfileServices []service.DockerfileService `yaml:"dockerfileServices"`
+}
+
+func (project *Project) GetServices() []Service {
+	returnList := []Service{}
+
+	for _, item := range project.ManifestServices {
+		returnList = append(returnList, &item)
+	}
+	for _, item := range project.HelmServices {
+		returnList = append(returnList, &item)
+	}
+
+	for _, item := range project.DockerfileServices {
+		returnList = append(returnList, &item)
+	}
+
+	return returnList
 }
 
 func (project *Project) Validate() error {
@@ -25,12 +45,12 @@ func (project *Project) Validate() error {
 		return fmt.Errorf("error parsing project file: %s", err)
 	}
 
-	if len(project.Services) == 0 {
+	if len(project.GetServices()) == 0 {
 		return fmt.Errorf("error parsing project file: at least one service block is required")
 	}
-	for _, service := range project.Services {
-		if err := service.Validate(structValidator); err != nil {
-			return fmt.Errorf("error parsing service %s: %s", service.GetId(), err)
+	for _, serviceConfig := range project.GetServices() {
+		if err := serviceConfig.Validate(structValidator); err != nil {
+			return fmt.Errorf("error parsing service %s: %s", serviceConfig.GetId(), err)
 		}
 	}
 

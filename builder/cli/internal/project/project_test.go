@@ -42,8 +42,8 @@ func TestProject_Validate(t *testing.T) {
 					Id:      "test-project",
 					Name:    "Test Project",
 					Version: "1.2.3",
-					Services: []Service{
-						&service.ManifestService{},
+					ManifestServices: []service.ManifestService{
+						{},
 					},
 				},
 			},
@@ -55,10 +55,9 @@ func TestProject_Validate(t *testing.T) {
 					Id:      "test-project",
 					Name:    "Test Project",
 					Version: "1.2.3",
-					Services: []Service{
-						&service.ManifestService{
+					ManifestServices: []service.ManifestService{
+						{
 							Id:             "service-id",
-							Type:           "manifest",
 							Port:           1234,
 							ProjectId:      "project-id",
 							ProjectVersion: "1.2.3",
