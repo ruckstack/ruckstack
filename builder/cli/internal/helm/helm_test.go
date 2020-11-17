@@ -110,6 +110,9 @@ func TestDownloadChart(t *testing.T) {
 		t.Skip("-short tests do not download from the internet")
 	}
 
+	ui.SetVerbose(true)
+	defer ui.SetVerbose(false)
+
 	output := new(bytes.Buffer)
 	ui.SetOutput(output)
 

@@ -24,11 +24,11 @@ func ParseData(data io.Reader, projectPath string) (*Project, error) {
 	decoder := yaml.NewDecoder(data)
 	decoder.SetStrict(true)
 
-	projectConfig := &Project{
+	projectConfig := Project{
 		K3sVersion:  "1.19.2+k3s1",
 		HelmVersion: "3.2.4",
 	}
-	if err := decoder.Decode(projectConfig); err != nil {
+	if err := decoder.Decode(&projectConfig); err != nil {
 		return nil, fmt.Errorf("error parsing %s: %s", projectPath, err)
 	}
 
@@ -45,10 +45,25 @@ func ParseData(data io.Reader, projectPath string) (*Project, error) {
 		projectConfig.SystemControlName = projectConfig.Id
 	}
 
+	for i, _ := range projectConfig.ManifestServices {
+		projectConfig.ManifestServices[i].ProjectVersion = projectConfig.Version
+		projectConfig.ManifestServices[i].ProjectId = projectConfig.Id
+	}
+
+	for i, _ := range projectConfig.HelmServices {
+		projectConfig.HelmServices[i].ProjectVersion = projectConfig.Version
+		projectConfig.HelmServices[i].ProjectId = projectConfig.Id
+	}
+
+	for i, _ := range projectConfig.DockerfileServices {
+		projectConfig.DockerfileServices[i].ProjectVersion = projectConfig.Version
+		projectConfig.DockerfileServices[i].ProjectId = projectConfig.Id
+	}
+
 	if err := projectConfig.Validate(); err != nil {
 		return nil, err
 	}
 
-	return projectConfig, nil
+	return &projectConfig, nil
 
 }

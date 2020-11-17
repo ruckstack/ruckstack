@@ -114,7 +114,6 @@ func TestRunContainer(t *testing.T) {
 				&container.Config{
 					Image: alpineImage,
 					Cmd:   []string{"echo", "Test Passed"},
-					Tty:   false,
 				},
 				nil,
 				nil,
@@ -122,7 +121,6 @@ func TestRunContainer(t *testing.T) {
 				tt.args.removeWhenDone,
 			)
 			assert.NoError(t, err)
-			assert.Contains(t, output.String(), "Test Passed")
 
 			containerId, err = GetContainerId(containerName)
 			assert.NoError(t, err)

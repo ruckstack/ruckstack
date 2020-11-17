@@ -55,8 +55,6 @@ func Build() error {
 	}
 
 	for _, serviceConfig := range projectConfig.GetServices() {
-		serviceConfig.SetProjectId(projectConfig.Id)
-		serviceConfig.SetProjectVersion(projectConfig.Version)
 		if err := serviceConfig.Build(installFile); err != nil {
 			return err
 		}

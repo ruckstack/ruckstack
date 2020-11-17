@@ -21,18 +21,21 @@ type Project struct {
 	DockerfileServices []service.DockerfileService `yaml:"dockerfileServices"`
 }
 
-func (project *Project) GetServices() []Service {
+func (project Project) GetServices() []Service {
 	returnList := []Service{}
 
 	for _, item := range project.ManifestServices {
-		returnList = append(returnList, &item)
+		thisItem := item
+		returnList = append(returnList, &thisItem)
 	}
 	for _, item := range project.HelmServices {
-		returnList = append(returnList, &item)
+		thisItem := item
+		returnList = append(returnList, &thisItem)
 	}
 
 	for _, item := range project.DockerfileServices {
-		returnList = append(returnList, &item)
+		thisItem := item
+		returnList = append(returnList, &thisItem)
 	}
 
 	return returnList
@@ -63,9 +66,6 @@ type Service interface {
 
 	GetType() string
 	GetPort() int
-
-	SetProjectId(string)
-	SetProjectVersion(string)
 
 	/**
 	Validate that the service is configured correctly

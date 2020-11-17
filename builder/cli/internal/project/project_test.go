@@ -83,3 +83,41 @@ func TestProject_Validate(t *testing.T) {
 		})
 	}
 }
+
+func TestProject_GetServices(t *testing.T) {
+
+	project := Project{
+		ManifestServices: []service.ManifestService{
+			{
+				Id: "manifest-1",
+			},
+			{
+				Id: "manifest-2",
+			},
+		},
+		HelmServices: []service.HelmService{
+			{
+				Id: "helm-1",
+			},
+			{
+				Id: "helm-2",
+			},
+		},
+		DockerfileServices: []service.DockerfileService{
+			{
+				Id: "docker-1",
+			},
+			{
+				Id: "docker-2",
+			},
+		},
+	}
+	assert.Equal(t, 6, len(project.GetServices()))
+	assert.Equal(t, "manifest-1", project.GetServices()[0].GetId())
+	assert.Equal(t, "manifest-2", project.GetServices()[1].GetId())
+	assert.Equal(t, "helm-1", project.GetServices()[2].GetId())
+	assert.Equal(t, "helm-2", project.GetServices()[3].GetId())
+	assert.Equal(t, "docker-1", project.GetServices()[4].GetId())
+	assert.Equal(t, "docker-2", project.GetServices()[5].GetId())
+
+}

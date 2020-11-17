@@ -56,6 +56,12 @@ func ImageList(options types.ImageListOptions) ([]types.ImageSummary, error) {
 func ContainerRun(containerConfig *container.Config, hostConfig *container.HostConfig, networkConfig *network.NetworkingConfig, containerName string, removeWhenDone bool) error {
 	ctx := context.Background()
 
+	containerConfig.Tty = false
+	containerConfig.AttachStdin = false
+	containerConfig.AttachStdout = true
+	containerConfig.AttachStderr = true
+	containerConfig.OpenStdin = false
+
 	createdContainer, err := dockerClient.ContainerCreate(
 		ctx,
 		containerConfig,
@@ -99,8 +105,6 @@ func ContainerRun(containerConfig *container.Config, hostConfig *container.HostC
 	case <-waitOk:
 		//ran correctly
 	}
-
-	ui.Println("Docker done")
 
 	return nil
 }

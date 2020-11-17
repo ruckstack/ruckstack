@@ -63,7 +63,7 @@ func TestBuild(t *testing.T) {
 					assert.FileExists(t, filepath.Join(unzipPath, "data/web/site-down.html"))
 
 					//installer is executable
-					cmd := exec.Command(environment.OutPath("example_1.0.5.installer"), "--help")
+					cmd := exec.Command(environment.OutPath("example_1.0.5.installer"))
 					var out bytes.Buffer
 					cmd.Stdout = &out
 					err := cmd.Run()
