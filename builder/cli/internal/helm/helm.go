@@ -178,7 +178,7 @@ func DownloadChart(repo string, chart string, version string) (string, error) {
 	savePath := filepath.Join(downloadDir, chart+"-"+version+".tgz")
 	_, err = os.Stat(savePath)
 	if os.IsNotExist(err) {
-		ui.Printf("Downloading chart %s...", filepath.Base(savePath))
+		defer ui.StartProgressf("Downloading chart %s", filepath.Base(savePath)).Stop()
 
 		savePath, _, err := chartDownloader.DownloadTo(repo+"/"+chart, version, downloadDir)
 		if err != nil {
@@ -186,8 +186,7 @@ func DownloadChart(repo string, chart string, version string) (string, error) {
 			errMessage = strings.Replace(errMessage, ". (try 'helm repo update')", "", 1)
 			return "", fmt.Errorf(errMessage)
 		}
-		ui.Printf("Downloading chart %s...DONE", filepath.Base(savePath))
-
+		ui.VPrintf("Saved to %s", savePath)
 	} else {
 		ui.VPrintf("Already downloaded chart %s", filepath.Base(savePath))
 	}

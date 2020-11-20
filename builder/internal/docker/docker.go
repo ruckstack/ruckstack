@@ -1,6 +1,7 @@
 package docker
 
 import (
+	"archive/zip"
 	"context"
 	"fmt"
 	"github.com/docker/docker/api/types"
@@ -13,6 +14,7 @@ import (
 	"github.com/docker/docker/pkg/term"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"io"
+	"io/ioutil"
 	"os"
 	"strings"
 )
@@ -72,12 +74,12 @@ func ContainerRun(containerConfig *container.Config, hostConfig *container.HostC
 		return fmt.Errorf("cannot create CLI container: %s", cleanErrorMessage(err))
 	}
 
-	if err := dockerClient.ContainerStart(ctx, createdContainer.ID, types.ContainerStartOptions{}); err != nil {
-		return fmt.Errorf("cannot start CLI container: %s", cleanErrorMessage(err))
-	}
-
 	if removeWhenDone {
 		defer ContainerRemove(createdContainer.ID)
+	}
+
+	if err := dockerClient.ContainerStart(ctx, createdContainer.ID, types.ContainerStartOptions{}); err != nil {
+		return fmt.Errorf("cannot start CLI container: %s", cleanErrorMessage(err))
 	}
 
 	containerResponse, err := dockerClient.ContainerAttach(ctx, createdContainer.ID, types.ContainerAttachOptions{
@@ -110,7 +112,7 @@ func ContainerRun(containerConfig *container.Config, hostConfig *container.HostC
 }
 
 func SaveImages(outputPath string, imageRefs ...string) error {
-	progressMonitor := ui.StartProgressMonitor("Saving images")
+	progressMonitor := ui.StartProgressf("Saving images")
 	defer progressMonitor.Stop()
 
 	outputFile, err := os.Create(outputPath)
@@ -129,6 +131,36 @@ func SaveImages(outputPath string, imageRefs ...string) error {
 	}
 
 	return nil
+}
+
+func ImageLoad(tarFile *zip.File) error {
+	tarStream, err := tarFile.Open()
+	if err != nil {
+		return err
+	}
+	reader, err := dockerClient.ImageLoad(context.Background(), tarStream, false)
+
+	if err != nil {
+		return err
+	}
+
+	defer reader.Body.Close()
+
+	if ui.IsVerbose() {
+		sendOutputToUi(reader.Body)
+	} else {
+		discardOutput(reader.Body)
+	}
+
+	return nil
+}
+
+func GetImageId(ref string) (string, error) {
+	inspect, _, err := dockerClient.ImageInspectWithRaw(context.Background(), ref)
+	if err != nil {
+		return "", err
+	}
+	return inspect.ID, nil
 }
 
 func cleanErrorMessage(err error) error {
@@ -153,6 +185,11 @@ func sendOutputToUi(output io.ReadCloser) {
 	jsonmessage.DisplayJSONMessagesStream(output, ui.GetOutput(), termFd, isTerm, nil)
 }
 
+func discardOutput(output io.ReadCloser) {
+	termFd, isTerm := term.GetFdInfo(ioutil.Discard)
+	jsonmessage.DisplayJSONMessagesStream(output, ioutil.Discard, termFd, isTerm, nil)
+}
+
 func GetContainerId(containerName string) (string, error) {
 
 	listFilters := filters.NewArgs()
@@ -173,28 +210,6 @@ func GetContainerId(containerName string) (string, error) {
 	}
 
 	return containerList[0].ID, nil
-}
-
-func GetImageId(imageRef string) (string, error) {
-
-	listFilters := filters.NewArgs()
-	listFilters.Add("reference", imageRef)
-
-	imageList, err := dockerClient.ImageList(context.Background(), types.ImageListOptions{
-		All:     true,
-		Filters: listFilters,
-	})
-	if err != nil {
-		return "", fmt.Errorf("error finding image %s: %s", imageRef, cleanErrorMessage(err))
-	}
-
-	if len(imageList) == 0 {
-		return "", nil
-	} else if len(imageList) > 1 {
-		return "", fmt.Errorf("found %d images matching %s", len(imageList), imageRef)
-	}
-
-	return imageList[0].ID, nil
 }
 
 func ContainerRemove(containerId string) error {

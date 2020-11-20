@@ -34,16 +34,23 @@ compile() {
   (export GOOS=linux && export CGO_ENABLED=0 && go build -o out/builder_image/bin/ruckstack builder/cli/cmd/main.go)
 
   echo "Compiling builder launcher..."
-  (export GOOS=linux && go build -o out/artifacts/linux/ruckstack builder/launcher/cmd/main.go)
-  (export GOOS=windows && go build -o out/artifacts/win/ruckstack.exe builder/launcher/cmd/main.go)
-  (export GOOS=darwin && go build -o out/artifacts/mac/ruckstack builder/launcher/cmd/main.go)
-  chmod 755 out/artifacts/linux/ruckstack
-  chmod 755 out/artifacts/mac/ruckstack
+  rm -rf out/artifacts/linux
+  rm -rf out/artifacts/win
+  rm -rf out/artifacts/mac
+
+  (export GOOS=linux && go build -o out/artifacts/linux/ruckstack.base builder/launcher/cmd/main.go)
+  (export GOOS=windows && go build -o out/artifacts/win/ruckstack.base.exe builder/launcher/cmd/main.go)
+  (export GOOS=darwin && go build -o out/artifacts/mac/ruckstack.base builder/launcher/cmd/main.go)
+  chmod 755 out/artifacts/linux/ruckstack.base
+  chmod 755 out/artifacts/mac/ruckstack.base
 
   echo "Creating ruckstack distribution..."
   cp ./LICENSE out/builder_image
   cp -r builder/cli/install_root/* out/builder_image
   chmod 755 out/builder_image/bin/ruckstack
+
+  echo "Compiling file_join..."
+  (export GOOS=linux && go build -o tmp/file_join builder/launcher/file_join/file_join.go)
 }
 
 test() {
@@ -67,7 +74,20 @@ test() {
 build_docker() {
   echo "Building docker image..."
   mkdir -p out/artifacts/docker
-  docker build -t ghcr.io/ruckstack/ruckstack:local out/builder_image
+  docker build -t ghcr.io/ruckstack/ruckstack:packaged out/builder_image
+  docker save ghcr.io/ruckstack/ruckstack:packaged --output out/artifacts/docker/ruckstack.image.tar
+  cp out/artifacts/linux/ruckstack.base out/artifacts/linux/ruckstack
+  cp out/artifacts/win/ruckstack.base.exe out/artifacts/win/ruckstack.exe
+  cp out/artifacts/mac/ruckstack.base out/artifacts/mac/ruckstack
+
+  echo "Appending packaged containers to launcher..."
+  tmp/file_join out/artifacts/linux/ruckstack out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:packaged)
+  tmp/file_join out/artifacts/win/ruckstack.exe out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:packaged)
+  tmp/file_join out/artifacts/mac/ruckstack out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:packaged)
+
+  chmod 755 out/artifacts/linux/ruckstack
+  chmod 755 out/artifacts/mac/ruckstack
+
 }
 
 clean() {

@@ -355,7 +355,7 @@ func (installFile *InstallFile) saveDockerImages() error {
 }
 
 func (installFile *InstallFile) saveImagesTar(imagesTarPath string, targetPath string) error {
-	monitor := ui.StartProgressMonitor("Compressing " + filepath.Base(imagesTarPath))
+	monitor := ui.StartProgressf("Compressing " + filepath.Base(imagesTarPath))
 	defer monitor.Stop()
 
 	targetPath = strings.Replace(targetPath, ".tar", ".untar", 1)

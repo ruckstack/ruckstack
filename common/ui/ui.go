@@ -196,10 +196,10 @@ func PromptForBoolean(prompt string, defaultValue *bool) bool {
 	}
 }
 
-func StartProgressMonitor(message string) *spinner.Spinner {
+func StartProgressf(format string, a ...interface{}) *spinner.Spinner {
 	progressMonitor := spinner.New(spinner.CharSets[11], 100*time.Millisecond, spinner.WithWriter(os.Stderr))
-	progressMonitor.Suffix = " " + message + "..."
-	progressMonitor.FinalMSG = message + "...DONE\n"
+	progressMonitor.Suffix = fmt.Sprintf(" "+format+"...", a...)
+	progressMonitor.FinalMSG = fmt.Sprintf(format+"...DONE", a...) + "...DONE\n"
 	progressMonitor.Start()
 
 	return progressMonitor

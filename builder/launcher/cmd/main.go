@@ -1,6 +1,7 @@
 package main
 
 import (
+	"archive/zip"
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -14,6 +15,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 )
 
@@ -35,17 +37,29 @@ var (
 			"project": ".",
 		},
 	}
+
+	packagedTag = "packaged"
 )
 
 func main() {
 
-	dockerGroup, err := user.LookupGroup("docker")
-	if err != nil {
-		exitWithError(fmt.Errorf("cannot find docker group: %s", err))
-	}
-	containerConfig := &container.Config{
-		//Using the built in user, but forcing it into the docker group so that it can access the docker.sock
-		User: environment.CurrentUser.Uid + ":" + dockerGroup.Gid,
+	containerConfig := &container.Config{}
+
+	if runtime.GOOS == "linux" {
+		ui.VPrintf("Running linux, performing user mapping")
+		dockerGroup, err := user.LookupGroup("docker")
+		if err == nil {
+			ui.VPrintf("Running container under group 'docker'")
+			containerConfig.User = environment.CurrentUser.Uid + ":" + dockerGroup.Gid
+		} else {
+			//no docker group, try with just the user's default group
+			ui.VPrintf("Cannot find group 'docker', using default group of %d", environment.CurrentUser.Gid)
+			containerConfig.User = environment.CurrentUser.Uid + ":" + environment.CurrentUser.Gid
+		}
+	} else {
+		ui.VPrintf("No user mapping for %s", runtime.GOOS)
+		containerConfig.User = "root"
+
 	}
 
 	hostConfig := &container.HostConfig{}
@@ -65,7 +79,7 @@ func main() {
 
 	useVersion := parsedArgs["--launch-version"]
 	if useVersion == "" {
-		useVersion = "latest"
+		useVersion = packagedTag
 	}
 
 	if regexp.MustCompile("^\\d.*").MatchString(useVersion) {
@@ -91,29 +105,68 @@ func main() {
 		ui.VPrintf("LAUNCHER: Mount Point %s -> %s\n", mountPt.Source, mountPt.Target)
 	}
 
-	if forcePull {
-		ui.VPrintf("Forced pull No local images found for %s", containerConfig.Image)
-		if err := docker.ImagePull(containerConfig.Image); err != nil {
-			exitWithError(err)
-		}
-
-	} else {
-		listFilters := filters.NewArgs()
-		listFilters.Add("reference", containerConfig.Image)
-		imageList, err := docker.ImageList(types.ImageListOptions{
-			Filters: listFilters,
-		})
+	if useVersion == packagedTag {
+		executable, err := os.Executable()
 		if err != nil {
-			exitWithError(err)
+			ui.Fatalf("Cannot determine executable: %s", err)
 		}
 
-		if len(imageList) == 0 {
-			ui.VPrintf("No local images found for %s", containerConfig.Image)
-			if err := docker.ImagePull(containerConfig.Image); err != nil {
-				ui.Fatalf("Error pulling %s: %s", containerConfig.Image, err)
-			}
+		zipReader, err := zip.OpenReader(executable)
+		if err != nil {
+			ui.Fatalf("cannot read packaged archive in %s: %s", executable, err)
+		}
+
+		if len(zipReader.File) != 1 {
+			ui.Fatalf("found %d many files in launcher", len(zipReader.File))
+		}
+
+		tarFile := zipReader.File[0]
+
+		ui.VPrintf("Packaged image %s", tarFile.Name)
+
+		currentContainerId, err := docker.GetImageId("ghcr.io/ruckstack/ruckstack:" + packagedTag)
+		ui.VPrintf("Currently cached image: %s", currentContainerId)
+
+		if currentContainerId == tarFile.Name {
+			ui.VPrintf("Already have packaged image %s loaded", currentContainerId)
 		} else {
-			ui.VPrintf("Not pulling image %s: already in local image cache", containerConfig.Image)
+			if currentContainerId != "" {
+				ui.VPrintf("Removing old %s", "ghcr.io/ruckstack/ruckstack:"+packagedTag)
+				if err := docker.ImageRemove("ghcr.io/ruckstack/ruckstack:" + packagedTag); err != nil {
+					ui.Printf("Cannot remove old image: %s", err)
+				}
+			}
+
+			ui.VPrintf("Loading packaged image...")
+			if err := docker.ImageLoad(tarFile); err != nil {
+				ui.Fatalf("error importing image: %s", err)
+			}
+		}
+	} else {
+		if forcePull {
+			ui.VPrintf("Forced pull for %s", containerConfig.Image)
+			if err := docker.ImagePull(containerConfig.Image); err != nil {
+				exitWithError(err)
+			}
+
+		} else {
+			listFilters := filters.NewArgs()
+			listFilters.Add("reference", containerConfig.Image)
+			imageList, err := docker.ImageList(types.ImageListOptions{
+				Filters: listFilters,
+			})
+			if err != nil {
+				exitWithError(err)
+			}
+
+			if len(imageList) == 0 {
+				ui.VPrintf("No local images found for %s", containerConfig.Image)
+				if err := docker.ImagePull(containerConfig.Image); err != nil {
+					ui.Fatalf("Error pulling %s: %s", containerConfig.Image, err)
+				}
+			} else {
+				ui.VPrintf("Not pulling image %s: already in local image cache", containerConfig.Image)
+			}
 		}
 	}
 

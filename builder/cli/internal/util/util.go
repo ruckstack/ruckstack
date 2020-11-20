@@ -30,7 +30,7 @@ func DownloadFile(url string) (string, error) {
 		return savePath, nil
 	}
 
-	ui.Println("Downloading " + url + "...")
+	defer ui.StartProgressf("Downloading %s", url)
 	resp, err := http.Get(url)
 	if err != nil {
 		return "", fmt.Errorf("cannot download %s: %s", url, err)
