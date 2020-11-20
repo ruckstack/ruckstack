@@ -158,6 +158,9 @@ func ImageLoad(tarFile *zip.File) error {
 func GetImageId(ref string) (string, error) {
 	inspect, _, err := dockerClient.ImageInspectWithRaw(context.Background(), ref)
 	if err != nil {
+		if client.IsErrNotFound(err) {
+			return "", nil
+		}
 		return "", err
 	}
 	return inspect.ID, nil

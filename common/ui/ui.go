@@ -17,6 +17,7 @@ var (
 	logger       *log.Logger
 	verbose      bool
 	inputScanner *bufio.Scanner
+	IsTerminal   bool
 )
 
 var NotDirectoryCheck = func(input string) error {
@@ -41,6 +42,20 @@ func init() {
 	}
 
 	inputScanner = bufio.NewScanner(os.Stdin)
+
+	if os.Getenv("RUCKSTACK_TERMINAL") == "true" {
+		IsTerminal = true
+	} else if os.Getenv("RUCKSTACK_TERMINAL") == "false" {
+		IsTerminal = false
+	} else {
+		if fileInfo, _ := os.Stdout.Stat(); (fileInfo.Mode() & os.ModeCharDevice) != 0 {
+			IsTerminal = true
+		} else {
+			IsTerminal = false
+		}
+	}
+
+	VPrintf("Running in a terminal: %t", IsTerminal)
 }
 
 func SetVerbose(value bool) {
@@ -196,11 +211,32 @@ func PromptForBoolean(prompt string, defaultValue *bool) bool {
 	}
 }
 
-func StartProgressf(format string, a ...interface{}) *spinner.Spinner {
-	progressMonitor := spinner.New(spinner.CharSets[11], 100*time.Millisecond, spinner.WithWriter(os.Stderr))
-	progressMonitor.Suffix = fmt.Sprintf(" "+format+"...", a...)
-	progressMonitor.FinalMSG = fmt.Sprintf(format+"...DONE", a...) + "...DONE\n"
-	progressMonitor.Start()
+func StartProgressf(format string, a ...interface{}) UiSpinner {
+	if IsTerminal {
+		progressMonitor := spinner.New(spinner.CharSets[11], 100*time.Millisecond, spinner.WithWriter(os.Stderr))
+		progressMonitor.Suffix = fmt.Sprintf(" "+format+"...", a...)
+		progressMonitor.FinalMSG = fmt.Sprintf(format+"...DONE", a...) + "...DONE\n"
+		progressMonitor.Start()
 
-	return progressMonitor
+		return progressMonitor
+	} else {
+		progressMonitor := &batchUiSpinner{
+			message: fmt.Sprintf(format, a...),
+		}
+		Println(progressMonitor.message + "...")
+
+		return progressMonitor
+	}
+}
+
+type UiSpinner interface {
+	Stop()
+}
+
+type batchUiSpinner struct {
+	message string
+}
+
+func (spinner *batchUiSpinner) Stop() {
+	Printf("%s...DONE", spinner.message)
 }

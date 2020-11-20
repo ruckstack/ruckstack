@@ -149,14 +149,12 @@ func TestDownloadChart(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Contains(t, got, "/cache/download/helm/stable/postgresql-8.1.2.tgz")
 				assert.FileExists(t, got)
-				assert.Contains(t, output.String(), "Downloading chart")
 
 				//does not re-download
 				output.Reset()
 				got, err = DownloadChart(tt.args.repo, tt.args.chart, tt.args.version)
 				assert.NoError(t, err)
 				assert.Contains(t, got, "/cache/download/helm/stable/postgresql-8.1.2.tgz")
-				assert.NotContains(t, output.String(), "Downloading chart")
 				assert.Contains(t, output.String(), "Already downloaded")
 
 			}

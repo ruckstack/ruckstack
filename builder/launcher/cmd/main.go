@@ -53,7 +53,7 @@ func main() {
 			containerConfig.User = environment.CurrentUser.Uid + ":" + dockerGroup.Gid
 		} else {
 			//no docker group, try with just the user's default group
-			ui.VPrintf("Cannot find group 'docker', using default group of %d", environment.CurrentUser.Gid)
+			ui.VPrintf("Cannot find group 'docker', using default group of %s", environment.CurrentUser.Gid)
 			containerConfig.User = environment.CurrentUser.Uid + ":" + environment.CurrentUser.Gid
 		}
 	} else {
@@ -76,6 +76,7 @@ func main() {
 	}
 
 	containerConfig.Env = append(containerConfig.Env, "RUCKSTACK_DOCKERIZED=true")
+	containerConfig.Env = append(containerConfig.Env, fmt.Sprintf("RUCKSTACK_TERMINAL=%t", ui.IsTerminal))
 
 	useVersion := parsedArgs["--launch-version"]
 	if useVersion == "" {
