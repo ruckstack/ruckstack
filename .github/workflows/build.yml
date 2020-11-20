@@ -37,12 +37,12 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Build
-        run: bash BUILD.sh compile
+        run: bash BUILD.sh fast
 
       - name: Test
         run: bash BUILD.sh test
 
-      - name: Test Again (Cached Files)
+      - name: Test Again (Ensure cached files)
         run: bash BUILD.sh test
 
       - name: Save artifacts
