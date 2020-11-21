@@ -67,11 +67,22 @@ func TestCreatingInstallFile(t *testing.T) {
 	assert.FileExists(t, filepath.Join(unzipPath, "example.html"))
 	assert.FileExists(t, filepath.Join(unzipPath, "from-download/file.here"))
 
+	fileMatches, err := filepath.Glob(filepath.Join(unzipPath, "data/agent/images/images.untar/*/json"))
+	assert.NoError(t, err)
+	assert.True(t, len(fileMatches) > 0)
+
+	//has compressed layers
+	fileMatches, err = filepath.Glob(filepath.Join(unzipPath, "data/agent/images/images.untar/*/layer.tar.gz"))
+	assert.NoError(t, err)
+	assert.True(t, len(fileMatches) > 0)
+
+	//no uncompressed layers
+	fileMatches, err = filepath.Glob(filepath.Join(unzipPath, "data/agent/images/images.untar/*/layer.tar"))
+	assert.NoError(t, err)
+	assert.True(t, len(fileMatches) == 0)
+
 	assert.FileExists(t, filepath.Join(unzipPath, "data/agent/images/images.untar/manifest.json"))
 	assert.FileExists(t, filepath.Join(unzipPath, "data/agent/images/images.untar/repositories"))
-	assert.FileExists(t, filepath.Join(unzipPath, "data/agent/images/images.untar/614088555b5b2f43a677aa33c55c7f9ccc5e2bd4d2d88bee4c127ec0f658c3df/json"))
-	assert.FileExists(t, filepath.Join(unzipPath, "data/agent/images/images.untar/614088555b5b2f43a677aa33c55c7f9ccc5e2bd4d2d88bee4c127ec0f658c3df/layer.tar.gz"))
-	assert.NoFileExists(t, filepath.Join(unzipPath, "data/agent/images/images.untar/614088555b5b2f43a677aa33c55c7f9ccc5e2bd4d2d88bee4c127ec0f658c3df/layer.tar"))
 
 	manifestContent, err := ioutil.ReadFile(filepath.Join(unzipPath, "data/agent/images/images.untar/manifest.json"))
 	assert.NoError(t, err)
