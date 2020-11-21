@@ -146,11 +146,7 @@ func ImageLoad(tarFile *zip.File) error {
 
 	defer reader.Body.Close()
 
-	if ui.IsVerbose() {
-		sendOutputToUi(reader.Body)
-	} else {
-		discardOutput(reader.Body)
-	}
+	sendOutputToUi(reader.Body)
 
 	return nil
 }

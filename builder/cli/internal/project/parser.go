@@ -2,6 +2,7 @@ package project
 
 import (
 	"fmt"
+	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
 	"gopkg.in/yaml.v2"
 	"io"
 	"os"
@@ -25,8 +26,8 @@ func ParseData(data io.Reader, projectPath string) (*Project, error) {
 	decoder.SetStrict(true)
 
 	projectConfig := Project{
-		K3sVersion:  "1.19.2+k3s1",
-		HelmVersion: "3.2.4",
+		K3sVersion:  environment.PackagedK3sVersion,
+		HelmVersion: environment.PackagedHelmVersion,
 	}
 	if err := decoder.Decode(&projectConfig); err != nil {
 		return nil, fmt.Errorf("error parsing %s: %s", projectPath, err)

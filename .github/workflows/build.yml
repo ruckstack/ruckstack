@@ -42,9 +42,6 @@ jobs:
       - name: Test
         run: bash BUILD.sh test
 
-      - name: Test Again (Ensure cached files)
-        run: bash BUILD.sh test
-
       - name: Save artifacts
         uses: actions/upload-artifact@v2
         with:

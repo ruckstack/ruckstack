@@ -44,6 +44,7 @@ func Build() error {
 	}
 
 	//add 3rd party files
+	//for user performance reasons, these should be pre-downloaded in builder/cli/cmd/commands/internal_build.go
 	if err := installFile.AddDownloadedNestedFile(fmt.Sprintf("https://get.helm.sh/helm-v%s-linux-amd64.tar.gz", url.PathEscape(projectConfig.HelmVersion)), "linux-amd64/helm", "lib/helm"); err != nil {
 		return err
 	}

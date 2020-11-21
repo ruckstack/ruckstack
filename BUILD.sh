@@ -48,9 +48,12 @@ compile() {
   cp ./LICENSE out/builder_image
   cp -r builder/cli/install_root/* out/builder_image
   chmod 755 out/builder_image/bin/ruckstack
+  export RUCKSTACK_CACHE_DIR=out/builder_image/resources/cache && export RUCKSTACK_TEMP_DIR=out/builder_image/tmp && out/builder_image/bin/ruckstack internal-build download
+  rm -rf out/builder_image/tmp
+  rm -rf out/builder_image/resources/cache/helm
 
   echo "Compiling file_join..."
-  (export GOOS=linux && go build -o tmp/file_join builder/launcher/file_join/file_join.go)
+  (export GOOS=linux && go build -o tmp/build_utils/file_join build_utils/file_join/file_join.go)
 }
 
 test() {
@@ -81,9 +84,9 @@ build_docker() {
   cp out/artifacts/mac/ruckstack.base out/artifacts/mac/ruckstack
 
   echo "Appending packaged containers to launcher..."
-  tmp/file_join out/artifacts/linux/ruckstack out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:packaged)
-  tmp/file_join out/artifacts/win/ruckstack.exe out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:packaged)
-  tmp/file_join out/artifacts/mac/ruckstack out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:packaged)
+  tmp/build_utils/file_join out/artifacts/linux/ruckstack out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:packaged)
+  tmp/build_utils/file_join out/artifacts/win/ruckstack.exe out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:packaged)
+  tmp/build_utils/file_join out/artifacts/mac/ruckstack out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:packaged)
 
   chmod 755 out/artifacts/linux/ruckstack
   chmod 755 out/artifacts/mac/ruckstack

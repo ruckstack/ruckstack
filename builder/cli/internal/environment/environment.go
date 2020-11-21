@@ -20,6 +20,9 @@ var (
 
 	OutDir     string
 	ProjectDir string
+
+	PackagedK3sVersion  = "1.19.2+k3s1"
+	PackagedHelmVersion = "3.2.4"
 )
 
 func init() {

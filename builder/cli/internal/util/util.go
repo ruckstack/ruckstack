@@ -15,7 +15,17 @@ import (
 
 func DownloadFile(url string) (string, error) {
 
-	cacheKey := regexp.MustCompile(`https?://.+?/`).ReplaceAllString(url, "")
+	cacheKey := regexp.MustCompile(`https?://`).ReplaceAllString(url, "")
+
+	packagedPath, err := environment.ResourcePath("cache/download/general/" + cacheKey)
+	if err != nil {
+		return "", err
+	}
+	_, err = os.Stat(packagedPath)
+	if err == nil {
+		ui.VPrintf("Packaged file %s", filepath.Base(packagedPath))
+		return packagedPath, nil
+	}
 
 	savePath := environment.CachePath("download/general/" + cacheKey)
 
@@ -24,7 +34,7 @@ func DownloadFile(url string) (string, error) {
 		return "", fmt.Errorf("cannot create directory %s: %s", saveDir, err)
 	}
 
-	_, err := os.Stat(savePath)
+	_, err = os.Stat(savePath)
 	if err == nil {
 		ui.VPrintf("Already downloaded %s", filepath.Base(savePath))
 		return savePath, nil
