@@ -7,7 +7,6 @@ import (
 	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/spf13/cobra"
 	"net/url"
-	"os"
 )
 
 func init() {
@@ -27,14 +26,12 @@ func initDownload(parent *cobra.Command) {
 		Use:   "download",
 		Short: "Downloads a file",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ui.SetOutput(os.Stdout)
-			ui.SetVerbose(true)
-
 			for _, urlToDownload := range []string{
 				fmt.Sprintf("https://github.com/rancher/k3s/releases/download/v%s/k3s-airgap-images-amd64.tar", url.PathEscape(environment.PackagedK3sVersion)),
 				fmt.Sprintf("https://github.com/rancher/k3s/releases/download/v%s/k3s", url.PathEscape(environment.PackagedK3sVersion)),
 				fmt.Sprintf("https://get.helm.sh/helm-v%s-linux-amd64.tar.gz", url.PathEscape(environment.PackagedHelmVersion)),
 			} {
+				ui.Printf("Downloading %s...", urlToDownload)
 				_, err := util.DownloadFile(urlToDownload)
 				if err != nil {
 					return err

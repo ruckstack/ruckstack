@@ -18,13 +18,16 @@ func DownloadFile(url string) (string, error) {
 	cacheKey := regexp.MustCompile(`https?://`).ReplaceAllString(url, "")
 
 	packagedPath, err := environment.ResourcePath("cache/download/general/" + cacheKey)
-	if err != nil {
-		return "", err
-	}
-	_, err = os.Stat(packagedPath)
 	if err == nil {
 		ui.VPrintf("Packaged file %s", filepath.Base(packagedPath))
 		return packagedPath, nil
+	} else {
+		if os.IsNotExist(err) {
+			//ok, will download
+		} else {
+			return "", err
+		}
+
 	}
 
 	savePath := environment.CachePath("download/general/" + cacheKey)

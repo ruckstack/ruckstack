@@ -48,7 +48,7 @@ compile() {
   cp ./LICENSE out/builder_image
   cp -r builder/cli/install_root/* out/builder_image
   chmod 755 out/builder_image/bin/ruckstack
-  export RUCKSTACK_CACHE_DIR=out/builder_image/resources/cache && export RUCKSTACK_TEMP_DIR=out/builder_image/tmp && out/builder_image/bin/ruckstack internal-build download
+  export RUCKSTACK_CACHE_DIR=out/builder_image/resources/cache && export RUCKSTACK_TEMP_DIR=out/builder_image/tmp && out/builder_image/bin/ruckstack --verbose internal-build download
   rm -rf out/builder_image/tmp
   rm -rf out/builder_image/resources/cache/helm
 

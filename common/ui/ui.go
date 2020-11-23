@@ -63,6 +63,7 @@ func SetVerbose(value bool) {
 		logger.SetFlags(log.Ldate | log.Ltime)
 		Println("Enabled verbose output")
 	} else {
+		Println("Disabled verbose output")
 		logger.SetFlags(0)
 	}
 	verbose = value
