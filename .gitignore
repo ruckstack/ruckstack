@@ -1,9 +1,14 @@
 /.idea
 /*.iml
-**/bindata.go
 /out
 /tmp
-internal/ruckstack/builder/resources/new_project/example/out
+/cache
 TODO.txt
 **/__debug_bin
 /workspace
+
+#Compiled binaries
+builder/cli/install_root/resources/installer
+builder/cli/install_root/resources/install_dir/bin/system-control
+builder/cli/install_root/resources/install_dir/bin/system-daemon
+builder/cli/install_root/resources/install_dir/lib

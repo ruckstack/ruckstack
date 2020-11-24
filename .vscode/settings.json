@@ -1,6 +1,0 @@
-{
-	"go.alternateTools": {
-		"dlv": "dlv-sudo.sh"
-	},
-	"go.useLanguageServer": true
-}

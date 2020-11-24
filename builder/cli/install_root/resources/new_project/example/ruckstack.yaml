@@ -1,0 +1,20 @@
+id: example
+name: Example Project
+version: 1.0.5
+
+dockerfileServices:
+  - id: homepage
+    dockerfile: homepage/Dockerfile
+    port: 8080
+    baseUrl: /
+
+  - id: cart
+    dockerfile: cart/Dockerfile
+    port: 8080
+    baseUrl: /cart
+
+helmServices:
+  - id: mariadb
+    chart: stable/mariadb
+    version: 7.3.9
+    port: 3306
