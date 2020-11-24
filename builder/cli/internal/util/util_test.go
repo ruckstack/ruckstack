@@ -24,7 +24,7 @@ func TestDownloadFile(t *testing.T) {
 		{
 			name: "Can download a file",
 			args: args{
-				url: "https://example.com",
+				url: "https://example.com/index.html",
 			},
 		},
 		{
