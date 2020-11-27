@@ -70,7 +70,7 @@ func printJobStatus(job *batch.Job) {
 }
 
 func watchJobs() {
-	factory := informers.NewSharedInformerFactory(kubeClient, 0)
+	factory := informers.NewSharedInformerFactory(kube.Client(), 0)
 	informer := factory.Batch().V1().Jobs().Informer()
 	stopper := make(chan struct{})
 	defer close(stopper)

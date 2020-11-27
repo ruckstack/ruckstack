@@ -68,7 +68,7 @@ func initStatusServices(parent *cobra.Command) {
 	}
 
 	statusServicesCmd.Flags().BoolVar(&includeSystemServices, "include-system", false, "Include system-level services in output")
-	statusServicesCmd.Flags().BoolVar(&followServices, "follow", false, "Continue watching for changes to the services")
+	statusServicesCmd.Flags().BoolVarP(&followServices, "follow", "f", false, "Continue watching for changes to the services")
 
 	parent.AddCommand(statusServicesCmd)
 

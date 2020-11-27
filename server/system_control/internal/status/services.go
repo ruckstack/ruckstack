@@ -13,7 +13,6 @@ import (
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -25,7 +24,6 @@ type serviceInfo struct {
 	pods       []string
 }
 
-var kubeClient *kubernetes.Clientset
 var lastPodStatus = map[string]string{}
 var ownerTree = map[string]*meta.OwnerReference{}
 var allServices = map[string]*serviceInfo{}
@@ -166,7 +164,7 @@ func ShowServiceStatus(includeSystemService bool, follow bool) error {
 
 func watchPods(wg *sync.WaitGroup) {
 	defer wg.Done()
-	factory := informers.NewSharedInformerFactory(kubeClient, 0)
+	factory := informers.NewSharedInformerFactory(kube.Client(), 0)
 	informer := factory.Core().V1().Pods().Informer()
 	stopper := make(chan struct{})
 	defer close(stopper)
@@ -244,7 +242,7 @@ func getPodStatusDescription(newPod *core.Pod) string {
 
 func watchDaemonSets(wg *sync.WaitGroup) {
 	defer wg.Done()
-	factory := informers.NewSharedInformerFactory(kubeClient, 0)
+	factory := informers.NewSharedInformerFactory(kube.Client(), 0)
 	informer := factory.Apps().V1().DaemonSets().Informer()
 	stopper := make(chan struct{})
 	defer close(stopper)
@@ -286,7 +284,7 @@ func watchDaemonSets(wg *sync.WaitGroup) {
 
 func watchDeployments(wg *sync.WaitGroup) {
 	defer wg.Done()
-	factory := informers.NewSharedInformerFactory(kubeClient, 0)
+	factory := informers.NewSharedInformerFactory(kube.Client(), 0)
 	informer := factory.Apps().V1().Deployments().Informer()
 	stopper := make(chan struct{})
 	defer close(stopper)
@@ -329,7 +327,7 @@ func watchDeployments(wg *sync.WaitGroup) {
 
 func watchStatefulSets(wg *sync.WaitGroup) {
 	defer wg.Done()
-	factory := informers.NewSharedInformerFactory(kubeClient, 0)
+	factory := informers.NewSharedInformerFactory(kube.Client(), 0)
 	informer := factory.Apps().V1().StatefulSets().Informer()
 	stopper := make(chan struct{})
 	defer close(stopper)

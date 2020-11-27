@@ -81,7 +81,7 @@ func Start() error {
 
 	//go monitor.StartMonitor()
 
-	ui.Println("Server started")
+	ui.Printf("Server started.\nAdditional logs are available through `system-control logs` or in %s/logs", environment.ServerHome)
 
 	select {
 	case <-ctx.Done():
