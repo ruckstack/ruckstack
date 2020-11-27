@@ -10,6 +10,7 @@ import (
 	"github.com/ruckstack/ruckstack/builder/internal/argwrapper"
 	"github.com/ruckstack/ruckstack/builder/internal/docker"
 	"github.com/ruckstack/ruckstack/builder/launcher/internal/environment"
+	"github.com/ruckstack/ruckstack/common/global_util"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"os"
 	"os/user"
@@ -37,11 +38,10 @@ var (
 			"project": ".",
 		},
 	}
-
-	packagedTag = "packaged"
 )
 
 func main() {
+	packagedVersion := "v" + global_util.RuckstackVersion
 
 	containerConfig := &container.Config{}
 
@@ -80,7 +80,7 @@ func main() {
 
 	useVersion := parsedArgs["--launch-version"]
 	if useVersion == "" {
-		useVersion = packagedTag
+		useVersion = "v" + global_util.RuckstackVersion
 	}
 
 	if regexp.MustCompile("^\\d.*").MatchString(useVersion) {
@@ -106,41 +106,41 @@ func main() {
 		ui.VPrintf("LAUNCHER: Mount Point %s -> %s\n", mountPt.Source, mountPt.Target)
 	}
 
-	if useVersion == packagedTag {
+	if useVersion == packagedVersion {
 		executable, err := os.Executable()
 		if err != nil {
-			ui.Fatalf("Cannot determine executable: %s", err)
+			exitWithError(fmt.Errorf("Cannot determine executable: %s", err))
 		}
 
 		zipReader, err := zip.OpenReader(executable)
 		if err != nil {
-			ui.Fatalf("cannot read packaged archive in %s: %s", executable, err)
+			exitWithError(fmt.Errorf("cannot read packaged archive in %s: %s", executable, err))
 		}
 
 		if len(zipReader.File) != 1 {
-			ui.Fatalf("found %d many files in launcher", len(zipReader.File))
+			exitWithError(fmt.Errorf("found %d many files in launcher", len(zipReader.File)))
 		}
 
 		tarFile := zipReader.File[0]
 
 		ui.VPrintf("Packaged image %s", tarFile.Name)
 
-		currentContainerId, err := docker.GetImageId("ghcr.io/ruckstack/ruckstack:" + packagedTag)
+		currentContainerId, err := docker.GetImageId("ghcr.io/ruckstack/ruckstack:" + packagedVersion)
 		ui.VPrintf("Currently cached image: %s", currentContainerId)
 
 		if currentContainerId == tarFile.Name {
 			ui.VPrintf("Already have packaged image %s loaded", currentContainerId)
 		} else {
 			if currentContainerId != "" {
-				ui.VPrintf("Removing old %s", "ghcr.io/ruckstack/ruckstack:"+packagedTag)
-				if err := docker.ImageRemove("ghcr.io/ruckstack/ruckstack:" + packagedTag); err != nil {
-					ui.Printf("Cannot remove old image: %s", err)
+				ui.VPrintf("Removing old %s", "ghcr.io/ruckstack/ruckstack:"+packagedVersion)
+				if err := docker.ImageRemove("ghcr.io/ruckstack/ruckstack:" + packagedVersion); err != nil {
+					ui.Printf("Cannot remove old Docker image: %s", err)
 				}
 			}
 
-			ui.VPrintf("Loading packaged image...")
+			ui.Printf("Loading CLI %s into Docker...", packagedVersion)
 			if err := docker.ImageLoad(tarFile); err != nil {
-				ui.Fatalf("error importing image: %s", err)
+				exitWithError(fmt.Errorf("Error importing image: %s", err))
 			}
 		}
 	} else {
@@ -163,7 +163,7 @@ func main() {
 			if len(imageList) == 0 {
 				ui.VPrintf("No local images found for %s", containerConfig.Image)
 				if err := docker.ImagePull(containerConfig.Image); err != nil {
-					ui.Fatalf("Error pulling %s: %s", containerConfig.Image, err)
+					exitWithError(fmt.Errorf("Error pulling %s: %s", containerConfig.Image, err))
 				}
 			} else {
 				ui.VPrintf("Not pulling image %s: already in local image cache", containerConfig.Image)
@@ -182,6 +182,9 @@ func exitWithError(err error) {
 	if err.Error() == "cannot find docker group" || strings.Contains(err.Error(), "Cannot connect to the Docker daemon") {
 		ui.VPrintln("LAUNCHER:", err.Error())
 		errorMessage = "Error launching Ruckstack: Ruckstack requires Docker to run. Please install and/or start the Docker daemon process and re-run Ruckstack"
+	} else if strings.Contains(err.Error(), "connect: permission denied") {
+		ui.VPrintln("LAUNCHER:", err.Error())
+		errorMessage = fmt.Sprintf("Error launching Ruckstack: Ruckstack requires Docker to run. The %s does not have the needed permissions to run Docker containers. Usually you must be a member of the 'docker' group.", environment.CurrentUser.Username)
 	} else {
 		errorMessage = "Error launching Ruckstack:" + err.Error()
 	}
@@ -276,7 +279,7 @@ func processArguments(originalArgs []string) (map[string]string, []string, []str
 
 	currentUser, err := user.Current()
 	if err != nil {
-		ui.Fatalf("Cannot determine current user: %s", err)
+		exitWithError(fmt.Errorf("Cannot determine current user: %s", err))
 	}
 
 	localCacheDir := filepath.Join(currentUser.HomeDir, ".ruckstack")

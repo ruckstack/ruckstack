@@ -38,7 +38,6 @@ manifestServices:
 	assert.NoError(t, err)
 
 	assert.Equal(t, "test", project.Id)
-	assert.Equal(t, "test", project.SystemControlName)
 	assert.Equal(t, "Test Project", project.Name)
 	assert.Equal(t, "1.0.5", project.Version)
 	assert.NotEmpty(t, project.K3sVersion)

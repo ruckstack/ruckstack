@@ -74,7 +74,7 @@ func (installFile *InstallFile) Install(installOptions InstallOptions) error {
 		localConfig.Join.Token = addNodeToken.Token
 	}
 
-	ui.Printf("Installing to %s...\n", installOptions.TargetDir)
+	defer ui.StartProgressf("Installing to %s", installOptions.TargetDir).Stop()
 
 	if err := installFile.Extract(installOptions.TargetDir, localConfig); err != nil {
 		return err
@@ -95,7 +95,7 @@ func (installFile *InstallFile) Install(installOptions InstallOptions) error {
 	}
 
 	ui.Println("\n\nInstallation complete")
-	ui.Printf("To start the server, run `%s/bin/%s start`\n\n", installOptions.TargetDir, installFile.PackageConfig.SystemControlName)
+	ui.Printf("To start the server, run `%s/bin/system-control start`\n\n", installOptions.TargetDir)
 
 	return nil
 }
@@ -153,7 +153,7 @@ func joinCluster(joinToken string, installFile *InstallFile) (*config.AddNodeTok
 	}
 
 	if joinToken == "" {
-		joinToken = ui.PromptForString(fmt.Sprintf("Run `%s cluster add-node` on the primary machine in the cluster and enter the token here:", installFile.PackageConfig.SystemControlName), "", parseTokenCheck)
+		joinToken = ui.PromptForString("Run `system-control cluster add-node` on the primary machine in the cluster and enter the token here:", "", parseTokenCheck)
 	}
 
 	timeout := time.Second

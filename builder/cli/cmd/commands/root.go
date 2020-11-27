@@ -3,6 +3,7 @@ package commands
 import (
 	"github.com/pkg/profile"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
+	"github.com/ruckstack/ruckstack/common/global_util"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/spf13/cobra"
 	"os"
@@ -14,7 +15,7 @@ var RootCmd = &cobra.Command{
 	Use:              "ruckstack",
 	Short:            "Ruckstack CLI",
 	Long:             "Ruckstack CLI",
-	Version:          "0.9.0",
+	Version:          global_util.RuckstackVersion,
 	TraverseChildren: true,
 }
 
@@ -35,7 +36,7 @@ func init() {
 	RootCmd.Flags().BoolVar(&verboseMode, "verbose", false, "Enable more detailed output")
 	RootCmd.Flags().BoolVar(&profileCpu, "profile-cpu", false, "Track cpu usage")
 	RootCmd.Flags().BoolVar(&profileMemory, "profile-memory", false, "Track memory usage")
-	RootCmd.Flags().StringVar(&launchVersion, "launch-version", "packaged", "Specify the version of the Ruckstack CLI to launch")
+	RootCmd.Flags().StringVar(&launchVersion, "launch-version", "v"+global_util.RuckstackVersion, "Specify the version of the Ruckstack CLI to launch")
 	RootCmd.Flags().StringVar(&launchImage, "launch-image", "ghcr.io/ruckstack/ruckstack", "Specify the Ruckstack CLI image to launch")
 	RootCmd.Flags().BoolVar(&launchForcePull, "launch-force-pull", false, "Force the Ruckstack CLI to re-download the image to launch")
 }

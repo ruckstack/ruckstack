@@ -69,6 +69,10 @@ func StartCreation(installerPath string, compressionLevel int) (*InstallFile, er
 				"logs/*": {
 					AdminGroupReadable: true,
 				},
+				"tmp/*": {
+					AdminGroupReadable: true,
+					AdminGroupWritable: true,
+				},
 				"bin/*": {
 					AdminGroupReadable: true,
 					Executable:         true,

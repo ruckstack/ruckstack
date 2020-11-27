@@ -14,7 +14,7 @@ import (
 
 var seenJobs = map[string]bool{}
 
-func ShowJobStatus(includeSystemJobs bool, watch bool) error {
+func ShowJobStatus(includeSystemJobs bool, follow bool) error {
 	packageConfig := environment.PackageConfig
 
 	fmt.Printf("Jobs in %s\n", packageConfig.Name)
@@ -48,8 +48,8 @@ func ShowJobStatus(includeSystemJobs bool, watch bool) error {
 		fmt.Println("")
 	}
 
-	if watch {
-		fmt.Println("\nWatching for changes (ctrl-c to exit)...")
+	if follow {
+		fmt.Println("\nFollowing changes (ctrl-c to exit)...")
 
 		watchJobs()
 

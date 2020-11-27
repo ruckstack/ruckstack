@@ -11,11 +11,11 @@ import (
 	"time"
 )
 
-func ShowServiceLogs(systemService bool, serviceName string, watch bool, since string, node string) error {
+func ShowServiceLogs(systemService bool, serviceName string, follow bool, since string, node string) error {
 	client := kube.Client()
 
 	logOptions := &core.PodLogOptions{
-		Follow: watch,
+		Follow: follow,
 	}
 
 	fmt.Print("Logs for")
@@ -33,7 +33,7 @@ func ShowServiceLogs(systemService bool, serviceName string, watch bool, since s
 		fmt.Printf(" since %s", time.Now().Add(time.Duration(-1*sinceSeconds)*time.Second).Format(time.RFC822))
 	}
 
-	if watch {
+	if follow {
 		fmt.Println(" (ctrl-c to exit)...")
 	} else {
 		fmt.Println("")

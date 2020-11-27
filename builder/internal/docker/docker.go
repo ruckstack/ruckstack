@@ -90,12 +90,12 @@ func ContainerRun(containerConfig *container.Config, hostConfig *container.HostC
 	})
 
 	if err != nil {
-		return fmt.Errorf("cannot attach to container: %s", err)
+		return fmt.Errorf("cannot attach to container: %s", cleanErrorMessage(err))
 	}
 
 	_, err = stdcopy.StdCopy(ui.GetOutput(), os.Stderr, containerResponse.Reader)
 	if err != nil {
-		return fmt.Errorf("error reading docker output: %s", err)
+		return fmt.Errorf("error reading docker output: %s", cleanErrorMessage(err))
 	}
 
 	waitOk, errCh := dockerClient.ContainerWait(ctx, createdContainer.ID, container.WaitConditionNotRunning)
@@ -141,7 +141,7 @@ func ImageLoad(tarFile *zip.File) error {
 	reader, err := dockerClient.ImageLoad(context.Background(), tarStream, false)
 
 	if err != nil {
-		return err
+		return cleanErrorMessage(err)
 	}
 
 	defer reader.Body.Close()

@@ -32,7 +32,6 @@ func Build() error {
 	installFile.PackageConfig.Id = projectConfig.Id
 	installFile.PackageConfig.Name = projectConfig.Name
 	installFile.PackageConfig.Version = projectConfig.Version
-	installFile.PackageConfig.SystemControlName = projectConfig.SystemControlName
 
 	//add install_dir
 	installDir, err := environment.ResourcePath("install_dir")

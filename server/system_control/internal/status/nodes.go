@@ -12,7 +12,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-func ShowNodeStatus(watch bool) error {
+func ShowNodeStatus(follow bool) error {
 	packageConfig := environment.PackageConfig
 
 	fmt.Printf("Nodes in %s Cluster\n", packageConfig.Name)
@@ -31,8 +31,8 @@ func ShowNodeStatus(watch bool) error {
 		seenNodes[node.Name] = true
 	}
 
-	if watch {
-		fmt.Println("\nWatching for changes (ctrl-c to exit)...")
+	if follow {
+		fmt.Println("\nFollowing changes (ctrl-c to exit)...")
 		factory := informers.NewSharedInformerFactory(kubeClient, 0)
 		informer := factory.Core().V1().Nodes().Informer()
 		stopper := make(chan struct{})

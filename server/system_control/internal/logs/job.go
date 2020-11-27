@@ -8,18 +8,18 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func ShowJobLogs(systemJob bool, jobName string, watch bool) error {
+func ShowJobLogs(systemJob bool, jobName string, follow bool) error {
 	client := kube.Client()
 
 	logOptions := &core.PodLogOptions{
-		Follow: watch,
+		Follow: follow,
 	}
 
 	fmt.Print("Logs for")
 
 	fmt.Printf(" job %s", jobName)
 
-	if watch {
+	if follow {
 		fmt.Println(" (ctrl-c to exit)...")
 	} else {
 		fmt.Println("")

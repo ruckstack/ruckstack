@@ -77,16 +77,16 @@ test() {
 build_docker() {
   echo "Building docker image..."
   mkdir -p out/artifacts/docker
-  docker build -t ghcr.io/ruckstack/ruckstack:packaged out/builder_image
-  docker save ghcr.io/ruckstack/ruckstack:packaged --output out/artifacts/docker/ruckstack.image.tar
+  docker build -t ghcr.io/ruckstack/ruckstack:v${VERSION} out/builder_image
+  docker save ghcr.io/ruckstack/ruckstack:v${VERSION} --output out/artifacts/docker/ruckstack.image.tar
   cp out/artifacts/linux/ruckstack.base out/artifacts/linux/ruckstack
   cp out/artifacts/win/ruckstack.base.exe out/artifacts/win/ruckstack.exe
   cp out/artifacts/mac/ruckstack.base out/artifacts/mac/ruckstack
 
   echo "Appending packaged containers to launcher..."
-  tmp/build_utils/file_join out/artifacts/linux/ruckstack out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:packaged)
-  tmp/build_utils/file_join out/artifacts/win/ruckstack.exe out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:packaged)
-  tmp/build_utils/file_join out/artifacts/mac/ruckstack out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:packaged)
+  tmp/build_utils/file_join out/artifacts/linux/ruckstack out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:v${VERSION})
+  tmp/build_utils/file_join out/artifacts/win/ruckstack.exe out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:v${VERSION})
+  tmp/build_utils/file_join out/artifacts/mac/ruckstack out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:v${VERSION})
 
   chmod 755 out/artifacts/linux/ruckstack
   chmod 755 out/artifacts/mac/ruckstack

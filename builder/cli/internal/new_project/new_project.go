@@ -37,6 +37,7 @@ func NewProject(projectType string) error {
 	outputDirToShow := argwrapper.GetOriginalValue("out", environment.OutDir)
 
 	ui.Printf("Created %s project in %s\n", projectType, outputDirToShow)
+	ui.Println("To create a project with a different template, use the --type flag.")
 	ui.Println("")
 	ui.Printf("Open %s/ruckstack.yaml in your favorite text editor to see the generated project file\n", outputDirToShow)
 	ui.Printf("To build it, run `ruckstack build` from %s\n", outputDirToShow)

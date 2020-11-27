@@ -30,7 +30,7 @@ var lastPodStatus = map[string]string{}
 var ownerTree = map[string]*meta.OwnerReference{}
 var allServices = map[string]*serviceInfo{}
 
-func ShowServiceStatus(includeSystemService bool, watch bool) error {
+func ShowServiceStatus(includeSystemService bool, follow bool) error {
 	packageConfig := environment.PackageConfig
 
 	fmt.Printf("Services in %s\n", packageConfig.Name)
@@ -141,8 +141,8 @@ func ShowServiceStatus(includeSystemService bool, watch bool) error {
 		fmt.Println("")
 	}
 
-	if watch {
-		fmt.Println("\nWatching for changes (ctrl-c to exit)...")
+	if follow {
+		fmt.Println("\nFollowing changes (ctrl-c to exit)...")
 
 		stopper := make(chan struct{})
 		defer close(stopper)

@@ -83,13 +83,12 @@ func init() {
 		currentUserGroup, _ := user.LookupGroupId(currentUser.Gid)
 
 		PackageConfig = &config.PackageConfig{
-			Id:                "test-config",
-			Name:              "Test Package",
-			Version:           "0.1",
-			BuildTime:         0,
-			SystemControlName: "system-control",
-			FilePermissions:   map[string]config.PackagedFileConfig{},
-			Files:             map[string]string{},
+			Id:              "test-config",
+			Name:            "Test Package",
+			Version:         "0.1",
+			BuildTime:       0,
+			FilePermissions: map[string]config.PackagedFileConfig{},
+			Files:           map[string]string{},
 		}
 
 		LocalConfig = &config.LocalConfig{

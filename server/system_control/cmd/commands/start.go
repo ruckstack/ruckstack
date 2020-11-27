@@ -8,17 +8,6 @@ import (
 
 func init() {
 	var cmd = &cobra.Command{
-		Use:   "server",
-		Short: "Controls the server",
-	}
-
-	initServerStart(cmd)
-
-	rootCmd.AddCommand(cmd)
-}
-
-func initServerStart(parent *cobra.Command) {
-	parent.AddCommand(&cobra.Command{
 		Use: "start",
 		Annotations: map[string]string{
 			RequiresRoot: "true",
@@ -27,5 +16,7 @@ func initServerStart(parent *cobra.Command) {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return server.Start()
 		},
-	})
+	}
+
+	rootCmd.AddCommand(cmd)
 }

@@ -20,55 +20,55 @@ func init() {
 
 func initStatusJobs(parent *cobra.Command) {
 
-	var watchJobs bool
+	var followJobs bool
 	var includeSystemJobs bool
 
 	var statusJobsCmd = &cobra.Command{
 		Use:   "jobs",
 		Short: "Display status of jobs",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return status.ShowJobStatus(includeSystemJobs, watchJobs)
+			return status.ShowJobStatus(includeSystemJobs, followJobs)
 		},
 	}
 
 	statusJobsCmd.Flags().BoolVar(&includeSystemJobs, "include-system", false, "Include system-level jobs in output")
-	statusJobsCmd.Flags().BoolVar(&watchJobs, "watch", false, "Continue watching for changes to the jobs")
+	statusJobsCmd.Flags().BoolVarP(&followJobs, "follow", "f", false, "Continue watching for changes to the jobs")
 
 	parent.AddCommand(statusJobsCmd)
 
 }
 
 func initStatusNodes(parent *cobra.Command) {
-	var watch bool
+	var follow bool
 
 	var statusNodesCmd = &cobra.Command{
 		Use:   "nodes",
 		Short: "Display status of nodes",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return status.ShowNodeStatus(watch)
+			return status.ShowNodeStatus(follow)
 		},
 	}
 
-	statusNodesCmd.Flags().BoolVar(&watch, "watch", false, "Continue watching for changes to the nodes")
+	statusNodesCmd.Flags().BoolVarP(&follow, "follow", "f", false, "Continue watching for changes to the nodes")
 
 	parent.AddCommand(statusNodesCmd)
 
 }
 
 func initStatusServices(parent *cobra.Command) {
-	var watchServices bool
+	var followServices bool
 	var includeSystemServices bool
 
 	var statusServicesCmd = &cobra.Command{
 		Use:   "services",
 		Short: "Display status of services",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return status.ShowServiceStatus(includeSystemServices, watchServices)
+			return status.ShowServiceStatus(includeSystemServices, followServices)
 		},
 	}
 
 	statusServicesCmd.Flags().BoolVar(&includeSystemServices, "include-system", false, "Include system-level services in output")
-	statusServicesCmd.Flags().BoolVar(&watchServices, "watch", false, "Continue watching for changes to the services")
+	statusServicesCmd.Flags().BoolVar(&followServices, "follow", false, "Continue watching for changes to the services")
 
 	parent.AddCommand(statusServicesCmd)
 
