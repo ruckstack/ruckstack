@@ -1,6 +1,7 @@
 id: example
 name: Example Project
 version: 1.0.5
+managerFilename: example-manager
 
 dockerfileServices:
   - id: homepage

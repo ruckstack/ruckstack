@@ -25,7 +25,7 @@ func TestInstallFile_Install(t *testing.T) {
 
 	assert.NoError(t, err)
 	//most files checked in extract_test.go
-	assert.FileExists(t, serverHome+"/bin/system-control")
+	assert.FileExists(t, serverHome+"/bin/example-manager")
 	assert.FileExists(t, serverHome+"/config/cluster.config")
 	assert.FileExists(t, serverHome+"/config/local.config")
 

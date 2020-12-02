@@ -23,10 +23,12 @@ func Container(systemContainer bool, containerName string) error {
 		return err
 	}
 
+	packageConfig := environment.PackageConfig
+
 	fmt.Printf("%s container %s is restarting...\n", containerType, containerName)
 	fmt.Println("")
 	fmt.Println("Restart progress can be watched with:")
-	fmt.Printf("    %s/bin/system-control status services --follow\n", environment.ServerHome)
+	fmt.Printf("    %s/bin/%s status services --follow\n", environment.ServerHome, packageConfig.ManagerFilename)
 
 	return nil
 }

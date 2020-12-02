@@ -39,10 +39,12 @@ func Service(systemService bool, serviceName string) error {
 		return fmt.Errorf("Unknown %s service %s", strings.ToLower(serviceType), serviceName)
 	}
 
+	packageConfig := environment.PackageConfig
+
 	fmt.Printf("%s service %s is restarting...\n", serviceType, serviceName)
 	fmt.Println("")
 	fmt.Println("Restart progress can be watched with:")
-	fmt.Printf("    %s/bin/system-control status services --follow\n", environment.ServerHome)
+	fmt.Printf("    %s/bin/%s status services --follow\n", environment.ServerHome, packageConfig.ManagerFilename)
 
 	return nil
 

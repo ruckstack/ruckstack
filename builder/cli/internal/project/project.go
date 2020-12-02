@@ -12,8 +12,9 @@ type Project struct {
 	Name    string `validate:"required"`
 	Version string `validate:"required"`
 
-	HelmVersion string
-	K3sVersion  string
+	HelmVersion     string
+	K3sVersion      string
+	ManagerFilename string `yaml:"managerFilename"`
 
 	ManifestServices   []service.ManifestService   `yaml:"manifestServices"`
 	HelmServices       []service.HelmService       `yaml:"helmServices"`

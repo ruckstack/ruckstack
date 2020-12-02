@@ -42,6 +42,10 @@ func ParseData(data io.Reader, projectPath string) (*Project, error) {
 		return nil, fmt.Errorf("No services are defined in %s", projectPath)
 	}
 
+	if projectConfig.ManagerFilename == "" {
+		projectConfig.ManagerFilename = projectConfig.Id
+	}
+
 	for i, _ := range projectConfig.ManifestServices {
 		projectConfig.ManifestServices[i].ProjectVersion = projectConfig.Version
 		projectConfig.ManifestServices[i].ProjectId = projectConfig.Id

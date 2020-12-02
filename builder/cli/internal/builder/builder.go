@@ -32,6 +32,7 @@ func Build() error {
 	installFile.PackageConfig.Id = projectConfig.Id
 	installFile.PackageConfig.Name = projectConfig.Name
 	installFile.PackageConfig.Version = projectConfig.Version
+	installFile.PackageConfig.ManagerFilename = projectConfig.ManagerFilename
 
 	//add install_dir
 	installDir, err := environment.ResourcePath("install_dir")
@@ -39,6 +40,15 @@ func Build() error {
 		return err
 	}
 	if err = installFile.AddDirectory(installDir, ""); err != nil {
+		return err
+	}
+
+	//add system-control
+	systemControl, err := environment.ResourcePath("system-control")
+	if err != nil {
+		return err
+	}
+	if err = installFile.AddFile(systemControl, fmt.Sprintf("bin/%s", projectConfig.ManagerFilename)); err != nil {
 		return err
 	}
 

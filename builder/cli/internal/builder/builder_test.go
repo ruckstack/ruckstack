@@ -40,7 +40,7 @@ func TestBuild(t *testing.T) {
 
 			assert.NoError(t, util.CopyDir(environment.RuckstackHome+"/builder/cli/install_root/resources/new_project/example", environment.ProjectDir))
 
-			assert.FileExists(t, environment.RuckstackHome+"/builder/cli/install_root/resources/install_dir/bin/system-control", "compiled system-control does not exist. Should be created by BUILD.sh")
+			assert.FileExists(t, environment.RuckstackHome+"/builder/cli/install_root/resources/system-control", "compiled system-control does not exist. Should be created by BUILD.sh")
 			err := Build()
 			if tt.wantErr == "" {
 				if assert.NoError(t, err) {
@@ -49,7 +49,7 @@ func TestBuild(t *testing.T) {
 
 					assert.NoError(t, global_util.UnzipFile(environment.OutPath("example_1.0.5.installer"), unzipPath))
 
-					assert.FileExists(t, filepath.Join(unzipPath, "bin/system-control"))
+					assert.FileExists(t, filepath.Join(unzipPath, "bin/example-manager"))
 					assert.FileExists(t, filepath.Join(unzipPath, "lib/helm"))
 					assert.FileExists(t, filepath.Join(unzipPath, "data/agent/images/images.untar/repositories"))
 					assert.FileExists(t, filepath.Join(unzipPath, "data/agent/images/k3s.untar/repositories"))

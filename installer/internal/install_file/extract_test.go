@@ -30,7 +30,7 @@ func TestExtract(t *testing.T) {
 	err = installFile.Extract(serverHome, localConfig)
 	if assert.NoError(t, err) {
 		assert.FileExists(t, serverHome+"/.package.config")
-		assert.FileExists(t, serverHome+"/bin/system-control")
+		assert.FileExists(t, serverHome+"/bin/example-manager")
 		assert.NoFileExists(t, serverHome+"/config/cluster.config") //created by install, not packaged
 		assert.NoFileExists(t, serverHome+"/config/local.config")   //created by install, not packaged
 		assert.FileExists(t, serverHome+"/lib/helm")
@@ -44,7 +44,7 @@ func TestExtract(t *testing.T) {
 		assert.NoFileExists(t, serverHome+"/data/agent/images/k3s.tar")
 		assert.DirExists(t, serverHome+"/data/agent/images/k3s.untar")
 
-		for _, file := range []string{"/bin/system-control", "/lib/helm", "/lib/k3s"} {
+		for _, file := range []string{"/bin/example-manager", "/lib/helm", "/lib/k3s"} {
 			file = serverHome + file
 			stat, err := os.Stat(file)
 			assert.NoError(t, err)

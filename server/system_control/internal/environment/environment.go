@@ -87,6 +87,7 @@ func init() {
 			Name:            "Test Package",
 			Version:         "0.1",
 			BuildTime:       0,
+			ManagerFilename: "test-control",
 			FilePermissions: map[string]config.PackagedFileConfig{},
 			Files:           map[string]string{},
 		}
