@@ -2,9 +2,9 @@ name: Build
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
 
@@ -59,10 +59,20 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.PACKAGE_PAT }}
 
-      - name: Docker Build and Push
+      - name: Docker Build and Push (PR)
+        if: github.event_name == 'pull_request'
         uses: docker/build-push-action@v2
         with:
           file: out/builder_image/Dockerfile
           context: out/builder_image
           push: true
-          tags: ghcr.io/ruckstack/ruckstack:${{ format(github.head_ref, 'refs/heads/', '') }}
+          tags: ghcr.io/ruckstack/ruckstack:dev-${{ format(github.head_ref, 'refs/heads/', '') }}
+
+      - name: Docker Build and Push (Main)
+        if: github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v2
+        with:
+          file: out/builder_image/Dockerfile
+          context: out/builder_image
+          push: true
+          tags: ghcr.io/ruckstack/ruckstack:latest
