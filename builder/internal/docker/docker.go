@@ -112,8 +112,7 @@ func ContainerRun(containerConfig *container.Config, hostConfig *container.HostC
 }
 
 func SaveImages(outputPath string, imageRefs ...string) error {
-	progressMonitor := ui.StartProgressf("Saving images")
-	defer progressMonitor.Stop()
+	defer ui.StartProgressf("Saving images").Stop()
 
 	outputFile, err := os.Create(outputPath)
 	if err != nil {

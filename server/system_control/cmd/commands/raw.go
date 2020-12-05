@@ -8,20 +8,20 @@ import (
 )
 
 func init() {
-	var systemCmd = &cobra.Command{
-		Use:   "system",
-		Short: "Low-Level System Commands",
+	var cmd = &cobra.Command{
+		Use:   "raw",
+		Short: "Direct access to low-level CLIs",
 	}
 
-	initSystemCrictl(systemCmd)
-	initSystemCtr(systemCmd)
-	initSystemKubectl(systemCmd)
-	initSystemHelm(systemCmd)
+	initRawCrictl(cmd)
+	initRawCtr(cmd)
+	initRawKubectl(cmd)
+	initRawHelm(cmd)
 
-	rootCmd.AddCommand(systemCmd)
+	rootCmd.AddCommand(cmd)
 }
 
-func initSystemCrictl(parent *cobra.Command) {
+func initRawCrictl(parent *cobra.Command) {
 	parent.AddCommand(&cobra.Command{
 		Use: "crictl",
 		Annotations: map[string]string{
@@ -37,7 +37,7 @@ NOTE: normally this is not a command that should be run, but can be a useful esc
 	})
 }
 
-func initSystemCtr(parent *cobra.Command) {
+func initRawCtr(parent *cobra.Command) {
 	parent.AddCommand(&cobra.Command{
 		Use: "ctr",
 		Annotations: map[string]string{
@@ -53,7 +53,7 @@ NOTE: normally this is not a command that should be run, but can be a useful esc
 	})
 }
 
-func initSystemKubectl(parent *cobra.Command) {
+func initRawKubectl(parent *cobra.Command) {
 	parent.AddCommand(&cobra.Command{
 		Use:   "kubectl",
 		Short: "Kubernetes CLI",
@@ -67,7 +67,7 @@ NOTE: normally this is not a command that should be run, but can be a useful esc
 	})
 }
 
-func initSystemHelm(parent *cobra.Command) {
+func initRawHelm(parent *cobra.Command) {
 	parent.AddCommand(&cobra.Command{
 		Use:   "helm",
 		Short: "Helm CLI",

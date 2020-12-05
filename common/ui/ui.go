@@ -216,7 +216,7 @@ func StartProgressf(format string, a ...interface{}) UiSpinner {
 	if IsTerminal {
 		progressMonitor := spinner.New(spinner.CharSets[11], 100*time.Millisecond, spinner.WithWriter(os.Stderr))
 		progressMonitor.Suffix = fmt.Sprintf(" "+format+"...", a...)
-		progressMonitor.FinalMSG = fmt.Sprintf(format+"...DONE", a...) + "...DONE\n"
+		progressMonitor.FinalMSG = fmt.Sprintf(format+"...DONE\n", a...)
 		progressMonitor.Start()
 
 		return progressMonitor
