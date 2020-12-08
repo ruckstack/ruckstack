@@ -14,13 +14,11 @@ jobs:
     steps:
       - name: Configure (PR)
         if: github.event_name == 'pull_request'
-        env:
-          BRANCH_NAME: ${{ format(github.head_ref, 'refs/heads/', '') }}
+        run: echo 'BRANCH_NAME=${{ format(github.head_ref, 'refs/heads/', '') }}' >> $GITHUB_ENV
 
       - name: Configure (Branch)
         if: github.event_name != 'pull_request'
-        env:
-          BRANCH_NAME: ${{ format(github.ref, 'refs/heads/', '') }}
+        run: echo 'BRANCH_NAME=${{ format(github.ref, 'refs/heads/', '') }}' >> $GITHUB_ENV
 
       - name: Install Go
         uses: actions/setup-go@v2
