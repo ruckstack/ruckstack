@@ -1,5 +1,5 @@
 package global_util
 
 var (
-	RuckstackVersion = "0.9.0"
+	RuckstackVersion = "0.10.0"
 )

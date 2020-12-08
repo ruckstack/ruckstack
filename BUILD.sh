@@ -3,7 +3,7 @@
 set -e
 
 ##Ideally this comes from $(out/linux/bin/ruckstack --version)
-VERSION=0.9.0
+VERSION=0.10.0
 
 build_all() {
   compile
@@ -40,9 +40,9 @@ compile() {
 
   (export GOOS=linux && go build -o out/artifacts/linux/ruckstack.base builder/launcher/cmd/main.go)
   (export GOOS=windows && go build -o out/artifacts/win/ruckstack.base.exe builder/launcher/cmd/main.go)
-  (export GOOS=darwin && go build -o out/artifacts/mac/ruckstack.base builder/launcher/cmd/main.go)
+  (export GOOS=darwin && go build -o out/artifacts/mac/ruckstack.base.app builder/launcher/cmd/main.go)
   chmod 755 out/artifacts/linux/ruckstack.base
-  chmod 755 out/artifacts/mac/ruckstack.base
+  chmod 755 out/artifacts/mac/ruckstack.base.app
 
   echo "Creating ruckstack distribution..."
   cp ./LICENSE out/builder_image
@@ -81,16 +81,20 @@ build_docker() {
   docker save ghcr.io/ruckstack/ruckstack:v${VERSION} --output out/artifacts/docker/ruckstack.image.tar
   cp out/artifacts/linux/ruckstack.base out/artifacts/linux/ruckstack
   cp out/artifacts/win/ruckstack.base.exe out/artifacts/win/ruckstack.exe
-  cp out/artifacts/mac/ruckstack.base out/artifacts/mac/ruckstack
+  cp out/artifacts/mac/ruckstack.base.app out/artifacts/mac/ruckstack.app
 
   echo "Appending packaged containers to launcher..."
   tmp/build_utils/file_join out/artifacts/linux/ruckstack out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:v${VERSION})
   tmp/build_utils/file_join out/artifacts/win/ruckstack.exe out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:v${VERSION})
-  tmp/build_utils/file_join out/artifacts/mac/ruckstack out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:v${VERSION})
+  tmp/build_utils/file_join out/artifacts/mac/ruckstack.app out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:v${VERSION})
 
   chmod 755 out/artifacts/linux/ruckstack
-  chmod 755 out/artifacts/mac/ruckstack
+  chmod 755 out/artifacts/mac/ruckstack.app
+}
 
+push_docker() {
+  docker tag ghcr.io/ruckstack/ruckstack:v${VERSION} ghcr.io/ruckstack/ruckstack:${1}
+  docker push ghcr.io/ruckstack/ruckstack:${1}
 }
 
 clean() {

@@ -12,6 +12,14 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
+      - name: Configure (PR)
+        if: github.event_name == 'pull_request'
+        run: echo 'BRANCH_NAME=${{ format(github.head_ref, 'refs/heads/', '') }}' >> $GITHUB_ENV
+
+      - name: Configure (Branch)
+        if: github.event_name != 'pull_request'
+        run: echo 'BRANCH_NAME=${{ format(github.ref, 'refs/heads/', '') }}' >> $GITHUB_ENV
+
       - name: Install Go
         uses: actions/setup-go@v2
         with:
@@ -36,21 +44,20 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
-      - name: Build
-        run: bash BUILD.sh fast
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
 
-      - name: Test
-        run: bash BUILD.sh test
+      - name: Build
+        run: bash BUILD.sh
 
       - name: Save artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: ruckstack-${{ format(github.head_ref, 'refs/heads/', '') }}.zip
+          name: ruckstack-${{ env.BRANCH_NAME }}
           path: |
-            ~/work/ruckstack/ruckstack/out/artifacts
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+            ~/work/ruckstack/ruckstack/out/artifacts/linux/ruckstack
+            ~/work/ruckstack/ruckstack/out/artifacts/mac/ruckstack.app
+            ~/work/ruckstack/ruckstack/out/artifacts/win/ruckstack.exe
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v1
@@ -59,20 +66,5 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.PACKAGE_PAT }}
 
-      - name: Docker Build and Push (PR)
-        if: github.event_name == 'pull_request'
-        uses: docker/build-push-action@v2
-        with:
-          file: out/builder_image/Dockerfile
-          context: out/builder_image
-          push: true
-          tags: ghcr.io/ruckstack/ruckstack:dev-${{ format(github.head_ref, 'refs/heads/', '') }}
-
-      - name: Docker Build and Push (Main)
-        if: github.ref == 'refs/heads/main'
-        uses: docker/build-push-action@v2
-        with:
-          file: out/builder_image/Dockerfile
-          context: out/builder_image
-          push: true
-          tags: ghcr.io/ruckstack/ruckstack:latest
+      - name: Docker Push
+        run: bash BUILD.sh push_docker snapshot-${{ env.BRANCH_NAME }}
