@@ -3,7 +3,7 @@
 set -e
 
 ##Ideally this comes from $(out/linux/bin/ruckstack --version)
-VERSION=0.9.0
+VERSION=0.10.0
 
 build_all() {
   compile
