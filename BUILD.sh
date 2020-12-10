@@ -6,19 +6,14 @@ set -e
 VERSION=0.10.0
 
 build_all() {
-  compile
-  build_docker
+  fast
   test
-
-  echo "Done"
 }
 
 fast() {
-  echo "Building without tests.... Good luck!"
   compile
   build_docker
-
-  echo "Done"
+  finish_artifacts
 }
 
 compile() {
@@ -38,11 +33,11 @@ compile() {
   rm -rf out/artifacts/win
   rm -rf out/artifacts/mac
 
-  (export GOOS=linux && go build -o out/artifacts/linux/ruckstack.base builder/launcher/cmd/main.go)
-  (export GOOS=windows && go build -o out/artifacts/win/ruckstack.base.exe builder/launcher/cmd/main.go)
-  (export GOOS=darwin && go build -o out/artifacts/mac/ruckstack.base.app builder/launcher/cmd/main.go)
-  chmod 755 out/artifacts/linux/ruckstack.base
-  chmod 755 out/artifacts/mac/ruckstack.base.app
+  (export GOOS=linux && go build -o out/artifacts/linux/ruckstack.launcher builder/launcher/cmd/main.go)
+  (export GOOS=windows && go build -o out/artifacts/win/ruckstack.launcher.exe builder/launcher/cmd/main.go)
+  (export GOOS=darwin && go build -o out/artifacts/mac/ruckstack.launcher builder/launcher/cmd/main.go)
+  chmod 755 out/artifacts/linux/ruckstack.launcher
+  chmod 755 out/artifacts/mac/ruckstack.launcher
 
   echo "Creating ruckstack distribution..."
   cp ./LICENSE out/builder_image
@@ -79,17 +74,25 @@ build_docker() {
   mkdir -p out/artifacts/docker
   docker build -t ghcr.io/ruckstack/ruckstack:v${VERSION} out/builder_image
   docker save ghcr.io/ruckstack/ruckstack:v${VERSION} --output out/artifacts/docker/ruckstack.image.tar
-  cp out/artifacts/linux/ruckstack.base out/artifacts/linux/ruckstack
-  cp out/artifacts/win/ruckstack.base.exe out/artifacts/win/ruckstack.exe
-  cp out/artifacts/mac/ruckstack.base.app out/artifacts/mac/ruckstack.app
+}
 
+finish_artifacts() {
   echo "Appending packaged containers to launcher..."
+  cp out/artifacts/linux/ruckstack.launcher out/artifacts/linux/ruckstack
+  cp out/artifacts/win/ruckstack.launcher.exe out/artifacts/win/ruckstack.exe
+  cp out/artifacts/mac/ruckstack.launcher out/artifacts/mac/ruckstack
+
   tmp/build_utils/file_join out/artifacts/linux/ruckstack out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:v${VERSION})
   tmp/build_utils/file_join out/artifacts/win/ruckstack.exe out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:v${VERSION})
-  tmp/build_utils/file_join out/artifacts/mac/ruckstack.app out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:v${VERSION})
+  tmp/build_utils/file_join out/artifacts/mac/ruckstack out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:v${VERSION})
 
   chmod 755 out/artifacts/linux/ruckstack
-  chmod 755 out/artifacts/mac/ruckstack.app
+  chmod 755 out/artifacts/mac/ruckstack
+
+  echo "Building release archives..."
+  (cd out/artifacts/linux && tar -czf ruckstack-linux-${VERSION}.tar.gz ruckstack)
+  (cd out/artifacts/mac && tar -czf ruckstack-mac-${VERSION}.gz ruckstack)
+  (cd out/artifacts/win && zip -q ruckstack-windows-${VERSION}.zip ruckstack.exe)
 }
 
 push_docker() {

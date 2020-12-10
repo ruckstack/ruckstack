@@ -55,9 +55,9 @@ jobs:
         with:
           name: ruckstack-${{ env.BRANCH_NAME }}
           path: |
-            ~/work/ruckstack/ruckstack/out/artifacts/linux/ruckstack
-            ~/work/ruckstack/ruckstack/out/artifacts/mac/ruckstack.app
-            ~/work/ruckstack/ruckstack/out/artifacts/win/ruckstack.exe
+            ~/work/ruckstack/ruckstack/out/artifacts/linux/ruckstack*.tar.gz
+            ~/work/ruckstack/ruckstack/out/artifacts/mac/ruckstack*.tar.gz
+            ~/work/ruckstack/ruckstack/out/artifacts/win/ruckstack*.zip
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v1
