@@ -91,7 +91,7 @@ finish_artifacts() {
 
   echo "Building release archives..."
   (cd out/artifacts/linux && tar -czf ruckstack-linux-${VERSION}.tar.gz ruckstack)
-  (cd out/artifacts/mac && tar -czf ruckstack-mac-${VERSION}.gz ruckstack)
+  (cd out/artifacts/mac && tar -czf ruckstack-mac-${VERSION}.tar.gz ruckstack)
   (cd out/artifacts/win && zip -q ruckstack-windows-${VERSION}.zip ruckstack.exe)
 }
 

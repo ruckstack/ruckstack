@@ -53,7 +53,7 @@ jobs:
       - name: Save artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: ruckstack-${{ env.BRANCH_NAME }}
+          name: ruckstack-all-${{ env.BRANCH_NAME }}
           path: |
             ~/work/ruckstack/ruckstack/out/artifacts/linux/ruckstack*.tar.gz
             ~/work/ruckstack/ruckstack/out/artifacts/mac/ruckstack*.tar.gz
