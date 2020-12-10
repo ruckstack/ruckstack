@@ -12,6 +12,7 @@ import (
 )
 
 func NewProject(projectType string) error {
+	commonDir, err := environment.ResourcePath("new_project/common")
 	sourceDir, err := environment.ResourcePath("new_project/" + projectType)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -30,6 +31,9 @@ func NewProject(projectType string) error {
 	}
 
 	ui.VPrintf("Copying template project %s to %s", sourceDir, environment.OutDir)
+	if err := util.CopyDir(commonDir, environment.OutDir); err != nil {
+		return err
+	}
 	if err := util.CopyDir(sourceDir, environment.OutDir); err != nil {
 		return err
 	}

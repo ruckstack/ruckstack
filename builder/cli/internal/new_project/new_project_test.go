@@ -20,6 +20,7 @@ func TestNewProject_example(t *testing.T) {
 	assert.FileExists(t, filepath.Join(environment.OutDir, "ruckstack.yaml"))
 	assert.FileExists(t, filepath.Join(environment.OutDir, "cart", "Dockerfile"))
 	assert.FileExists(t, filepath.Join(environment.OutDir, "homepage", "src", "index.jsp"))
+	assert.FileExists(t, filepath.Join(environment.OutDir, "custom", "README.txt"))
 
 	assert.Contains(t, output.String(), "Created example project in")
 }

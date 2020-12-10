@@ -9,6 +9,7 @@ import (
 	"github.com/ruckstack/ruckstack/common/ui"
 	"net/url"
 	"os"
+	"path/filepath"
 )
 
 func Build() error {
@@ -33,6 +34,21 @@ func Build() error {
 	installFile.PackageConfig.Name = projectConfig.Name
 	installFile.PackageConfig.Version = projectConfig.Version
 	installFile.PackageConfig.ManagerFilename = projectConfig.ManagerFilename
+
+	//add custom files
+	customFiles := map[string]string{
+		filepath.Join("custom", "site-down.png"): "data/web/ops/img/public/site-down.png",
+	}
+
+	for customFile, targetPath := range customFiles {
+		_, err := os.Stat(customFile)
+		if err == nil {
+			ui.Printf("Adding custom %s", customFile)
+			if err := installFile.AddFile(customFile, targetPath); err != nil {
+				return fmt.Errorf("error adding custom file: %s", err)
+			}
+		}
+	}
 
 	//add install_dir
 	installDir, err := environment.ResourcePath("install_dir")

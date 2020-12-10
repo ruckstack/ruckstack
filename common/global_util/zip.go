@@ -20,7 +20,7 @@ func UnzipFile(zipFile string, outputDir string) (err error) {
 }
 
 func Unzip(zipContent *zip.ReadCloser, outputDir string) (err error) {
-	ui.Println(".....")
+	defer ui.StartProgressf("Extracting").Stop()
 
 	for _, file := range zipContent.File {
 		fullname := path.Join(outputDir, file.Name)

@@ -18,6 +18,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"time"
 )
 
 var (
@@ -171,7 +172,7 @@ func main() {
 		}
 	}
 
-	if err := docker.ContainerRun(containerConfig, hostConfig, nil, "ruckstack_cli", true); err != nil {
+	if err := docker.ContainerRun(containerConfig, hostConfig, nil, fmt.Sprintf("ruckstack_cli_%d", time.Now().Unix()), true); err != nil {
 		exitWithError(err)
 	}
 }

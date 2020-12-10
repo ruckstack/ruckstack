@@ -38,11 +38,10 @@ type InstallFile struct {
 	CompressionLevel int
 
 	dockerImages map[string]bool
+	addedFiles   map[string]bool
 
 	file      *os.File
 	zipWriter *zip.Writer
-
-	filesToAddToTar map[string]string
 }
 
 /**
@@ -87,8 +86,8 @@ func StartCreation(installerPath string, compressionLevel int) (*InstallFile, er
 				},
 			},
 		},
-		dockerImages:    map[string]bool{},
-		filesToAddToTar: map[string]string{},
+		dockerImages: map[string]bool{},
+		addedFiles:   map[string]bool{},
 	}
 
 	ui.Printf("Building %s...", filepath.Base(installerPath))
@@ -127,13 +126,6 @@ func StartCreation(installerPath string, compressionLevel int) (*InstallFile, er
 }
 
 func (installFile *InstallFile) CompleteCreation() error {
-	for key, _ := range installFile.filesToAddToTar {
-		if err := installFile.AddFile(installFile.filesToAddToTar[key], key); err != nil {
-			return err
-		}
-
-	}
-
 	if err := installFile.saveDockerImages(); err != nil {
 		return err
 	}
@@ -204,6 +196,15 @@ func (installFile *InstallFile) AddDownloadedNestedFile(url string, wantedFile s
 Adds the given file to the installer
 */
 func (installFile *InstallFile) AddFile(srcPath string, targetPath string) error {
+	//standardize targetPath
+	targetPath = regexp.MustCompile("^/").ReplaceAllString(targetPath, "")
+
+	if installFile.addedFiles[targetPath] {
+		ui.VPrintf("File %s already added to installer. Not adding %s", targetPath, srcPath)
+		return nil
+	}
+	installFile.addedFiles[targetPath] = true
+
 	file, err := os.Open(srcPath)
 	if err != nil {
 		return fmt.Errorf("cannot open %s: %s", srcPath, err)

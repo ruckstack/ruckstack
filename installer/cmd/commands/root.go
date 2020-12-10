@@ -31,7 +31,7 @@ var rootCmd = &cobra.Command{
 			if installOptions.TargetDir == "" {
 				ui.Fatal("--install-path is required for extract-only")
 			}
-			if installOptions.TargetDir == "" {
+			if installOptions.AdminGroup == "" {
 				ui.Fatal("--admin-group is required for extract-only")
 			}
 

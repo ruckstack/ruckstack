@@ -1,9 +1,9 @@
 ### This ruckstack.yaml file is designed to give you a starting point for setting up your own project
 
-id: starter-project ### This id is used as a default for various filenames and identifiers. It must be lowercase with no whitespace.
-name: My Project ### Name of the project. Used in CLI help and other end-user facing locations
-version: 0.0.1 ### Overall version of the project
-#managerFilename: other-filename ### Name of the "manager" file in SERVER_HOME/bin. Default's to the project "id"
+id: starter-project # This id is used as a default for various filenames and identifiers. It must be lowercase with no whitespace.
+name: My Project # Name of the project. Used in CLI help and other end-user facing locations
+version: 0.0.1 # Overall version of the project
+#managerFilename: other-filename # Name of the "manager" file in SERVER_HOME/bin. Default's to the project "id"
 
 ### Every project is made up of at least one service running within it
 ### Services correspond (more or less) to a process running in your stack
