@@ -61,7 +61,7 @@ func Test_processArguments(t *testing.T) {
 			name: "Handles default values",
 			args: []string{"init", "--template", "empty"},
 			parsedArgs: map[string]string{
-				"--template": "example",
+				"--template": "empty",
 				"--out":      ".",
 			},
 			newArgs:    []string{"init", "--template", "empty", "--out", "/data/out"},
