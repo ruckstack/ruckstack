@@ -1,4 +1,4 @@
-package new_project
+package init_project
 
 import (
 	"bytes"
@@ -15,12 +15,12 @@ func TestNewProject_example(t *testing.T) {
 
 	environment.OutDir = environment.TempPath("test_new_example_project-*")
 
-	err := NewProject("example")
+	err := InitProject("example")
 	assert.NoError(t, err)
 	assert.FileExists(t, filepath.Join(environment.OutDir, "ruckstack.yaml"))
 	assert.FileExists(t, filepath.Join(environment.OutDir, "cart", "Dockerfile"))
 	assert.FileExists(t, filepath.Join(environment.OutDir, "homepage", "src", "index.jsp"))
-	assert.FileExists(t, filepath.Join(environment.OutDir, "custom", "README.txt"))
+	assert.FileExists(t, filepath.Join(environment.OutDir, "ruckstack", "README.txt"))
 
 	assert.Contains(t, output.String(), "Created example project in")
 }
@@ -28,7 +28,7 @@ func TestNewProject_example(t *testing.T) {
 func TestNewProject_starter(t *testing.T) {
 	environment.OutDir = environment.TempPath("test_new_starter_project-*")
 
-	err := NewProject("empty")
+	err := InitProject("empty")
 	assert.NoError(t, err)
 	assert.FileExists(t, filepath.Join(environment.OutDir, "ruckstack.yaml"))
 	assert.NoFileExists(t, filepath.Join(environment.OutDir, "cart"))
@@ -37,6 +37,6 @@ func TestNewProject_starter(t *testing.T) {
 func TestNewProject_invalid(t *testing.T) {
 	environment.OutDir = environment.TempPath("test_new_invalid_project-*")
 
-	err := NewProject("invalid")
+	err := InitProject("invalid")
 	assert.Equal(t, err.Error(), "unknown template: 'invalid'. Available templates: empty, example")
 }

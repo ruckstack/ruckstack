@@ -59,12 +59,12 @@ func Test_processArguments(t *testing.T) {
 		},
 		{
 			name: "Handles default values",
-			args: []string{"new-project", "--type", "example"},
+			args: []string{"init", "--template", "empty"},
 			parsedArgs: map[string]string{
-				"--type": "example",
-				"--out":  ".",
+				"--template": "example",
+				"--out":      ".",
 			},
-			newArgs:    []string{"new-project", "--type", "example", "--out", "/data/out"},
+			newArgs:    []string{"init", "--template", "empty", "--out", "/data/out"},
 			env:        []string{"WRAPPED_OUT=."},
 			mountCount: 3,
 		},

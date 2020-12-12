@@ -37,7 +37,7 @@ func Build() error {
 
 	//add custom files
 	customFiles := map[string]string{
-		filepath.Join("custom", "site-down.png"): "data/web/ops/img/public/site-down.png",
+		filepath.Join("ruckstack", "site-down.png"): "data/web/ops/img/public/site-down.png",
 	}
 
 	for customFile, targetPath := range customFiles {

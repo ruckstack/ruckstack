@@ -1,4 +1,4 @@
-package new_project
+package init_project
 
 import (
 	"fmt"
@@ -11,12 +11,12 @@ import (
 	"strings"
 )
 
-func NewProject(projectType string) error {
-	commonDir, err := environment.ResourcePath("new_project_common")
-	sourceDir, err := environment.ResourcePath("new_project/" + projectType)
+func InitProject(projectType string) error {
+	commonDir, err := environment.ResourcePath("init_common")
+	sourceDir, err := environment.ResourcePath("init/" + projectType)
 	if err != nil {
 		if os.IsNotExist(err) {
-			newProjectDir, _ := environment.ResourcePath("new_project")
+			newProjectDir, _ := environment.ResourcePath("init")
 			projectTypes, _ := ioutil.ReadDir(newProjectDir)
 			projectTypeNames := make([]string, len(projectTypes))
 
@@ -39,9 +39,12 @@ func NewProject(projectType string) error {
 	}
 
 	outputDirToShow := argwrapper.GetOriginalValue("out", environment.OutDir)
+	if outputDirToShow == "." {
+		outputDirToShow = "the current directory"
+	}
 
 	ui.Printf("Created %s project in %s\n", projectType, outputDirToShow)
-	ui.Println("To create a project with a different template, use the --type flag.")
+	ui.Println("To initialize with a different template, use the --template flag.")
 	ui.Println("")
 	ui.Printf("Open %s/ruckstack.yaml in your favorite text editor to see the generated project file\n", outputDirToShow)
 	ui.Printf("To build it, run `ruckstack build` from %s\n", outputDirToShow)

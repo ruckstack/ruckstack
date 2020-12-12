@@ -56,7 +56,7 @@ test() {
     echo "Building test installer package..."
     echo "-- Generating example project in tmp/test-installer/project..."
     mkdir -p tmp/test-installer
-    out/artifacts/linux/ruckstack new-project --type example --out tmp/test-installer/project
+    out/artifacts/linux/ruckstack init --template example --out tmp/test-installer/project
 
     echo "-- Building example project in tmp/test-installer/out..."
     out/artifacts/linux/ruckstack build --project tmp/test-installer/project --out tmp/test-installer/out

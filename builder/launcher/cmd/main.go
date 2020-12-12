@@ -31,7 +31,7 @@ var (
 	We can't directly depend on RootCommand or it compiles in all of the builder into the launcher
 	*/
 	commandDefaults = map[string]map[string]string{
-		"new-project": {
+		"init": {
 			"out": ".",
 		},
 		"build": {

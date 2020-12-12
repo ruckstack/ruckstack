@@ -162,7 +162,7 @@ func TestCopyDir(t *testing.T) {
 	type args struct {
 		source string
 	}
-	newProjectPath, err := environment.ResourcePath("new_project")
+	newProjectPath, err := environment.ResourcePath("init")
 	assert.NoError(t, err)
 
 	tests := []struct {

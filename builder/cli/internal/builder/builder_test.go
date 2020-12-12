@@ -38,7 +38,7 @@ func TestBuild(t *testing.T) {
 			assert.NoError(t, os.MkdirAll(environment.OutDir, 0755))
 			assert.NoError(t, os.MkdirAll(environment.ProjectDir, 0755))
 
-			assert.NoError(t, util.CopyDir(environment.RuckstackHome+"/builder/cli/install_root/resources/new_project/example", environment.ProjectDir))
+			assert.NoError(t, util.CopyDir(environment.RuckstackHome+"/builder/cli/install_root/resources/init/example", environment.ProjectDir))
 
 			assert.FileExists(t, environment.RuckstackHome+"/builder/cli/install_root/resources/system-control", "compiled system-control does not exist. Should be created by BUILD.sh")
 			err := Build()

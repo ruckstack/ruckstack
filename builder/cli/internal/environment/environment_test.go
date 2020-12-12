@@ -24,12 +24,12 @@ func TestTemPath(t *testing.T) {
 }
 
 func TestGetResourcePath(t *testing.T) {
-	path, err := ResourcePath("new_project")
+	path, err := ResourcePath("init")
 	assert.NoError(t, err)
 	assert.DirExists(t, path)
 	assert.Regexp(t, ".*/resources/.*", path, "resources")
 
-	path, err = ResourcePath("new_project/example/ruckstack.yaml")
+	path, err = ResourcePath("init/example/ruckstack.yaml")
 	assert.NoError(t, err)
 	assert.FileExists(t, path)
 
