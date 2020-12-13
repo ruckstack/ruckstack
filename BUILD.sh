@@ -4,6 +4,8 @@ set -e
 
 ##Ideally this comes from $(out/linux/bin/ruckstack --version)
 VERSION=0.10.0
+export RUCKSTACK_TEMP_DIR="$(pwd)/tmp"
+export RUCKSTACK_CACHE_DIR="$(pwd)/cache"
 
 build_all() {
   fast
@@ -43,7 +45,7 @@ compile() {
   cp ./LICENSE out/builder_image
   cp -r builder/cli/install_root/* out/builder_image
   chmod 755 out/builder_image/bin/ruckstack
-  export RUCKSTACK_CACHE_DIR=out/builder_image/resources/cache && export RUCKSTACK_TEMP_DIR=out/builder_image/tmp && out/builder_image/bin/ruckstack --verbose internal-build download
+  (RUCKSTACK_TEMP_DIR=out/builder_image/tmp && out/builder_image/bin/ruckstack --verbose internal-build download)
   rm -rf out/builder_image/tmp
   rm -rf out/builder_image/resources/cache/helm
 
@@ -52,7 +54,7 @@ compile() {
 }
 
 test() {
-  if [ ! -f tmp/test-installer/example_1.0.5.installer ]; then
+  if [ ! -f tmp/test-installer/out/example_1.0.5.installer ]; then
     echo "Building test installer package..."
     echo "-- Generating example project in tmp/test-installer/project..."
     mkdir -p tmp/test-installer
