@@ -215,7 +215,7 @@ func (installFile *InstallFile) AddFile(srcPath string, targetPath string) error
 		return fmt.Errorf("cannot stat %s: %s", srcPath, err)
 	}
 
-	ui.VPrintf("File exists at %s", srcPath)
+	ui.VPrintf("Adding %s to installer", srcPath)
 
 	if strings.HasPrefix(targetPath, "data/agent/images") && strings.HasSuffix(targetPath, ".tar") {
 		if err := installFile.saveImagesTar(srcPath, targetPath); err != nil {
