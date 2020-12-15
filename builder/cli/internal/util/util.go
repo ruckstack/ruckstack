@@ -39,7 +39,7 @@ func DownloadFile(url string) (string, error) {
 
 	_, err = os.Stat(savePath)
 	if err == nil {
-		ui.VPrintf("Already downloaded %s", filepath.Base(savePath))
+		ui.VPrintf("Already downloaded %s to %s", filepath.Base(savePath), savePath)
 		return savePath, nil
 	}
 

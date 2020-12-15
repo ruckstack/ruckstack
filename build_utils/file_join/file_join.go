@@ -39,7 +39,7 @@ func main() {
 
 	zipWriter := zip.NewWriter(targetFile)
 	zipWriter.RegisterCompressor(zip.Deflate, func(out io.Writer) (io.WriteCloser, error) {
-		return flate.NewWriter(out, 7)
+		return flate.NewWriter(out, 9)
 	})
 	zipWriter.SetOffset(startOffset)
 	defer zipWriter.Close()

@@ -394,25 +394,42 @@ func (installFile *InstallFile) saveImagesTar(imagesTarPath string, targetPath s
 
 		case tar.TypeReg:
 			if strings.HasSuffix(target, ".tar") {
-				pipeReader, pipeWriter := io.Pipe()
+				cachePath := environment.CachePath("files/" + target + ".gz")
 
-				gzipWriter, err := gzip.NewWriterLevel(pipeWriter, installFile.CompressionLevel)
-				if err != nil {
-					return err
-				}
+				_, err := os.Stat(cachePath)
+				if os.IsNotExist(err) {
+					err := os.MkdirAll(filepath.Dir(cachePath), 0755)
+					if err != nil {
+						return fmt.Errorf("cannot create cache directory %s: %s", cachePath, err)
+					}
 
-				buffTarReader := bufio.NewReader(tarReader)
+					ui.VPrintf("caching compressed layer at %s", cachePath)
+					cacheFile, err := os.Create(cachePath)
+					if err != nil {
+						return fmt.Errorf("cannot create cache file: %s", err)
+					}
 
-				go func() {
-					_, err := buffTarReader.WriteTo(gzipWriter)
+					gzipWriter, err := gzip.NewWriterLevel(cacheFile, installFile.CompressionLevel)
+					if err != nil {
+						return err
+					}
+
+					buffTarReader := bufio.NewReader(tarReader)
+
+					_, err = buffTarReader.WriteTo(gzipWriter)
 					if err != nil {
 						log.Fatal(err)
 					}
-					gzipWriter.Close()
-					pipeWriter.Close()
-				}()
+					_ = gzipWriter.Close()
+					_ = cacheFile.Close()
+				}
 
-				if err := installFile.AddFileData(pipeReader, target+".gz", header.ModTime); err != nil {
+				cacheFile, err := os.Open(cachePath)
+				if err != nil {
+					return fmt.Errorf("error opening cache file %s: %s", cachePath, err)
+				}
+
+				if err := installFile.AddFileData(cacheFile, target+".gz", header.ModTime); err != nil {
 					return err
 				}
 			} else {
