@@ -21,7 +21,7 @@ var (
 	OutDir     string
 	ProjectDir string
 
-	PackagedK3sVersion  = "1.19.4+k3s1"
+	PackagedK3sVersion  = "1.19.5+k3s1"
 	PackagedHelmVersion = "3.2.4"
 )
 

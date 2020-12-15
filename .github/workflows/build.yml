@@ -33,6 +33,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
+      - name: Cache Ruckstack Cache
+        uses: actions/cache@v2
+        with:
+          path: ~/go/src/github.com/ruckstack/ruckstack/cache
+          key: ${{ runner.os }}-ruckstack-cache
+
       - name: Cache Docker layers
         uses: actions/cache@v2
         with:
