@@ -112,7 +112,7 @@ func ContainerRun(containerConfig *container.Config, hostConfig *container.HostC
 }
 
 func SaveImages(outputPath string, imageRefs ...string) error {
-	defer ui.StartProgressf("Saving images").Stop()
+	defer ui.StartProgressf("Collecting images").Stop()
 
 	outputFile, err := os.Create(outputPath)
 	if err != nil {

@@ -37,7 +37,7 @@ func init() {
 	RootCmd.Flags().BoolVar(&profileCpu, "profile-cpu", false, "Track cpu usage")
 	RootCmd.Flags().BoolVar(&profileMemory, "profile-memory", false, "Track memory usage")
 	RootCmd.Flags().StringVar(&launchVersion, "launch-version", "v"+global_util.RuckstackVersion, "Specify the version of the Ruckstack CLI to launch")
-	RootCmd.Flags().StringVar(&launchImage, "launch-image", "ghcr.io/ruckstack/ruckstack", "Specify the Ruckstack CLI image to launch")
+	RootCmd.Flags().StringVar(&launchImage, "launch-image", "ruckstack/ruckstack", "Specify the Ruckstack CLI image to launch")
 	RootCmd.Flags().BoolVar(&launchForcePull, "launch-force-pull", false, "Force the Ruckstack CLI to re-download the image to launch")
 }
 

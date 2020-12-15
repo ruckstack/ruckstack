@@ -90,7 +90,7 @@ func main() {
 
 	imageName := parsedArgs["--launch-image"]
 	if imageName == "" {
-		imageName = "ghcr.io/ruckstack/ruckstack"
+		imageName = "ruckstack/ruckstack"
 	}
 
 	_, forcePull := parsedArgs["--launch-force-pull"]
@@ -126,15 +126,15 @@ func main() {
 
 		ui.VPrintf("Packaged image %s", tarFile.Name)
 
-		currentContainerId, err := docker.GetImageId("ghcr.io/ruckstack/ruckstack:" + packagedVersion)
+		currentContainerId, err := docker.GetImageId(imageName + ":" + packagedVersion)
 		ui.VPrintf("Currently cached image: %s", currentContainerId)
 
 		if currentContainerId == tarFile.Name {
 			ui.VPrintf("Already have packaged image %s loaded", currentContainerId)
 		} else {
 			if currentContainerId != "" {
-				ui.VPrintf("Removing old %s", "ghcr.io/ruckstack/ruckstack:"+packagedVersion)
-				if err := docker.ImageRemove("ghcr.io/ruckstack/ruckstack:" + packagedVersion); err != nil {
+				ui.VPrintf("Removing old %s", imageName+":"+packagedVersion)
+				if err := docker.ImageRemove(imageName + ":" + packagedVersion); err != nil {
 					ui.Printf("Cannot remove old Docker image: %s", err)
 				}
 			}

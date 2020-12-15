@@ -73,8 +73,8 @@ test() {
 build_docker() {
   echo "Building docker image..."
   mkdir -p out/artifacts/docker
-  docker build -t ghcr.io/ruckstack/ruckstack:v${VERSION} out/builder_image
-  docker save ghcr.io/ruckstack/ruckstack:v${VERSION} --output out/artifacts/docker/ruckstack.image.tar
+  docker build -t ruckstack/ruckstack:v${VERSION} out/builder_image
+  docker save ruckstack/ruckstack:v${VERSION} --output out/artifacts/docker/ruckstack.image.tar
 }
 
 finish_artifacts() {
@@ -83,9 +83,9 @@ finish_artifacts() {
   cp out/artifacts/win/ruckstack.launcher.exe out/artifacts/win/ruckstack.exe
   cp out/artifacts/mac/ruckstack.launcher out/artifacts/mac/ruckstack
 
-  tmp/build_utils/file_join out/artifacts/linux/ruckstack out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:v${VERSION})
-  tmp/build_utils/file_join out/artifacts/win/ruckstack.exe out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:v${VERSION})
-  tmp/build_utils/file_join out/artifacts/mac/ruckstack out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:v${VERSION})
+  tmp/build_utils/file_join out/artifacts/linux/ruckstack out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ruckstack/ruckstack:v${VERSION})
+  tmp/build_utils/file_join out/artifacts/win/ruckstack.exe out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ruckstack/ruckstack:v${VERSION})
+  tmp/build_utils/file_join out/artifacts/mac/ruckstack out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ruckstack/ruckstack:v${VERSION})
 
   chmod 755 out/artifacts/linux/ruckstack
   chmod 755 out/artifacts/mac/ruckstack
@@ -97,7 +97,7 @@ finish_artifacts() {
 }
 
 push_docker() {
-  docker tag ghcr.io/ruckstack/ruckstack:v${VERSION} ghcr.io/ruckstack/ruckstack:${1}
+  docker tag ruckstack/ruckstack:v${VERSION} ghcr.io/ruckstack/ruckstack:${1}
   docker push ghcr.io/ruckstack/ruckstack:${1}
 }
 
