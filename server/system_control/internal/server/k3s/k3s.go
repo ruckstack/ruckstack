@@ -76,6 +76,7 @@ func Start(ctx context.Context) error {
 
 	if environment.LocalConfig.Join.Server == "" {
 		k3sArgs = append(k3sArgs,
+			"--cluster-init",
 			"--bind-address", environment.LocalConfig.BindAddress,
 			"--no-deploy", "traefik",
 			"--default-local-storage-path", environment.ServerHome+"/data/local-storage",

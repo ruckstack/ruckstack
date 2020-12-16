@@ -8,11 +8,11 @@ version: 0.0.1 # Overall version of the project
 ### Every project is made up of at least one service running within it
 ### Services correspond (more or less) to a process running in your stack
 ### Service are defined as `[service-THE_SERVICE_ID]` where THE_SERVICE_ID like the project id, but for the service
-dockerfileServices:
-  - id: inventory
-    base_dir: ./homepage # The directory containing the Dockerfile
-    port: 8080 # Port your service is running on
-    baseUrl: / # URL base this http-based service should be served under
+#dockerfileServices:
+#  - id: your_id
+#    dockerFile: ./path/to/your/Dockerfile # Path to the dockerfile to use
+#    port: 8080 # Exposed port in your container your http service is running on
+#    baseUrl: / # URL base this http-based service should be served under
 
 
 ### For more available project config options, see http://ruckstack.org/docs/builder/project-config
