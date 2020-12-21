@@ -112,7 +112,7 @@ func ContainerRun(containerConfig *container.Config, hostConfig *container.HostC
 }
 
 func SaveImages(outputPath string, imageRefs ...string) error {
-	defer ui.StartProgressf("Saving images out of Docker").Stop()
+	defer ui.StartProgressf("Exporting images").Stop()
 
 	outputFile, err := os.Create(outputPath)
 	if err != nil {

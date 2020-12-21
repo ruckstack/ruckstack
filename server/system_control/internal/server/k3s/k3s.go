@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 func Start(ctx context.Context) error {
@@ -126,8 +127,11 @@ func Start(ctx context.Context) error {
 
 	client := kube.Client()
 	version, err := client.ServerVersion()
-	if err != nil {
-		return fmt.Errorf("error checking server: %s", err)
+	for err != nil {
+		ui.Printf("error checking server: %s", err)
+		time.Sleep(5 * time.Second)
+
+		version, err = client.ServerVersion()
 	}
 	ui.Printf("Server version %s started", version.String())
 
