@@ -85,27 +85,13 @@ func Start() error {
 		return fmt.Errorf("error starting webserver: %s", err)
 	}
 
-	if err := containerd.Start(ctx); err != nil {
+	if err := containerd.StartManager(ctx); err != nil {
 		return fmt.Errorf("error starting containerd: %s", err)
 	}
-
-	//if err := etcd.Start(ctx); err != nil {
-	//	return fmt.Errorf("error starting etcd: %s", err)
-	//}
 
 	if err := k3s.Start(ctx); err != nil {
 		return fmt.Errorf("error starting k3s server: %s", err)
 	}
-
-	//if err := containerd.LoadPackagedImages(); err != nil {
-	//	return fmt.Errorf("error loading images: %s", err)
-	//}
-
-	//if err := agent.Start(ctx); err != nil {
-	//	ui.Fatalf("error starting k3s agent: %s", err)
-	//}
-
-	//go monitor.StartMonitor()
 
 	ui.Println("Server started")
 	ui.Printf("Additional logs are available through `%s logs` or in %s/logs", environment.PackageConfig.ManagerFilename, environment.ServerHome)

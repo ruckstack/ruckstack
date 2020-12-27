@@ -32,7 +32,7 @@ var logger *log.Logger
 /**
 Starts the containerd manager and monitor. Actual containerd is started in k3s.
 */
-func Start(ctx context.Context) error {
+func StartManager(ctx context.Context) error {
 	ui.Println("Starting containerd manager...")
 
 	logFile, err := os.OpenFile(filepath.Join(environment.ServerHome, "logs", "containerd.manager.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)

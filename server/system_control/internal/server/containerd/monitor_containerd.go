@@ -2,7 +2,6 @@ package containerd
 
 import (
 	"fmt"
-	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/server/monitor"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"time"
@@ -26,15 +25,6 @@ func checkContainerdHealth(tracker *monitor.Tracker) {
 		if err != nil {
 			tracker.FoundProblem(componentKey, problemKey, fmt.Sprintf("Cannot create watcher: %s", err))
 			time.Sleep(10 * time.Second)
-		}
-
-		select {
-		case <-tracker.Context.Done():
-			if watcher != nil {
-				ui.VPrintf("Stopping containerd watch")
-				_ = watcher.CloseSend()
-				watcher = nil
-			}
 		}
 	}
 
