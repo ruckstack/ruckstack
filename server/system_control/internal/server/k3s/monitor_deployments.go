@@ -12,8 +12,6 @@ import (
 func checkDeployments(tracker *monitor.Tracker) {
 	factory := informers.NewSharedInformerFactory(kube.Client(), 0)
 	informer := factory.Apps().V1().Deployments().Informer()
-	stopper := make(chan struct{})
-	defer close(stopper)
 
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(oldObj interface{}, newObj interface{}) {
@@ -37,7 +35,7 @@ func checkDeployments(tracker *monitor.Tracker) {
 			tracker.ResolveComponent(kube.FullName(deployment.ObjectMeta))
 		},
 	})
-	informer.Run(stopper)
+	informer.Run(tracker.Context.Done())
 
 }
 

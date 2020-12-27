@@ -20,7 +20,12 @@ var ServerStatus = struct {
 var trackers = []*Tracker{}
 var trackerUpdateChannel = make(chan *Tracker)
 
+var shutdownInProgress = false
+var monitorContext context.Context
+
 func Start(ctx context.Context) error {
+	monitorContext = ctx
+
 	ui.Println("Starting monitor...")
 
 	logFile, err := os.OpenFile(filepath.Join(environment.ServerHome, "logs", "monitor.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -36,6 +41,10 @@ func Start(ctx context.Context) error {
 		logger.Printf("HEALTH: System is unhealthy")
 
 		for updatedTracker := range trackerUpdateChannel {
+			if shutdownInProgress {
+				return
+			}
+
 			logger.Printf("Updated tracker %s", updatedTracker.Name)
 
 			saveMonitorStatus()
@@ -88,6 +97,7 @@ func saveMonitorStatus() {
 }
 
 func Add(tracker *Tracker) {
+	tracker.Context = monitorContext
 	tracker.currentProblems = map[string]string{}
 	tracker.seenProblems = map[string]bool{}
 

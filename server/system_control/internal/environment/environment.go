@@ -24,6 +24,8 @@ var (
 	PackageConfig *config.PackageConfig
 	ClusterConfig *config.ClusterConfig
 	LocalConfig   *config.LocalConfig
+
+	NodeName string
 )
 
 func init() {
@@ -36,6 +38,13 @@ func init() {
 		return
 	}
 	IsRunningAsRoot = CurrentUser.Name == "root"
+
+	NodeName, err = os.Hostname()
+	if err != nil {
+		ui.VPrintf("Running on nodeName %s", NodeName)
+		ui.Printf("Cannot determine hostname: %s", err)
+		return
+	}
 
 	for i, val := range os.Args {
 		if val == "--server-home" && i < (len(os.Args)-1) {

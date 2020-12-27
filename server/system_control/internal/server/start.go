@@ -9,6 +9,7 @@ import (
 	"github.com/ruckstack/ruckstack/server/system_control/internal/server/k3s"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/server/monitor"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/server/webserver"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/util"
 	"io/ioutil"
 	"log"
 	"os"
@@ -16,9 +17,27 @@ import (
 	"path/filepath"
 	"strconv"
 	"syscall"
+	"time"
 )
 
+var serverPidPath string
+
+func init() {
+	serverPidPath = filepath.Join(environment.ServerHome, "data", "server.pid")
+}
+
 func Start() error {
+
+	serverProcess, err := util.GetProcessFromFile(serverPidPath)
+	if err != nil {
+		return fmt.Errorf("cannot check %s lock file: %s", serverPidPath, err)
+	}
+	if serverProcess != nil {
+		err = serverProcess.SendSignal(syscall.Signal(0))
+		if err == nil {
+			ui.Fatalf("Server already running under process id %d. Cannot run a second instance", serverProcess.Pid)
+		}
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -26,9 +45,16 @@ func Start() error {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
+		ui.Printf("Received shutdown command")
+
 		cancel()
-		<-c
-		os.Exit(1) // second signal. Exit directly.
+
+		stopErr := Stop(false)
+		if stopErr != nil {
+			ui.Printf("error stopping server: %s", err)
+		}
+
+		os.Exit(0)
 	}()
 
 	packageConfig := environment.PackageConfig
@@ -45,7 +71,7 @@ func Start() error {
 	fmt.Printf("    Server log: %s\n", serverLog.Name())
 	fmt.Printf("    K3S log: %s\n", filepath.Join(environment.ServerHome, "logs", "k3s.log"))
 
-	if err := ioutil.WriteFile(filepath.Join(environment.ServerHome, "data", "server.pid"), []byte(strconv.Itoa(os.Getpid())), 0644); err != nil {
+	if err := ioutil.WriteFile(serverPidPath, []byte(strconv.Itoa(os.Getpid())), 0644); err != nil {
 		return err
 	}
 
@@ -85,10 +111,9 @@ func Start() error {
 	ui.Printf("Additional logs are available through `%s logs` or in %s/logs", environment.PackageConfig.ManagerFilename, environment.ServerHome)
 	ui.Printf("System can be watched with `%s status`", environment.PackageConfig.ManagerFilename)
 
-	select {
-	case <-ctx.Done():
-		ui.Println("Server shutting down...")
-		ui.VPrintf("Shutdown reason: %s", ctx.Err())
-		return nil
+	for true {
+		time.Sleep(100000 * time.Hour)
 	}
+
+	return nil
 }

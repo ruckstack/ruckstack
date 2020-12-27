@@ -12,8 +12,6 @@ import (
 func checkDaemonSets(tracker *monitor.Tracker) {
 	factory := informers.NewSharedInformerFactory(kube.Client(), 0)
 	informer := factory.Apps().V1().DaemonSets().Informer()
-	stopper := make(chan struct{})
-	defer close(stopper)
 
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(oldObj interface{}, newObj interface{}) {
@@ -39,7 +37,7 @@ func checkDaemonSets(tracker *monitor.Tracker) {
 		},
 	})
 
-	informer.Run(stopper)
+	informer.Run(tracker.Context.Done())
 
 }
 

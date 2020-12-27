@@ -1,12 +1,14 @@
 package monitor
 
 import (
+	"context"
 	"strings"
 )
 
 type Tracker struct {
-	Name  string
-	Check func(*Tracker)
+	Name    string
+	Check   func(*Tracker)
+	Context context.Context
 
 	currentProblems map[string]string
 	seenProblems    map[string]bool

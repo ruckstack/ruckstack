@@ -7,14 +7,22 @@ import (
 	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/kube"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/server/monitor"
+	"io/ioutil"
 	"log"
 	"net"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
 
+var k3sPidPath string
+
+func init() {
+	k3sPidPath = filepath.Join(environment.ServerHome, "data", "server.k3s.pid")
+}
 func Start(ctx context.Context) error {
 	ui.Println("Starting k3s...")
 
@@ -99,6 +107,9 @@ func Start(ctx context.Context) error {
 	if err := k3sStartCommand.Start(); err != nil {
 		return err
 	}
+	if err := ioutil.WriteFile(k3sPidPath, []byte(strconv.Itoa(k3sStartCommand.Process.Pid)), 0644); err != nil {
+		return fmt.Errorf("cannot write %s: %s", k3sPidPath, err)
+	}
 
 	monitor.Add(&monitor.Tracker{
 		Name:  "Kubernetes Client",
@@ -135,6 +146,10 @@ func Start(ctx context.Context) error {
 	}
 	ui.Printf("Server version %s started", version.String())
 
+	if err := setUnschedulable(false, ctx); err != nil {
+		log.Fatalf("Cannot uncordon server: %s", err)
+	}
+
 	if err := os.Chown(kube.KubeconfigFile, 0, int(environment.LocalConfig.AdminGroupId)); err != nil {
 		ui.Fatalf("Cannot set %s ownership: %s", kube.KubeconfigFile, err)
 	}
@@ -142,8 +157,7 @@ func Start(ctx context.Context) error {
 	go func() {
 		select {
 		case <-ctx.Done():
-			ui.Println("Server shutting down...")
-			ui.VPrintf("Shutdown reason: %s", ctx.Err())
+			ui.Println("K3s shutting down...")
 		}
 	}()
 

@@ -34,7 +34,7 @@ var reverseProxy *httputil.ReverseProxy
 
 var logger *log.Logger
 
-func Start(parent context.Context) error {
+func Start(ctx context.Context) error {
 
 	logFile, err := os.OpenFile(filepath.Join(environment.ServerHome, "logs", "webserver.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -76,26 +76,24 @@ func Start(parent context.Context) error {
 
 	go func() {
 		select {
-		case <-parent.Done():
+		case <-ctx.Done():
 			logger.Println("Stopping webserver...")
 			logger.Println("Stopping webserver...DONE")
 		}
 	}()
 
-	go watchTraefikService()
+	go watchTraefikService(ctx)
 
 	return nil
 }
 
 var traefikIp string
 
-func watchTraefikService() {
+func watchTraefikService(ctx context.Context) {
 	kubeClient := kube.Client()
 
 	factory := informers.NewSharedInformerFactory(kubeClient, 0)
 	informer := factory.Core().V1().Services().Informer()
-	stopper := make(chan struct{})
-	defer close(stopper)
 
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(oldObj interface{}, newObj interface{}) {
@@ -119,7 +117,7 @@ func watchTraefikService() {
 			}
 		},
 	})
-	informer.Run(stopper)
+	informer.Run(ctx.Done())
 
 }
 

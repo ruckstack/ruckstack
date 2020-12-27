@@ -11,20 +11,31 @@ require (
 	github.com/go-playground/assert/v2 v2.0.1
 	github.com/go-playground/validator/v10 v10.1.0
 	github.com/gogo/googleapis v1.4.0 // indirect
+	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
+	github.com/golang/protobuf v1.4.2 // indirect
+	github.com/google/go-cmp v0.5.1 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.0
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/opencontainers/selinux v1.6.0 // indirect
 	github.com/pkg/profile v1.5.0
-	github.com/smartystreets/goconvey v1.6.4 // indirect
+	github.com/shirou/gopsutil/v3 v3.20.11
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.6.1
+	go.opencensus.io v0.22.4 // indirect
 	golang.org/x/net v0.0.0-20200822124328-c89045814202 // indirect
-	golang.org/x/sys v0.0.0-20200826173525-f9321e4c35a6
+	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d // indirect
+	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208 // indirect
+	golang.org/x/sys v0.0.0-20201024232916-9f70ab9862d5
+	golang.org/x/text v0.3.3 // indirect
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	google.golang.org/appengine v1.6.6 // indirect
+	google.golang.org/genproto v0.0.0-20200806141610-86f49bd18e98 // indirect
 	google.golang.org/grpc v1.31.1
-	google.golang.org/grpc/examples v0.0.0-20201112215255-90f1b3ee835b // indirect
+	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/yaml.v2 v2.3.0
+	gotest.tools/v3 v3.0.3 // indirect
 	helm.sh/helm/v3 v3.3.4
 	k8s.io/api v0.18.8
 	k8s.io/apimachinery v0.18.8

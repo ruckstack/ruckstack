@@ -12,12 +12,15 @@ import (
 	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/server/monitor"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/util"
+	"github.com/shirou/gopsutil/v3/process"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -43,8 +46,7 @@ func Start(ctx context.Context) error {
 	go func() {
 		select {
 		case <-ctx.Done():
-			logger.Println("Server shutting down...")
-			logger.Printf("shutdown reason: %s", ctx.Err())
+			logger.Println("Containerd shutting down...")
 		}
 	}()
 
@@ -230,6 +232,39 @@ func LoadPackagedImages() error {
 
 		logger.Printf("Importing images in %s...DONE", untarDir)
 	}
+
+	return nil
+}
+
+func KillProcesses(ctx context.Context) error {
+	processes, err := process.Processes()
+	if err != nil {
+		return err
+	}
+
+	var waitGroup sync.WaitGroup
+
+	for _, proc := range processes {
+		name, err := proc.Name()
+		if err != nil {
+			ui.Printf("Cannot get proc name for %d", proc.Pid)
+			continue
+		}
+		if strings.HasPrefix(name, "containerd-shim") {
+			cmdLine, err := proc.CmdlineSlice()
+			if err != nil {
+				ui.Printf("Cannot get command line for %d", proc.Pid)
+				continue
+			}
+			for _, arg := range cmdLine {
+				if arg == containerdAddress {
+					util.ShutdownProcess(proc, 30*time.Second, &waitGroup, ctx)
+				}
+			}
+		}
+	}
+
+	waitGroup.Wait()
 
 	return nil
 }

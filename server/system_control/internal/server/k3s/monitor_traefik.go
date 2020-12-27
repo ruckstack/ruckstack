@@ -16,8 +16,6 @@ var traefikServiceName = "kube-system.traefik"
 func checkTraefik(tracker *monitor.Tracker) {
 	factory := informers.NewSharedInformerFactory(kube.Client(), 0)
 	informer := factory.Core().V1().Services().Informer()
-	stopper := make(chan struct{})
-	defer close(stopper)
 
 	tracker.FoundProblem(traefikServiceName, traefikNotStarted, "Service not started")
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -46,7 +44,7 @@ func checkTraefik(tracker *monitor.Tracker) {
 			checkService(service, tracker)
 		},
 	})
-	informer.Run(stopper)
+	informer.Run(tracker.Context.Done())
 
 }
 
