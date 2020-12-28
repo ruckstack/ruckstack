@@ -51,7 +51,7 @@ func init() {
 
 		entry := repo.Entry{
 			Name: "stable",
-			URL:  "https://kubernetes-charts.storage.googleapis.com",
+			URL:  "https://charts.helm.sh/stable",
 		}
 
 		repoFile := repo.NewFile()
