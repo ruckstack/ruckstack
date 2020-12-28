@@ -32,8 +32,6 @@ var NotDirectoryCheck = func(input string) error {
 	return nil
 }
 
-type InputCheck func(string) error
-
 func init() {
 	logger = log.New(os.Stdout, "", 0)
 
@@ -153,7 +151,7 @@ func MarkFlagsDirname(command *cobra.Command, dirnameFlags ...string) {
 	}
 }
 
-func PromptForString(prompt string, defaultValue string, matchers ...InputCheck) string {
+func PromptForString(prompt string, defaultValue string, matchers ...func(string) error) string {
 	prompt += ": "
 
 	if defaultValue != "" {

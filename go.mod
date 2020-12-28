@@ -8,6 +8,7 @@ require (
 	github.com/containerd/containerd v1.4.0
 	github.com/docker/docker v17.12.0-ce-rc1.0.20200916142827-bd33bbf0497b+incompatible
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
+	github.com/fsnotify/fsnotify v1.4.7
 	github.com/go-playground/assert/v2 v2.0.1
 	github.com/go-playground/validator/v10 v10.1.0
 	github.com/gogo/googleapis v1.4.0 // indirect

@@ -13,7 +13,7 @@ func TestPromptForString(t *testing.T) {
 	type args struct {
 		prompt       string
 		defaultValue string
-		matchers     []InputCheck
+		matchers     []func(string) error
 	}
 	tests := []struct {
 		name         string
@@ -37,7 +37,7 @@ func TestPromptForString(t *testing.T) {
 			want:  "lower",
 			args: args{
 				prompt: "Test String",
-				matchers: []InputCheck{
+				matchers: []func(string) error{
 					func(input string) error {
 						if strings.ToLower(input) != input {
 							return fmt.Errorf("only lower case")
