@@ -35,8 +35,13 @@ compile() {
   rm -rf out/artifacts/win
   rm -rf out/artifacts/mac
 
+  echo "Compiling builder launcher...Linux..."
   (export GOOS=linux && go build -o out/artifacts/linux/ruckstack.launcher builder/launcher/cmd/main.go)
+
+  echo "Compiling builder launcher...Windows..."
   (export GOOS=windows && go build -o out/artifacts/win/ruckstack.launcher.exe builder/launcher/cmd/main.go)
+
+  echo "Compiling builder launcher...Mac..."
   (export GOOS=darwin && go build -o out/artifacts/mac/ruckstack.launcher builder/launcher/cmd/main.go)
   chmod 755 out/artifacts/linux/ruckstack.launcher
   chmod 755 out/artifacts/mac/ruckstack.launcher

@@ -24,7 +24,7 @@ var dockerClient *client.Client
 func init() {
 	var err error
 
-	dockerClient, err = client.NewClientWithOpts(client.FromEnv)
+	dockerClient, err = client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		ui.Fatalf("cannot create docker client: %s", cleanErrorMessage(err))
 	}
@@ -69,6 +69,7 @@ func ContainerRun(containerConfig *container.Config, hostConfig *container.HostC
 		containerConfig,
 		hostConfig,
 		networkConfig,
+		nil,
 		containerName)
 	if err != nil {
 		return fmt.Errorf("cannot create CLI container: %s", cleanErrorMessage(err))

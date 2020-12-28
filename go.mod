@@ -6,7 +6,7 @@ require (
 	github.com/briandowns/spinner v1.11.1
 	github.com/containerd/cgroups v0.0.0-20201109155418-13abef5d31ec // indirect
 	github.com/containerd/containerd v1.4.0
-	github.com/docker/docker v17.12.0-ce-rc1.0.20200916142827-bd33bbf0497b+incompatible
+	github.com/docker/docker v20.10.1+incompatible
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/go-playground/assert/v2 v2.0.1
@@ -16,6 +16,8 @@ require (
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/google/go-cmp v0.5.1 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.0
+	github.com/moby/sys/mount v0.2.0 // indirect
+	github.com/moby/term v0.0.0-20201216013528-df9cb8a40635 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/opencontainers/selinux v1.6.0 // indirect
 	github.com/pkg/profile v1.5.0
