@@ -88,7 +88,7 @@ func ShutdownProcess(proc *process.Process, terminateTimeout time.Duration, wait
 		ui.Printf("Sending SIGKILL to %s (PID %d)", name, proc.Pid)
 
 		if err := proc.KillWithContext(ctx); err != nil {
-			ui.Printf("Cannot kill %S (PID %d): %s", name, proc.Pid, err)
+			ui.Printf("Cannot kill %s (PID %d): %s", name, proc.Pid, err)
 		}
 
 		return
