@@ -3,7 +3,7 @@
 set -e
 
 ##Ideally this comes from $(out/linux/bin/ruckstack --version)
-VERSION=0.10.0
+VERSION=1.0.0
 export RUCKSTACK_TEMP_DIR="$(pwd)/tmp"
 export RUCKSTACK_CACHE_DIR="$(pwd)/cache"
 
