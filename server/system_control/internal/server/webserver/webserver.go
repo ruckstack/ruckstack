@@ -44,20 +44,13 @@ func Start(ctx context.Context) error {
 
 	http.HandleFunc("/", handleRequest)
 
-	go func() {
-		logger.Println("Starting listener on port 80")
-		if err := http.ListenAndServe(":80", nil); err != nil {
-			e := fmt.Errorf("error starting webserver listener on port 80: %s", err)
-			logger.Println(e)
-			//ui.Fatal(e)
-		}
-	}()
-
+	httpsSupported := false
 	_, err = os.Stat(sslKeyFilePath)
 	if err == nil {
 		_, err = os.Stat(sslCertFilePath)
 		if err == nil {
 			go func() {
+				httpsSupported = true
 				logger.Println("Starting listener on port 443")
 				if err := http.ListenAndServeTLS(":443",
 					sslCertFilePath,
@@ -74,6 +67,20 @@ func Start(ctx context.Context) error {
 	} else {
 		logger.Printf("Not starting https, cannot use key in %s: %s", sslKeyFilePath, err)
 	}
+
+	go func() {
+		var handler http.Handler
+		if httpsSupported {
+			handler = http.HandlerFunc(redirectToHttps)
+		}
+
+		logger.Println("Starting listener on port 80")
+		if err := http.ListenAndServe(":80", handler); err != nil {
+			e := fmt.Errorf("error starting webserver listener on port 80: %s", err)
+			logger.Println(e)
+			//ui.Fatal(e)
+		}
+	}()
 
 	go func() {
 		select {
@@ -201,4 +208,12 @@ func proxyToKubernetes(res http.ResponseWriter, req *http.Request) error {
 	reverseProxy.ServeHTTP(res, req)
 
 	return nil
+}
+
+func redirectToHttps(responseWriter http.ResponseWriter, requeset *http.Request) {
+	target := "https://" + requeset.Host + requeset.URL.Path
+	if len(requeset.URL.RawQuery) > 0 {
+		target += "?" + requeset.URL.RawQuery
+	}
+	http.Redirect(responseWriter, requeset, target, http.StatusMovedPermanently)
 }
