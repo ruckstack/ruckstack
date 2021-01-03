@@ -22,7 +22,7 @@ var (
 	ProjectDir string
 
 	PackagedK3sVersion  = "1.20.0+k3s2"
-	PackagedHelmVersion = "3.2.4"
+	PackagedHelmVersion = "3.4.2" //should match go.mod
 )
 
 func init() {
