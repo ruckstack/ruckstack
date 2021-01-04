@@ -13,7 +13,7 @@ import (
 func Test_init(t *testing.T) {
 	assert.Contains(t, helmHome, "cache/helm")
 	assert.DirExists(t, helmHome)
-	assert.FileExists(t, helmHome+"/config/helm/repositories.yaml")
+	assert.FileExists(t, helmHome+"/repositories.yaml")
 }
 
 func TestReIndex(t *testing.T) {
@@ -37,74 +37,6 @@ func TestReIndex(t *testing.T) {
 	assert.Contains(t, string(stableIndexText), "description: Chart for PostgreSQL, an object-relational database management system")
 }
 
-func TestSearch(t *testing.T) {
-	if testing.Short() {
-		t.Skip("-short tests do not search the internet")
-	}
-
-	output := new(bytes.Buffer)
-	ui.SetOutput(output)
-
-	type args struct {
-		chartRepo string
-		chartName string
-	}
-	tests := []struct {
-		name           string
-		args           args
-		outputContains string
-		wantErr        bool
-	}{
-		{
-			name: "Find postgresql",
-			args: args{
-				chartName: "postgresql",
-				chartRepo: "stable",
-			},
-			outputContains: "Chart: stable/postgresql",
-		},
-		{
-			name: "Find coredns",
-			args: args{
-				chartName: "coredns",
-				chartRepo: "stable",
-			},
-			outputContains: "Chart: stable/coredns",
-		},
-		{
-			name: "Invalid chartName",
-			args: args{
-				chartName: "invalid",
-				chartRepo: "stable",
-			},
-			wantErr:        true,
-			outputContains: "unknown helm chart: stable/invalid",
-		},
-		{
-			name: "Invalid repo",
-			args: args{
-				chartName: "postgresql",
-				chartRepo: "invalid",
-			},
-			wantErr:        true,
-			outputContains: "unknown helm repository: invalid",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := Search(tt.args.chartRepo, tt.args.chartName)
-			if tt.wantErr {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tt.outputContains)
-			} else {
-				assert.NoError(t, err)
-				assert.Contains(t, output.String(), tt.outputContains)
-				assert.Contains(t, output.String(), "All Available Versions:")
-			}
-		})
-	}
-}
-
 func TestDownloadChart(t *testing.T) {
 	if testing.Short() {
 		t.Skip("-short tests do not download from the internet")
@@ -117,7 +49,6 @@ func TestDownloadChart(t *testing.T) {
 	ui.SetOutput(output)
 
 	type args struct {
-		repo    string
 		chart   string
 		version string
 	}
@@ -130,8 +61,7 @@ func TestDownloadChart(t *testing.T) {
 		{
 			name: "Download postgresql",
 			args: args{
-				repo:    "stable",
-				chart:   "postgresql",
+				chart:   "stable/postgresql",
 				version: "8.1.2",
 			},
 			want: "asdf",
@@ -142,7 +72,7 @@ func TestDownloadChart(t *testing.T) {
 			//delete it for the original download
 			_ = os.Remove(environment.CachePath("/download/helm/stable/postgresql-8.1.2.tgz"))
 
-			got, err := DownloadChart(tt.args.repo, tt.args.chart, tt.args.version)
+			got, err := DownloadChart(tt.args.chart, tt.args.version)
 			if tt.wantErr {
 				assert.Equal(t, err, tt.wantErr)
 			} else {
@@ -152,7 +82,7 @@ func TestDownloadChart(t *testing.T) {
 
 				//does not re-download
 				output.Reset()
-				got, err = DownloadChart(tt.args.repo, tt.args.chart, tt.args.version)
+				got, err = DownloadChart(tt.args.chart, tt.args.version)
 				assert.NoError(t, err)
 				assert.Contains(t, got, "/cache/download/helm/stable/postgresql-8.1.2.tgz")
 				assert.Contains(t, output.String(), "Already downloaded")

@@ -12,10 +12,72 @@ func init() {
 		Short: "Commands for interacting with the Helm repository",
 	}
 
+	initRepoGroup(helmCommand)
+
 	initReIndex(helmCommand)
-	initSearch(helmCommand)
 
 	RootCmd.AddCommand(helmCommand)
+}
+
+func initRepoGroup(parent *cobra.Command) {
+	var cmd = &cobra.Command{
+		Use:   "repo",
+		Short: "Commands for interacting with the Helm repository configuration",
+	}
+
+	initRepoAdd(cmd)
+	initRepoRemove(cmd)
+
+	parent.AddCommand(cmd)
+
+}
+
+func initRepoAdd(parent *cobra.Command) {
+	var name string
+	var url string
+	var username string
+	var password string
+
+	var cmd = &cobra.Command{
+		Use:   "add",
+		Short: "Adds a new repository",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := helm.AddRepository(name, url, username, password); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	}
+
+	cmd.Flags().StringVar(&name, "name", "", "Name of repository")
+	cmd.Flags().StringVar(&url, "url", "", "URL to repository")
+	cmd.Flags().StringVar(&username, "username", "", "Chart repository username")
+	cmd.Flags().StringVar(&password, "password", "", "Chart repository password")
+
+	ui.MarkFlagsRequired(cmd, "name", "url")
+
+	parent.AddCommand(cmd)
+}
+
+func initRepoRemove(parent *cobra.Command) {
+	var name string
+
+	var cmd = &cobra.Command{
+		Use:   "remove",
+		Short: "Removes a repository",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := helm.RemoveRepository(name); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	}
+
+	cmd.Flags().StringVar(&name, "name", "", "Name of repository")
+
+	parent.AddCommand(cmd)
 }
 
 func initReIndex(parent *cobra.Command) {
@@ -30,26 +92,6 @@ func initReIndex(parent *cobra.Command) {
 			return nil
 		},
 	}
-
-	parent.AddCommand(cmd)
-}
-
-func initSearch(parent *cobra.Command) {
-	var chartName string
-	var chartRepo string
-
-	var cmd = &cobra.Command{
-		Use:   "search",
-		Short: "Simple Helm search",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return helm.Search(chartRepo, chartName)
-		},
-	}
-
-	cmd.Flags().StringVar(&chartName, "chart", "", "Chart to search")
-	cmd.Flags().StringVar(&chartRepo, "repo", "stable", "Chart repository to search. Defaults to 'stable'")
-
-	ui.MarkFlagsRequired(cmd, "chart")
 
 	parent.AddCommand(cmd)
 }
