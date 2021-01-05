@@ -58,7 +58,6 @@ func TestProject_Validate(t *testing.T) {
 					ManifestServices: []service.ManifestService{
 						{
 							Id:             "service-id",
-							Port:           1234,
 							ProjectId:      "project-id",
 							ProjectVersion: "1.2.3",
 							Manifest:       "test-manifest.yaml",

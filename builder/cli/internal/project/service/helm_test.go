@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -39,6 +40,13 @@ func TestHelmService_Build(t *testing.T) {
 			},
 		},
 		{
+			name: "Can alternate repo",
+			args: args{
+				chart:   "bitnami/mongodb",
+				version: "10.3.3",
+			},
+		},
+		{
 			name:    "Invalid chart",
 			wantErr: "chart \"invalid\" matching 0.4.1 not found in stable index: no chart name found",
 			args: args{
@@ -63,7 +71,6 @@ func TestHelmService_Build(t *testing.T) {
 
 			service := &HelmService{
 				Id:             "test-service",
-				Port:           8000,
 				ProjectId:      "test-project",
 				ProjectVersion: "1.2.3",
 				Chart:          tt.args.chart,
@@ -96,7 +103,7 @@ func TestHelmService_Build(t *testing.T) {
 
 				helmContent, err := ioutil.ReadFile(filepath.Join(unzipPath, "data/agent/images/images.untar/manifest.json"))
 				assert.NoError(t, err)
-				assert.Contains(t, string(helmContent), "\"RepoTags\":[\"tomcat:7.0\"]")
+				assert.Contains(t, string(helmContent), strings.Split(tt.args.chart, "/")[1])
 
 			}
 		})

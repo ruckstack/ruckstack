@@ -65,7 +65,6 @@ type Service interface {
 	SetId(id string)
 
 	GetType() string
-	GetPort() int
 
 	/**
 	Validate that the service is configured correctly

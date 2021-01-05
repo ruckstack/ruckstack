@@ -7,13 +7,11 @@ import (
 	"github.com/ruckstack/ruckstack/builder/cli/internal/helm"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"os"
-	"strings"
 )
 
 type HelmService struct {
 	//Common fields
 	Id             string `validate:"required"`
-	Port           int    `validate:"required"`
 	ProjectId      string
 	ProjectVersion string
 
@@ -21,6 +19,8 @@ type HelmService struct {
 	Chart   string `validate:"required"`
 	Version string `validate:"required"`
 }
+
+var defaultRepoUrl = "https://charts.helm.sh/stable"
 
 func (serviceConfig *HelmService) GetId() string {
 	return serviceConfig.Id
@@ -31,10 +31,6 @@ func (serviceConfig *HelmService) SetId(id string) {
 
 func (serviceConfig *HelmService) GetType() string {
 	return "helm"
-}
-
-func (serviceConfig *HelmService) GetPort() int {
-	return serviceConfig.Port
 }
 
 func (serviceConfig *HelmService) SetProjectId(projectId string) {
@@ -60,11 +56,7 @@ func (service *HelmService) Build(installFile *install_file.InstallFile) error {
 		return err
 	}
 
-	splitChart := strings.Split(service.Chart, "/")
-	repo := splitChart[0]
-	chartName := splitChart[1]
-
-	chartFile, err := helm.DownloadChart(repo, chartName, service.Version)
+	chartFile, err := helm.DownloadChart(service.Chart, service.Version)
 	if err != nil {
 		return err
 	}

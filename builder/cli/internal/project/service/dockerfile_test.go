@@ -68,14 +68,16 @@ func TestDockerfileService_Build(t *testing.T) {
 			assert.NoError(t, os.MkdirAll(testDir, 0755))
 
 			service := &DockerfileService{
-				Id:             "test-service",
-				Port:           8000,
+				Id: "test-service",
+				Http: DockerfileServiceHttp{
+					Port:       8000,
+					PathPrefix: "/my-url",
+				},
 				ProjectId:      "test-project",
 				ProjectVersion: "1.2.3",
 
 				Dockerfile:     tt.args.dockerfile,
 				ServiceVersion: "0.5.2",
-				BaseUrl:        "/my-url",
 			}
 
 			installFile, err := install_file.StartCreation(outFile, flate.BestSpeed)

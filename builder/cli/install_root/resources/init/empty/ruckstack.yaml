@@ -11,8 +11,9 @@ version: 0.0.1 # Overall version of the project
 #dockerfileServices:
 #  - id: your_id
 #    dockerFile: ./path/to/your/Dockerfile # Path to the dockerfile to use
-#    port: 8080 # Exposed port in your container your http service is running on
-#    baseUrl: / # URL base this http-based service should be served under
+#    http:
+#      port: 8080 # Exposed port in your container your http service is running on
+#      pathPrefix: / # URL base this http-based service should be served under
 
 
 ### For more available project config options, see http://ruckstack.org/docs/builder/project-config

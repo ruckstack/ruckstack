@@ -13,7 +13,6 @@ import (
 type ManifestService struct {
 	//Common fields
 	Id             string `validate:"required"`
-	Port           int    `validate:"required"`
 	ProjectId      string
 	ProjectVersion string
 
@@ -31,10 +30,6 @@ func (serviceConfig *ManifestService) SetId(id string) {
 
 func (serviceConfig *ManifestService) GetType() string {
 	return "manifest"
-}
-
-func (serviceConfig *ManifestService) GetPort() int {
-	return serviceConfig.Port
 }
 
 func (serviceConfig *ManifestService) SetProjectId(projectId string) {

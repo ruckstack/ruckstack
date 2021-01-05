@@ -19,17 +19,21 @@ import (
 type DockerfileService struct {
 	//Common fields
 	Id             string `validate:"required"`
-	Port           int    `validate:"required"`
 	ProjectId      string
 	ProjectVersion string
 
 	//Unique Fields
-	Dockerfile      string `validate:"required"`
-	ServiceVersion  string `yaml:"serviceVersion"`
-	BaseUrl         string `yaml:"baseUrl"`
-	PathPrefixStrip bool   `yaml:"pathPrefixStrip"`
+	Dockerfile     string `validate:"required"`
+	ServiceVersion string `yaml:"serviceVersion"`
+	Http           DockerfileServiceHttp
 
 	serviceWorkDir string
+}
+
+type DockerfileServiceHttp struct {
+	Port            int
+	PathPrefix      string `yaml:"pathPrefix"`
+	PathPrefixStrip bool   `yaml:"pathPrefixStrip"`
 }
 
 func (serviceConfig *DockerfileService) GetId() string {
@@ -42,10 +46,6 @@ func (serviceConfig *DockerfileService) SetId(id string) {
 
 func (serviceConfig *DockerfileService) GetType() string {
 	return "dockerfile"
-}
-
-func (serviceConfig *DockerfileService) GetPort() int {
-	return serviceConfig.Port
 }
 
 func (serviceConfig *DockerfileService) SetProjectId(projectId string) {
@@ -93,7 +93,7 @@ func (service *DockerfileService) Build(app *install_file.InstallFile) error {
 		return err
 	}
 
-	if service.BaseUrl != "" {
+	if service.Http.PathPrefix != "" {
 		if err := service.writeIngress(); err != nil {
 			return err
 		}
@@ -177,7 +177,7 @@ func (service *DockerfileService) writeDaemonSet() error {
 							"name":  service.Id,
 							"image": "build.local/" + service.ProjectId + "/" + service.Id + ":" + service.ServiceVersion,
 							"ports": []map[string]int{
-								{"containerPort": service.Port},
+								{"containerPort": service.Http.Port},
 							},
 						},
 					},
@@ -215,7 +215,7 @@ func (service *DockerfileService) writeService() error {
 			"ports": []map[string]interface{}{
 				{
 					"protocol": "TCP",
-					"port":     service.Port,
+					"port":     service.Http.Port,
 				},
 			},
 		},
@@ -235,7 +235,7 @@ func (service *DockerfileService) writeService() error {
 
 func (service *DockerfileService) writeIngress() error {
 	annotations := map[string]string{}
-	if service.PathPrefixStrip {
+	if service.Http.PathPrefixStrip {
 		annotations["traefik.frontend.rule.type"] = "PathPrefixStrip"
 	}
 
@@ -255,22 +255,16 @@ func (service *DockerfileService) writeIngress() error {
 					"http": map[string]interface{}{
 						"paths": []map[string]interface{}{
 							{
-								"path": service.BaseUrl,
+								"path": service.Http.PathPrefix,
 								"backend": map[string]interface{}{
 									"serviceName": service.Id,
-									"servicePort": service.Port,
+									"servicePort": service.Http.Port,
 								},
 							},
 						},
 					},
 				},
 			},
-			//"ports": []map[string]interface{}{
-			//	{
-			//		"protocol":      "TCP",
-			//		"containerPort": serviceConfig.Port,
-			//	},
-			//},
 		},
 	}
 
