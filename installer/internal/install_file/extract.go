@@ -40,5 +40,23 @@ func (installFile *InstallFile) Extract(targetDir string, localConfig *config.Lo
 		}
 	}
 
+	//check directories
+	err = filepath.Walk(targetDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			relativePath, _ := filepath.Rel(targetDir, path)
+			if err := installFile.PackageConfig.CheckFilePermissions(relativePath, localConfig, targetDir); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("error checking directory permissions: %s", err)
+	}
+
 	return nil
 }

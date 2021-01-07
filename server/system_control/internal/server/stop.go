@@ -129,7 +129,8 @@ func removeNetworks(ctx context.Context) error {
 	for _, name := range []string{"cni0", "flannel.1"} {
 		ui.VPrintf("Removing network %s", name)
 		_, err := exec.Command("ip", "link", "delete", name).Output()
-		if err != nil {
+		if err != nil && err.Error() != "exit status 1" {
+			//exit status 1 == network not exists
 			ui.Printf("error deleting network %s: %s", name, err)
 		}
 	}

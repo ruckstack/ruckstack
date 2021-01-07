@@ -10,7 +10,7 @@ import (
 )
 
 func ExecKubectl(args ...string) error {
-	command := exec.Command(environment.ServerHome+"/lib/k3s", append([]string{"kubectl"}, args...)...)
+	command := exec.Command(environment.ServerHome+"/lib/k3s", append([]string{"--data-dir", environment.ServerHome + "/data/kubectl", "kubectl"}, args...)...)
 	command.Env = os.Environ()
 	command.Env = append(command.Env,
 		fmt.Sprintf("KUBECONFIG=%s", kube.KubeconfigFile),

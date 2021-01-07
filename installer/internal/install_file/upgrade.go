@@ -35,7 +35,7 @@ func (installFile *InstallFile) Upgrade(installOptions InstallOptions) error {
 		ui.Println("Server was shut down as part of upgrade process and must be restarted")
 		ui.Println()
 	} else {
-		ui.Println("Server was NOT auto-started as part of the upgrade process")
+		ui.Println("Server was NOT started as part of the upgrade process")
 		ui.Println()
 	}
 
@@ -45,6 +45,10 @@ func (installFile *InstallFile) Upgrade(installOptions InstallOptions) error {
 func shutdownServer(serverHome string) (bool, error) {
 	serverShutdown := false
 	serverPidData, err := ioutil.ReadFile(filepath.Join(serverHome, "data", "server.pid"))
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+
 	if err != nil {
 		return false, err
 	}
@@ -61,7 +65,7 @@ func shutdownServer(serverHome string) (bool, error) {
 		ui.Println("Shutting down server...")
 		ui.Println()
 
-		if err := serverProcess.Kill(); err != nil {
+		if err := serverProcess.Signal(syscall.SIGTERM); err != nil {
 			return false, err
 		}
 

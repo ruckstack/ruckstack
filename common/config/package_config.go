@@ -119,10 +119,18 @@ func (packageConfig *PackageConfig) CheckFilePermissions(filePath string, localC
 	}
 
 	if foundFileConfigPath == "" {
-		foundFileConfig = PackagedFileConfig{
-			AdminGroupReadable: false,
-			AdminGroupWritable: false,
-			Executable:         false,
+		if fileStat.IsDir() {
+			foundFileConfig = PackagedFileConfig{
+				AdminGroupReadable: true,
+				AdminGroupWritable: false,
+				Executable:         true,
+			}
+		} else {
+			foundFileConfig = PackagedFileConfig{
+				AdminGroupReadable: false,
+				AdminGroupWritable: false,
+				Executable:         false,
+			}
 		}
 	}
 

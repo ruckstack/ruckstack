@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"os"
 	"os/user"
+	"strings"
 )
 
 var (
@@ -77,6 +78,9 @@ func init() {
 
 	rootCmd.Flags().BoolVar(&extractOnly, "extract-only", false, "INTERNAL: only extract the files, don't install")
 	rootCmd.Flag("extract-only").Hidden = true
+
+	rootCmd.Flags().StringVar(&installPackagePath, "install-package", "", "INTERNAL: use a different install package")
+	rootCmd.Flag("install-package").Hidden = true
 }
 
 func initConfig() {
@@ -86,7 +90,12 @@ func initConfig() {
 }
 
 func Execute(args []string) error {
-	installPackagePath = os.Getenv("RUCKSTACK_INSTALL_PACKAGE")
+	for _, arg := range args {
+		if strings.HasPrefix(arg, "--install-package=") {
+			installPackagePath = strings.Replace(arg, "--install-package=", "", 1)
+		}
+	}
+
 	if installPackagePath == "" {
 		installPackagePath = os.Args[0]
 	}

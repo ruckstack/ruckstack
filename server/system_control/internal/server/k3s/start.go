@@ -144,7 +144,7 @@ func Start(ctx context.Context) error {
 
 		version, err = client.ServerVersion()
 	}
-	ui.Printf("Server version %s started", version.String())
+	ui.VPrintf("K3s version %s started", version.String())
 
 	if err := setUnschedulable(false, ctx); err != nil {
 		log.Fatalf("Cannot uncordon server: %s", err)

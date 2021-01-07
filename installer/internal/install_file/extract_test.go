@@ -44,6 +44,19 @@ func TestExtract(t *testing.T) {
 		assert.NoFileExists(t, serverHome+"/data/agent/images/k3s.tar")
 		assert.DirExists(t, serverHome+"/data/agent/images/k3s.untar")
 
+		stat, _ := os.Stat(serverHome)
+		assert.True(t, stat.Mode()&(unix.R_OK*100) != 0)
+		assert.True(t, stat.Mode()&(unix.W_OK*100) != 0)
+		assert.True(t, stat.Mode()&(unix.X_OK*100) != 0)
+
+		assert.True(t, stat.Mode()&(unix.R_OK*10) != 0)
+		assert.False(t, stat.Mode()&(unix.W_OK*10) != 0)
+		assert.True(t, stat.Mode()&(unix.X_OK*10) != 0)
+
+		assert.False(t, stat.Mode()&(unix.R_OK*1) != 0)
+		assert.False(t, stat.Mode()&(unix.W_OK*1) != 0)
+		assert.False(t, stat.Mode()&(unix.X_OK*1) != 0)
+
 		for _, file := range []string{"/bin/example-manager", "/lib/helm", "/lib/k3s"} {
 			file = serverHome + file
 			stat, err := os.Stat(file)

@@ -8,6 +8,7 @@ import (
 	"github.com/ruckstack/ruckstack/common/ui"
 	"io/ioutil"
 	"net"
+	"os"
 	"os/user"
 	"path/filepath"
 	"strings"
@@ -38,6 +39,16 @@ func (installFile *InstallFile) Install(installOptions InstallOptions) error {
 		installOptions.TargetDir = askInstallPath()
 	}
 
+	var err error
+
+	_, err = config.LoadPackageConfig(installOptions.TargetDir)
+	if err == nil {
+		ui.VPrintf("%s is an existing install. Upgrading...", installOptions.TargetDir)
+		return installFile.Upgrade(installOptions)
+	} else if !os.IsNotExist(err) {
+		ui.Fatalf("Error checking path %s: %s", installOptions.TargetDir, err)
+	}
+
 	shouldJoinCluster := false
 	if installOptions.JoinToken == "none" {
 		shouldJoinCluster = false
@@ -47,7 +58,6 @@ func (installFile *InstallFile) Install(installOptions InstallOptions) error {
 		shouldJoinCluster = true
 	}
 
-	var err error
 	var addNodeToken *config.AddNodeToken
 	if shouldJoinCluster {
 		addNodeToken, err = joinCluster(installOptions.JoinToken, installFile)
