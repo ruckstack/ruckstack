@@ -25,6 +25,14 @@ func Parse(installPackagePath string) (*InstallFile, error) {
 			}
 
 			installFile.PackageConfig, err = config.ReadPackageConfig(fileReader)
+		} else if zipFile.Name == "config/system.config" {
+			fileReader, err := zipFile.Open()
+			if err != nil {
+				ui.Fatalf("error reading system.config: %s, ", err)
+			}
+
+			installFile.SystemConfig, err = config.ReadSystemConfig(fileReader)
+
 		}
 	}
 

@@ -49,6 +49,8 @@ func TestBuild(t *testing.T) {
 
 					assert.NoError(t, global_util.UnzipFile(environment.OutPath("example_1.0.5.installer"), unzipPath))
 
+					assert.FileExists(t, filepath.Join(unzipPath, ".project.config"))
+					assert.FileExists(t, filepath.Join(unzipPath, "config/system.config"))
 					assert.FileExists(t, filepath.Join(unzipPath, "bin/example-manager"))
 					assert.FileExists(t, filepath.Join(unzipPath, "lib/helm"))
 					assert.FileExists(t, filepath.Join(unzipPath, "data/agent/images/images.untar/repositories"))

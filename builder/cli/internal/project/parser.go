@@ -46,6 +46,12 @@ func ParseData(data io.Reader, projectPath string) (*Project, error) {
 		projectConfig.ManagerFilename = projectConfig.Id
 	}
 
+	for i, _ := range projectConfig.Proxy {
+		if projectConfig.Proxy[i].ServicePort == 0 {
+			projectConfig.Proxy[i].ServicePort = projectConfig.Proxy[i].Port
+		}
+	}
+
 	for i, _ := range projectConfig.ManifestServices {
 		projectConfig.ManifestServices[i].ProjectVersion = projectConfig.Version
 		projectConfig.ManifestServices[i].ProjectId = projectConfig.Id

@@ -35,6 +35,7 @@ import (
 
 type InstallFile struct {
 	PackageConfig    *config.PackageConfig
+	SystemConfig     *config.SystemConfig
 	CompressionLevel int
 
 	dockerImages map[string]bool
@@ -90,6 +91,7 @@ func StartCreation(installerPath string, compressionLevel int) (*InstallFile, er
 				},
 			},
 		},
+		SystemConfig: &config.SystemConfig{},
 		dockerImages: map[string]bool{},
 		addedFiles:   map[string]bool{},
 	}
@@ -150,6 +152,22 @@ func (installFile *InstallFile) CompleteCreation() error {
 	}
 
 	if err := installFile.AddFile(packageConfigFilePath, ".package.config"); err != nil {
+		return err
+	}
+
+	systemConfigFilePath := environment.TempPath("config/system.config")
+	_ = os.MkdirAll(filepath.Dir(systemConfigFilePath), 0755)
+	systemConfigFile, err := os.OpenFile(systemConfigFilePath, os.O_CREATE|os.O_RDWR, 0644)
+	if err != nil {
+		return err
+	}
+
+	encoder = yaml.NewEncoder(systemConfigFile)
+	if err := encoder.Encode(installFile.SystemConfig); err != nil {
+		return err
+	}
+
+	if err := installFile.AddFile(systemConfigFilePath, "config/system.config"); err != nil {
 		return err
 	}
 

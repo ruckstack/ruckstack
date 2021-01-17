@@ -110,7 +110,7 @@ func GenerateKeys(outputDir string) error {
 	ui.Println()
 	ui.Println("Next steps:")
 	ui.Println("  1. Use the csr file with your certificate authority to create a valid certificate")
-	ui.Printf("  2. Import the private key and signed certificate using `%s https import`\n", environment.PackageConfig.ManagerFilename)
+	ui.Printf("  2. Import the private key and signed certificate using `%s https import`\n", environment.SystemConfig.ManagerFilename)
 
 	return nil
 }

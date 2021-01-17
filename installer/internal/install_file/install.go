@@ -105,7 +105,7 @@ func (installFile *InstallFile) Install(installOptions InstallOptions) error {
 	}
 
 	ui.Println("\n\nInstallation complete")
-	ui.Printf("To start the server, run `%s/bin/%s start`\n\n", installOptions.TargetDir, installFile.PackageConfig.ManagerFilename)
+	ui.Printf("To start the server, run `%s/bin/%s start`\n\n", installOptions.TargetDir, installFile.SystemConfig.ManagerFilename)
 
 	return nil
 }
@@ -163,7 +163,7 @@ func joinCluster(joinToken string, installFile *InstallFile) (*config.AddNodeTok
 	}
 
 	if joinToken == "" {
-		joinToken = ui.PromptForString(fmt.Sprintf("Run `%s cluster add-node` on the primary machine in the cluster and enter the token here:", installFile.PackageConfig.ManagerFilename), "", parseTokenCheck)
+		joinToken = ui.PromptForString(fmt.Sprintf("Run `%s cluster add-node` on the primary machine in the cluster and enter the token here:", installFile.SystemConfig.ManagerFilename), "", parseTokenCheck)
 	}
 
 	timeout := time.Second

@@ -8,6 +8,7 @@ import (
 	"github.com/ruckstack/ruckstack/server/system_control/internal/server/containerd"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/server/k3s"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/server/monitor"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/server/proxy"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/server/webserver"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/util"
 	"io/ioutil"
@@ -93,9 +94,13 @@ func Start() error {
 		return fmt.Errorf("error starting k3s server: %s", err)
 	}
 
+	if err := proxy.Start(ctx); err != nil {
+		return fmt.Errorf("error starting proxy server: %s", err)
+	}
+
 	ui.Println("Server started")
-	ui.Printf("Additional logs are available through `%s logs` or in %s/logs", environment.PackageConfig.ManagerFilename, environment.ServerHome)
-	ui.Printf("System can be watched with `%s status`", environment.PackageConfig.ManagerFilename)
+	ui.Printf("Additional logs are available through `%s logs` or in %s/logs", environment.SystemConfig.ManagerFilename, environment.ServerHome)
+	ui.Printf("System can be watched with `%s status`", environment.SystemConfig.ManagerFilename)
 
 	for true {
 		time.Sleep(100000 * time.Hour)

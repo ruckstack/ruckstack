@@ -6,6 +6,7 @@ import (
 	"github.com/ruckstack/ruckstack/builder/cli/internal/builder/install_file"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/project"
+	"github.com/ruckstack/ruckstack/common/config"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"net/url"
 	"os"
@@ -33,7 +34,20 @@ func Build() error {
 	installFile.PackageConfig.Id = projectConfig.Id
 	installFile.PackageConfig.Name = projectConfig.Name
 	installFile.PackageConfig.Version = projectConfig.Version
-	installFile.PackageConfig.ManagerFilename = projectConfig.ManagerFilename
+
+	installFile.SystemConfig.ManagerFilename = projectConfig.ManagerFilename
+
+	for _, proxyConfig := range projectConfig.Proxy {
+		servicePort := proxyConfig.ServicePort
+		if servicePort == 0 {
+			servicePort = proxyConfig.Port
+		}
+		installFile.SystemConfig.Proxy = append(installFile.SystemConfig.Proxy, config.OpenPort{
+			ServiceName: proxyConfig.ServiceName,
+			ServicePort: servicePort,
+			Port:        proxyConfig.Port,
+		})
+	}
 
 	//add custom files
 	customFiles := map[string]string{

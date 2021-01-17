@@ -24,6 +24,7 @@ var (
 	PackageConfig *config.PackageConfig
 	ClusterConfig *config.ClusterConfig
 	LocalConfig   *config.LocalConfig
+	SystemConfig  *config.SystemConfig
 
 	NodeName string
 )
@@ -96,7 +97,6 @@ func init() {
 			Name:            "Test Package",
 			Version:         "0.1",
 			BuildTime:       0,
-			ManagerFilename: "test-control",
 			FilePermissions: map[string]config.PackagedFileConfig{},
 			Files:           map[string]string{},
 		}
@@ -105,8 +105,17 @@ func init() {
 			AdminGroup:  currentUserGroup.Name,
 			BindAddress: "127.0.0.1",
 		}
+
+		SystemConfig = &config.SystemConfig{
+			ManagerFilename: "test-control",
+		}
 	} else {
 		PackageConfig, err = config.LoadPackageConfig(ServerHome)
+		if err != nil {
+			ui.Fatal(err)
+		}
+
+		SystemConfig, err = config.LoadSystemConfig(ServerHome)
 		if err != nil {
 			ui.Fatal(err)
 		}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/ruckstack/ruckstack/common/config"
 	"github.com/ruckstack/ruckstack/common/global_util"
+	"github.com/ruckstack/ruckstack/common/ui"
 	"os"
 	"path/filepath"
 )
@@ -12,6 +13,7 @@ import (
 type InstallFile struct {
 	FilePath      string
 	PackageConfig *config.PackageConfig
+	SystemConfig  *config.SystemConfig
 }
 
 /**
@@ -55,7 +57,7 @@ func (installFile *InstallFile) Extract(targetDir string, localConfig *config.Lo
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("error checking directory permissions: %s", err)
+		ui.VPrintf("error checking directory permissions: %s", err)
 	}
 
 	return nil

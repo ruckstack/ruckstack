@@ -16,6 +16,8 @@ type Project struct {
 	K3sVersion      string
 	ManagerFilename string `yaml:"managerFilename"`
 
+	Proxy []ProxyConfig `yaml:"proxy"`
+
 	ManifestServices   []service.ManifestService   `yaml:"manifestServices"`
 	HelmServices       []service.HelmService       `yaml:"helmServices"`
 	DockerfileServices []service.DockerfileService `yaml:"dockerfileServices"`
@@ -75,4 +77,10 @@ type Service interface {
 	Build the service, adding anything needed to the InstallFile
 	*/
 	Build(*install_file.InstallFile) error
+}
+
+type ProxyConfig struct {
+	ServiceName string `yaml:"serviceName" validate:"required"`
+	ServicePort int    `yaml:"servicePort"`
+	Port        int    `yaml:"port" validate:"required"`
 }

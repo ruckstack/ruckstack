@@ -62,6 +62,7 @@ func TestCreatingInstallFile(t *testing.T) {
 	assert.Contains(t, string(packageConfigContents), "id: test-project")
 
 	assert.FileExists(t, filepath.Join(unzipPath, "config/package_config.go"))
+	assert.FileExists(t, filepath.Join(unzipPath, "config/system.config"))
 	assert.FileExists(t, filepath.Join(unzipPath, "ui/ui.go"))
 	assert.FileExists(t, filepath.Join(unzipPath, "was-build.sh"))
 	assert.FileExists(t, filepath.Join(unzipPath, "example.html"))

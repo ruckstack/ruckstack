@@ -13,11 +13,10 @@ import (
 )
 
 type PackageConfig struct {
-	Id              string
-	Name            string
-	Version         string
-	BuildTime       int64  `yaml:"buildTime"`
-	ManagerFilename string `yaml:"managerFilename"`
+	Id        string
+	Name      string
+	Version   string
+	BuildTime int64 `yaml:"buildTime"`
 
 	FilePermissions map[string]PackagedFileConfig `yaml:"filePermissions"`
 	Files           map[string]string

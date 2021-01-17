@@ -6,16 +6,17 @@ managerFilename: example-manager
 dockerfileServices:
   - id: homepage
     dockerfile: homepage/Dockerfile
-    port: 8080
-    baseUrl: /
+    http:
+      port: 8080
+      pathPrefix: /
 
   - id: cart
     dockerfile: cart/Dockerfile
-    port: 8080
-    baseUrl: /cart
+    http:
+      port: 8080
+      pathPrefix: /cart
 
 helmServices:
   - id: mariadb
     chart: stable/mariadb
     version: 7.3.9
-    port: 3306

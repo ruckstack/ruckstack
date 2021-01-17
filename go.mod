@@ -13,7 +13,8 @@ require (
 	github.com/gogo/googleapis v1.4.0 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/google/go-cmp v0.5.1 // indirect
-	github.com/mitchellh/go-wordwrap v1.0.0
+	github.com/inetaf/tcpproxy v0.0.0-20200125044825-b6bb9b5b8252
+	github.com/jpillora/go-tcp-proxy v1.0.2
 	github.com/moby/sys/mount v0.2.0 // indirect
 	github.com/moby/term v0.0.0-20201216013528-df9cb8a40635 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
@@ -35,6 +36,7 @@ require (
 	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/yaml.v2 v2.3.0
+	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 	gotest.tools/v3 v3.0.3 // indirect
 	helm.sh/helm/v3 v3.4.2
 	k8s.io/api v0.19.4
