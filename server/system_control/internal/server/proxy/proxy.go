@@ -60,9 +60,10 @@ func watchServices(ctx context.Context) {
 
 			externalPort := getExternalPort(delService, 0)
 			if externalPort > 0 {
-				existingProxy, exists := proxies[getFromAddress(externalPort)]
+				key := getFromAddress(externalPort)
+				existingProxy, exists := proxies[key]
 				if exists {
-					log.Printf("Service %s closed. Removing proxy %s", existingProxy)
+					log.Printf("Service %s closed. Removing proxy %s", delService.Name, key)
 					if err := existingProxy.Close(); err != nil {
 						log.Printf("Error closing proxy: %s", err)
 					}
