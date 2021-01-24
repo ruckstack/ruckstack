@@ -12,6 +12,43 @@ id: test
 name: Test Project
 version: 1.0.5
 
+dockerfileServices:
+  - id: test_dockerfile
+    dockerfile: Dockerfile
+    http:
+        port: 8080
+        pathPrefix: /
+`), "in-memory")
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, "test", project.Id)
+	assert.Equal(t, "test", project.ManagerFilename)
+	assert.Equal(t, "Test Project", project.Name)
+	assert.Equal(t, "1.0.5", project.Version)
+	assert.NotEmpty(t, project.K3sVersion)
+	assert.NotEmpty(t, project.HelmVersion)
+
+	assert.Equal(t, 1, len(project.GetServices()))
+
+	assert.Equal(t, project.Id, project.DockerfileServices[0].ProjectId)
+	assert.Equal(t, project.Version, project.DockerfileServices[0].ProjectVersion)
+
+	assert.Equal(t, "test_dockerfile", project.DockerfileServices[0].Id)
+	assert.Equal(t, "dockerfile", project.DockerfileServices[0].GetType())
+	assert.Equal(t, 8080, project.DockerfileServices[0].Http.Port)
+	assert.Equal(t, "Dockerfile", project.DockerfileServices[0].Dockerfile)
+	assert.Equal(t, "", project.DockerfileServices[0].ServiceVersion)
+	assert.Equal(t, "/", project.DockerfileServices[0].Http.PathPrefix)
+	assert.Equal(t, false, project.DockerfileServices[0].Http.PathPrefixStrip)
+}
+
+func TestParse_FullProject(t *testing.T) {
+	project, err := ParseData(strings.NewReader(`
+id: test
+name: Test Full Project
+version: 1.0.5
+
 proxy:
   - serviceName: firstService
     servicePort: 1234
@@ -31,6 +68,20 @@ dockerfileServices:
     http:
         port: 8082
         pathPrefix: /2
+    env:
+      - name: postgres_password
+        secretName: postgresql
+        secretKey: postgresql-postgres-password
+      - name: map_location
+        configMapName: config_name
+        configMapKey: config_key
+    mount:
+      - name: postgres_dir
+        secretName: postgresql
+        path: /path/to/pg
+      - name: config_files
+        configMapName: myConfig
+        path: /path/to/config
 
 helmServices:
   - id: test_helm
@@ -47,7 +98,7 @@ manifestServices:
 
 	assert.Equal(t, "test", project.Id)
 	assert.Equal(t, "test", project.ManagerFilename)
-	assert.Equal(t, "Test Project", project.Name)
+	assert.Equal(t, "Test Full Project", project.Name)
 	assert.Equal(t, "1.0.5", project.Version)
 	assert.NotEmpty(t, project.K3sVersion)
 	assert.NotEmpty(t, project.HelmVersion)
@@ -71,6 +122,24 @@ manifestServices:
 	assert.Equal(t, 8082, project.DockerfileServices[1].Http.Port)
 	assert.Equal(t, "Dockerfile2", project.DockerfileServices[1].Dockerfile)
 	assert.Equal(t, "/2", project.DockerfileServices[1].Http.PathPrefix)
+
+	assert.Equal(t, 2, len(project.DockerfileServices[1].Env))
+	assert.Equal(t, "postgres_password", project.DockerfileServices[1].Env[0].Name)
+	assert.Equal(t, "postgresql", project.DockerfileServices[1].Env[0].SecretName)
+	assert.Equal(t, "postgresql-postgres-password", project.DockerfileServices[1].Env[0].SecretKey)
+
+	assert.Equal(t, "map_location", project.DockerfileServices[1].Env[1].Name)
+	assert.Equal(t, "config_name", project.DockerfileServices[1].Env[1].ConfigMapName)
+	assert.Equal(t, "config_key", project.DockerfileServices[1].Env[1].ConfigMapKey)
+
+	assert.Equal(t, 2, len(project.DockerfileServices[1].Mount))
+	assert.Equal(t, "postgres_dir", project.DockerfileServices[1].Mount[0].Name)
+	assert.Equal(t, "postgresql", project.DockerfileServices[1].Mount[0].SecretName)
+	assert.Equal(t, "/path/to/pg", project.DockerfileServices[1].Mount[0].Path)
+
+	assert.Equal(t, "config_files", project.DockerfileServices[1].Mount[1].Name)
+	assert.Equal(t, "myConfig", project.DockerfileServices[1].Mount[1].ConfigMapName)
+	assert.Equal(t, "/path/to/config", project.DockerfileServices[1].Mount[1].Path)
 
 	assert.Equal(t, "test_helm", project.HelmServices[0].Id)
 	assert.Equal(t, "helm", project.HelmServices[0].GetType())

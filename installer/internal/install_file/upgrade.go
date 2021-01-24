@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"syscall"
+	"time"
 )
 
 func (installFile *InstallFile) Upgrade(installOptions InstallOptions) error {
@@ -61,15 +62,23 @@ func shutdownServer(serverHome string) (bool, error) {
 	serverProcess, err := os.FindProcess(serverPid)
 	err = serverProcess.Signal(syscall.Signal(0))
 	if err == nil {
-		ui.Printf("Found running server on PID %d", serverPid)
-		ui.Println("Shutting down server...")
+		ui.Printf("Found running server (PID %d)", serverPid)
+		defer ui.StartProgressf("Shutting down server").Stop()
 		ui.Println()
 
 		if err := serverProcess.Signal(syscall.SIGTERM); err != nil {
 			return false, err
 		}
 
-		serverShutdown = true
+		for !serverShutdown {
+			err := serverProcess.Signal(syscall.Signal(0))
+			if err == nil {
+				time.Sleep(5 * time.Second)
+			} else {
+				serverShutdown = true
+			}
+		}
+
 	} else {
 		ui.Printf("No running server on PID %d", serverPid)
 	}

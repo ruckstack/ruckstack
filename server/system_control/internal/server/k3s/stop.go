@@ -14,6 +14,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"os"
 	"sync"
 	"syscall"
 	"time"
@@ -29,6 +30,11 @@ func Stop(ctx context.Context) error {
 
 	if k3sProcess == nil {
 		ui.VPrintf("k3s is already shut down")
+
+		if err := os.Remove(k3sPidPath); err != nil {
+			ui.Printf("error deleting %s: %s", k3sPidPath, err)
+		}
+
 		return nil
 	}
 
@@ -42,6 +48,10 @@ func Stop(ctx context.Context) error {
 
 	if err := killK3sProcess(k3sProcess, ctx); err != nil {
 		return err
+	}
+
+	if err := os.Remove(k3sPidPath); err != nil {
+		ui.Printf("error deleting %s: %s", k3sPidPath, err)
 	}
 
 	ui.Printf("Shutting down k3s...DONE")

@@ -21,7 +21,7 @@ var (
 	OutDir     string
 	ProjectDir string
 
-	PackagedK3sVersion  = "1.20.0+k3s2"
+	PackagedK3sVersion  = "1.20.2+k3s1"
 	PackagedHelmVersion = "3.4.2" //should match go.mod
 )
 

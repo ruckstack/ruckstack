@@ -71,6 +71,10 @@ func Stop(force bool) error {
 		ui.Printf("error removing cni directory: %s", err)
 	}
 
+	if err := os.Remove(serverPidPath); err != nil {
+		ui.Printf("error removing %s: %s", serverPidPath, err)
+	}
+
 	return nil
 }
 

@@ -6,6 +6,7 @@
 TODO.txt
 **/__debug_bin
 /workspace
+**/node_modules
 
 #Compiled binaries
 builder/cli/install_root/resources/installer

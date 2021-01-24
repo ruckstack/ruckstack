@@ -3,12 +3,13 @@ package k3s
 import (
 	"fmt"
 	"github.com/ruckstack/ruckstack/common/ui"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"os/exec"
 )
 
 func ExecCtr(serverHome string, args ...string) error {
 
-	command := exec.Command(serverHome+"/lib/k3s", append([]string{"ctr"}, args...)...)
+	command := exec.Command(serverHome+"/lib/k3s", append([]string{"ctr", "--data-dir", environment.ServerHome + "/data"}, args...)...)
 	command.Dir = serverHome
 	command.Stdout = ui.GetOutput()
 	command.Stderr = ui.GetOutput()

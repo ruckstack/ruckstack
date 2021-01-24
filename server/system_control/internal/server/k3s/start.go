@@ -147,7 +147,9 @@ func Start(ctx context.Context) error {
 	ui.VPrintf("K3s version %s started", version.String())
 
 	if err := setUnschedulable(false, ctx); err != nil {
-		log.Fatalf("Cannot uncordon server: %s", err)
+		if !strings.Contains(err.Error(), "not found") {
+			log.Fatalf("Cannot uncordon server: %s", err)
+		}
 	}
 
 	if err := os.Chown(kube.KubeconfigFile, 0, int(environment.LocalConfig.AdminGroupId)); err != nil {

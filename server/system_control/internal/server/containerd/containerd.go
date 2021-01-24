@@ -5,7 +5,9 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"crypto/sha1"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/namespaces"
@@ -94,11 +96,19 @@ func LoadPackagedImages() error {
 		importedInfoPath := untarDir + "/imported.info"
 		importDirectory := false
 
-		manifestStat, err := os.Stat(untarDir + "/manifest.json")
+		manifestFile, err := os.Open(untarDir + "/manifest.json")
 		if err == nil {
-			importedStat, err := os.Stat(importedInfoPath)
+			hash := sha1.New()
+			_, err = io.Copy(hash, manifestFile)
+			if err != nil {
+				return fmt.Errorf("cannot compute hash for %s: %s", untarDir+"/manifest.json", err)
+			}
+
+			currentHash := hex.EncodeToString(hash.Sum(nil)[:20])
+
+			importedHash, err := ioutil.ReadFile(importedInfoPath)
 			if err == nil {
-				if importedStat.ModTime().After(manifestStat.ModTime()) {
+				if string(importedHash) == currentHash {
 					logger.Printf("Directory %s has already been imported", untarDir)
 					importDirectory = false
 				} else {

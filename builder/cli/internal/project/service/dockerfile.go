@@ -1,7 +1,6 @@
 package service
 
 import (
-	"crypto/md5"
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/builder/install_file"
@@ -13,6 +12,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"regexp"
+	"strings"
 	"time"
 )
 
@@ -26,6 +27,8 @@ type DockerfileService struct {
 	Dockerfile     string `validate:"required"`
 	ServiceVersion string `yaml:"serviceVersion"`
 	Http           DockerfileServiceHttp
+	Env            []DockerfileServiceEnv
+	Mount          []DockerfileServiceMount
 
 	serviceWorkDir string
 }
@@ -34,6 +37,21 @@ type DockerfileServiceHttp struct {
 	Port            int
 	PathPrefix      string `yaml:"pathPrefix"`
 	PathPrefixStrip bool   `yaml:"pathPrefixStrip"`
+}
+
+type DockerfileServiceEnv struct {
+	Name          string `validate:"required"`
+	SecretName    string `yaml:"secretName"`
+	SecretKey     string `yaml:"secretKey"`
+	ConfigMapName string `yaml:"configMapName"`
+	ConfigMapKey  string `yaml:"configMapKey"`
+}
+
+type DockerfileServiceMount struct {
+	Name          string `validate:"required"`
+	SecretName    string `yaml:"secretName"`
+	ConfigMapName string `yaml:"configMapName"`
+	Path          string `validate:"required"`
 }
 
 func (serviceConfig *DockerfileService) GetId() string {
@@ -61,6 +79,33 @@ func (service *DockerfileService) Validate(structValidator *validator.Validate) 
 		return err
 	}
 
+	for _, env := range service.Env {
+		if (env.SecretKey != "" || env.SecretName != "") && (env.ConfigMapKey != "" || env.ConfigMapName != "") {
+			return fmt.Errorf("environment variable %s cannot specify both secret and configMap configurations", env.Name)
+		}
+
+		if env.SecretKey == "" && env.ConfigMapKey == "" {
+			return fmt.Errorf("environment variable %s must specify either secret and configMap configurations", env.Name)
+		}
+
+		if env.SecretKey != "" && env.SecretName == "" {
+			return fmt.Errorf("environment variable %s must specify both secretKey and secretName", env.Name)
+		}
+
+		if env.ConfigMapKey != "" && env.ConfigMapName == "" {
+			return fmt.Errorf("environment variable %s must specify both configMapKey and configMapName", env.Name)
+		}
+	}
+
+	for _, mount := range service.Mount {
+		if !regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$").MatchString(mount.Name) { //regexp from k8s
+			return fmt.Errorf("mount name '%s' must consist of lower case alphanumeric characters or '-'", mount.Name)
+		}
+		if mount.SecretName != "" && mount.ConfigMapName != "" {
+			return fmt.Errorf("mount point %s cannot specify both secret and configMap configurations", mount.Name)
+		}
+	}
+
 	return nil
 }
 
@@ -68,7 +113,7 @@ func (service *DockerfileService) Build(app *install_file.InstallFile) error {
 	ui.Printf("Building Dockerfile Service %s", service.Id)
 
 	if service.ServiceVersion == "" {
-		service.ServiceVersion = fmt.Sprintf("%x", md5.Sum([]byte(time.Now().String())))[0:6]
+		service.ServiceVersion = fmt.Sprintf("0.0.%d", time.Now().Unix())
 	}
 
 	service.serviceWorkDir = environment.TempPath(service.Id + "-*")
@@ -150,6 +195,58 @@ func (service *DockerfileService) writeChart() error {
 }
 
 func (service *DockerfileService) writeDaemonSet() error {
+
+	envDef := []map[string]interface{}{}
+	for _, envConfig := range service.Env {
+		if envConfig.SecretKey != "" {
+			envDef = append(envDef, map[string]interface{}{
+				"name": strings.ToUpper(envConfig.Name),
+				"valueFrom": map[string]interface{}{
+					"secretKeyRef": map[string]interface{}{
+						"name": envConfig.SecretName,
+						"key":  envConfig.SecretKey,
+					},
+				},
+			})
+		} else if envConfig.ConfigMapKey != "" {
+			envDef = append(envDef, map[string]interface{}{
+				"name": strings.ToUpper(envConfig.Name),
+				"valueFrom": map[string]interface{}{
+					"configMapKeyRef": map[string]interface{}{
+						"name": envConfig.ConfigMapName,
+						"key":  envConfig.ConfigMapKey,
+					},
+				},
+			})
+		}
+	}
+
+	volumeMounts := []map[string]interface{}{}
+	volumes := []map[string]interface{}{}
+	for _, mountConfig := range service.Mount {
+		volumeMounts = append(volumeMounts, map[string]interface{}{
+			"name":      mountConfig.Name,
+			"mountPath": mountConfig.Path,
+			"readOnly":  true,
+		})
+
+		if mountConfig.SecretName != "" {
+			volumes = append(volumes, map[string]interface{}{
+				"name": mountConfig.Name,
+				"secret": map[string]interface{}{
+					"secretName": mountConfig.SecretName,
+				},
+			})
+		} else if mountConfig.ConfigMapName != "" {
+			volumes = append(volumes, map[string]interface{}{
+				"name": mountConfig.Name,
+				"configMap": map[string]interface{}{
+					"name": mountConfig.ConfigMapName,
+				},
+			})
+		}
+	}
+
 	daemonSet := map[string]interface{}{
 		"apiVersion": "apps/v1",
 		"kind":       "DaemonSet",
@@ -179,8 +276,11 @@ func (service *DockerfileService) writeDaemonSet() error {
 							"ports": []map[string]int{
 								{"containerPort": service.Http.Port},
 							},
+							"env":          envDef,
+							"volumeMounts": volumeMounts,
 						},
 					},
+					"volumes": volumes,
 				},
 			},
 		},
