@@ -21,19 +21,25 @@ func init() {
 func Client() *kubernetes.Clientset {
 
 	if client == nil {
+		var spinner ui.UiSpinner
 		for true {
 			_, err := os.Stat(KubeconfigFile)
 
 			if err == nil {
+				ui.VPrintf("%s was found", KubeconfigFile)
 				break
 			} else {
 				if os.IsNotExist(err) {
-					ui.Printf("Waiting for %s to be created...", KubeconfigFile)
+					ui.VPrintf("%s does not exist yet", KubeconfigFile)
+					spinner = ui.StartProgressf("Waiting for client connection details", KubeconfigFile)
 					time.Sleep(time.Second * 5)
 				} else {
 					ui.Fatalf("cannot open %s: %s", KubeconfigFile, err)
 				}
 			}
+		}
+		if spinner != nil {
+			spinner.Stop()
 		}
 
 		config, err := clientcmd.BuildConfigFromFlags("", KubeconfigFile)
