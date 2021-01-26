@@ -2,12 +2,14 @@ package commands
 
 import (
 	"fmt"
+	"github.com/pkg/profile"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/util"
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 const (
@@ -15,6 +17,8 @@ const (
 )
 
 var verboseMode bool
+var profileCpu bool
+var profileMemory bool
 
 var rootCmd = &cobra.Command{
 	TraverseChildren: true,
@@ -48,6 +52,9 @@ func init() {
 	rootCmd.Flags().BoolVar(&verboseMode, "verbose", false, "Enable more detailed output")
 	rootCmd.Flags().StringVar(&serverHome, "server-home", "", "Enable more detailed output")
 
+	rootCmd.Flags().BoolVar(&profileCpu, "profile-cpu", false, "Track cpu usage")
+	rootCmd.Flags().BoolVar(&profileMemory, "profile-memory", false, "Track memory usage")
+
 }
 
 func initConfig() {
@@ -57,6 +64,15 @@ func initConfig() {
 }
 
 func Execute(args []string) error {
+	for _, arg := range args {
+		if arg == "--profile-cpu" {
+			defer profile.Start(profile.ProfilePath(fmt.Sprintf("%s/data/profile/cpu-%d", environment.ServerHome, time.Now().Unix()))).Stop()
+		}
+		if arg == "--profile-memory" {
+			defer profile.Start(profile.MemProfile, profile.ProfilePath(fmt.Sprintf("%s/data/profile/memory-%d", environment.ServerHome, time.Now().Unix()))).Stop()
+		}
+	}
+
 	rootCmd.SetArgs(args)
 	return rootCmd.Execute()
 }

@@ -95,6 +95,7 @@ func LoadPackagedImages() error {
 	for _, untarDir := range untarDirs {
 		importedInfoPath := untarDir + "/imported.info"
 		importDirectory := false
+		currentHash := "UNKNOWN"
 
 		manifestFile, err := os.Open(untarDir + "/manifest.json")
 		if err == nil {
@@ -104,7 +105,7 @@ func LoadPackagedImages() error {
 				return fmt.Errorf("cannot compute hash for %s: %s", untarDir+"/manifest.json", err)
 			}
 
-			currentHash := hex.EncodeToString(hash.Sum(nil)[:20])
+			currentHash = hex.EncodeToString(hash.Sum(nil)[:20])
 
 			importedHash, err := ioutil.ReadFile(importedInfoPath)
 			if err == nil {
@@ -130,7 +131,7 @@ func LoadPackagedImages() error {
 				continue
 			} else {
 				logger.Printf("Cannot check manifest.json file: %s", err)
-				importDirectory = true
+				continue
 			}
 		}
 
@@ -235,7 +236,7 @@ func LoadPackagedImages() error {
 			logger.Printf("Imported %s", image.Name)
 		}
 
-		err = ioutil.WriteFile(importedInfoPath, []byte("Import: SUCCESSFUL"), 0644)
+		err = ioutil.WriteFile(importedInfoPath, []byte(currentHash), 0644)
 		if err != nil {
 			logger.Printf("Cannot write %s: %s", importedInfoPath, err)
 		}
