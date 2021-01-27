@@ -1,66 +1,29 @@
 package uninstall
 
 import (
-	"bufio"
-	"bytes"
 	"fmt"
+	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/server"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/util"
 	"os"
-	"os/exec"
-	"strconv"
-	"strings"
 )
 
 func Uninstall() error {
 	packageConfig := environment.PackageConfig
 
-	ui := bufio.NewScanner(os.Stdin)
-	fmt.Printf("Uninstall %s from %s? [y|n] ", packageConfig.Name, environment.ServerHome)
-	ui.Scan()
-	if ui.Text() != "y" {
-		return fmt.Errorf("cancelling install")
+	defaultValue := false
+	if !ui.PromptForBoolean(fmt.Sprintf("Uninstall %s from %s", packageConfig.Name, environment.ServerHome), &defaultValue) {
+		return fmt.Errorf("uninstall cancelled")
 	}
 
-	fmt.Println("\nUninstalling " + packageConfig.Name + "...")
+	ui.Println("\nUninstalling " + packageConfig.Name + "...")
 
-	fmt.Println("Killing processes...")
-	psOut := bytes.NewBufferString("")
-
-	command := exec.Command("pgrep", "-f", environment.ServerHome)
-	command.Dir = environment.ServerHome
-	command.Stdout = psOut
-	command.Stderr = psOut
-	if err := command.Run(); err != nil {
-		if err.Error() == "exit status 1" {
-			//nothing matched, that is ok
-		} else {
-			fmt.Println(psOut.String())
-			return err
-		}
+	progress := ui.StartProgressf("Shutting down server")
+	if err := server.Stop(false); err != nil {
+		return fmt.Errorf("error stopping server: %s", err)
 	}
-
-	currentPid := os.Getpid()
-
-	for _, pidString := range strings.Split(psOut.String(), "\n") {
-		if pidString == "" {
-			continue
-		}
-		pid, err := strconv.Atoi(pidString)
-		if err != nil {
-			return err
-		}
-		process, err := os.FindProcess(pid)
-		if err != nil {
-			return err
-		}
-
-		if process.Pid != currentPid {
-			if err := process.Kill(); err != nil {
-				return err
-			}
-		}
-	}
+	progress.Stop()
 
 	fmt.Println("Removing network configuration...")
 	util.ExecBash("iptables-save | grep -v KUBE- | grep -v CNI- | iptables-restore")

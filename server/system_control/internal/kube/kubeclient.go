@@ -31,7 +31,7 @@ func Client() *kubernetes.Clientset {
 			} else {
 				if os.IsNotExist(err) {
 					ui.VPrintf("%s does not exist yet", KubeconfigFile)
-					spinner = ui.StartProgressf("Waiting for client connection details", KubeconfigFile)
+					spinner = ui.StartProgressf("Waiting for client connection details")
 					time.Sleep(time.Second * 5)
 				} else {
 					ui.Fatalf("cannot open %s: %s", KubeconfigFile, err)

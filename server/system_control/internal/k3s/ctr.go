@@ -9,7 +9,7 @@ import (
 
 func ExecCtr(serverHome string, args ...string) error {
 
-	command := exec.Command(serverHome+"/lib/k3s", append([]string{"ctr", "--data-dir", environment.ServerHome + "/data"}, args...)...)
+	command := exec.Command(serverHome+"/lib/k3s", append([]string{"--data-dir", environment.ServerHome + "/data", "ctr"}, args...)...)
 	command.Dir = serverHome
 	command.Stdout = ui.GetOutput()
 	command.Stderr = ui.GetOutput()

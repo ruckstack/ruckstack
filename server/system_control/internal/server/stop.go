@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"github.com/ruckstack/ruckstack/common/global_util"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/server/containerd"
@@ -16,6 +17,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"time"
 )
 
 func Stop(force bool) error {
@@ -31,13 +33,19 @@ func Stop(force bool) error {
 	if serverProc != nil && !isThisProcess {
 		err = serverProc.SendSignal(syscall.Signal(0))
 		if err == nil {
-			if !force {
-				ui.Printf("Sending SIGTERM to %d. System will shut down in a few minutes, follow progress in the server logs", serverProc.Pid)
-				if err := serverProc.TerminateWithContext(ctx); err != nil {
-					ui.Fatalf("error sending SIGTERM signal: %s", err)
-				}
-				os.Exit(0)
+			//wait basically forever, uninstall and upgrade can hit problems if not fully shut down
+			timeout := 1000 * time.Hour
+			if force {
+				timeout = 0
+			} else {
 			}
+			var waitGroup sync.WaitGroup
+			global_util.ShutdownProcess(serverProc, timeout, &waitGroup, context.Background())
+
+			defer ui.StartProgressf("Shutting down server. Follow progress in the server logs").Stop()
+			waitGroup.Wait()
+
+			return nil
 		}
 	}
 
@@ -54,7 +62,7 @@ func Stop(force bool) error {
 			ui.VPrintf("Overall server process already in process of stopping")
 		} else {
 			var waitGroup sync.WaitGroup
-			util.ShutdownProcess(serverProc, 0, &waitGroup, ctx)
+			global_util.ShutdownProcess(serverProc, 0, &waitGroup, ctx)
 			waitGroup.Wait()
 		}
 	}

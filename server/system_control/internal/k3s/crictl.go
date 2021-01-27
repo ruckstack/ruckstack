@@ -7,7 +7,7 @@ import (
 )
 
 func ExecCrictl(serverHome string, args ...string) error {
-	command := exec.Command(serverHome+"/lib/k3s", append([]string{"crictl", "--data-dir", environment.ServerHome + "/data"}, args...)...)
+	command := exec.Command(serverHome+"/lib/k3s", append([]string{"--data-dir", environment.ServerHome + "/data", "crictl"}, args...)...)
 	command.Dir = serverHome
 	command.Stdout = ui.GetOutput()
 	command.Stderr = ui.GetOutput()

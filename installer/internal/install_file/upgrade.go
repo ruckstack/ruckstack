@@ -1,13 +1,16 @@
 package install_file
 
 import (
+	"context"
 	"github.com/ruckstack/ruckstack/common/config"
+	"github.com/ruckstack/ruckstack/common/global_util"
 	"github.com/ruckstack/ruckstack/common/ui"
+	"github.com/shirou/gopsutil/v3/process"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
-	"syscall"
+	"sync"
 	"time"
 )
 
@@ -59,26 +62,14 @@ func shutdownServer(serverHome string) (bool, error) {
 		return false, err
 	}
 
-	serverProcess, err := os.FindProcess(serverPid)
-	err = serverProcess.Signal(syscall.Signal(0))
+	serverProcess, err := process.NewProcess(int32(serverPid))
 	if err == nil {
 		ui.Printf("Found running server (PID %d)", serverPid)
 		defer ui.StartProgressf("Shutting down server").Stop()
-		ui.Println()
 
-		if err := serverProcess.Signal(syscall.SIGTERM); err != nil {
-			return false, err
-		}
-
-		for !serverShutdown {
-			err := serverProcess.Signal(syscall.Signal(0))
-			if err == nil {
-				time.Sleep(5 * time.Second)
-			} else {
-				serverShutdown = true
-			}
-		}
-
+		var waitGroup sync.WaitGroup
+		global_util.ShutdownProcess(serverProcess, 15*time.Minute, &waitGroup, context.Background())
+		waitGroup.Wait()
 	} else {
 		ui.Printf("No running server on PID %d", serverPid)
 	}

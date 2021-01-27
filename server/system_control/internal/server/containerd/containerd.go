@@ -11,10 +11,10 @@ import (
 	"fmt"
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/namespaces"
+	"github.com/ruckstack/ruckstack/common/global_util"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/server/monitor"
-	"github.com/ruckstack/ruckstack/server/system_control/internal/util"
 	"github.com/shirou/gopsutil/v3/process"
 	"io"
 	"io/ioutil"
@@ -227,7 +227,7 @@ func LoadPackagedImages() error {
 		}()
 
 		logger.Printf("Importing images in %s...", untarDir)
-		images, err := containerdClient.Import(ctxContainerD, pipeReader, containerd.WithAllPlatforms(true))
+		images, err := containerdClient.Import(ctxContainerD, pipeReader, containerd.WithAllPlatforms(true), containerd.WithImportCompression())
 		if err != nil {
 			return err
 		}
@@ -269,7 +269,7 @@ func KillProcesses(ctx context.Context) error {
 			}
 			for _, arg := range cmdLine {
 				if arg == containerdAddress {
-					util.ShutdownProcess(proc, 30*time.Second, &waitGroup, ctx)
+					global_util.ShutdownProcess(proc, 30*time.Second, &waitGroup, ctx)
 				}
 			}
 		}
