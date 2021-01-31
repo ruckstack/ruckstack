@@ -23,9 +23,10 @@ type PackageConfig struct {
 }
 
 type PackagedFileConfig struct {
-	AdminGroupReadable bool `yaml:"adminGroupReadable"`
-	AdminGroupWritable bool `yaml:"adminGroupWritable"`
-	Executable         bool
+	PreservePermissions bool `yaml:"preservePermissions"`
+	AdminGroupReadable  bool `yaml:"adminGroupReadable"`
+	AdminGroupWritable  bool `yaml:"adminGroupWritable"`
+	Executable          bool
 }
 
 func ReadPackageConfig(content io.ReadCloser) (*PackageConfig, error) {
@@ -133,13 +134,9 @@ func (packageConfig *PackageConfig) CheckFilePermissions(filePath string, localC
 		}
 	}
 
-	//if isIgnorePermissions(filePath) {
-	//	if info.IsDir() {
-	//		return filepath.SkipDir
-	//	} else {
-	//		return nil
-	//	}
-	//}
+	if foundFileConfig.PreservePermissions {
+		return nil
+	}
 
 	if currentUser.Name == "root" {
 		err = os.Chown(fullFilePath, 0, adminGroupGid)

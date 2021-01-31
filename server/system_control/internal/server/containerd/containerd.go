@@ -227,7 +227,7 @@ func LoadPackagedImages() error {
 		}()
 
 		logger.Printf("Importing images in %s...", untarDir)
-		images, err := containerdClient.Import(ctxContainerD, pipeReader, containerd.WithAllPlatforms(true), containerd.WithImportCompression())
+		images, err := containerdClient.Import(ctxContainerD, pipeReader, containerd.WithAllPlatforms(true))
 		if err != nil {
 			return err
 		}

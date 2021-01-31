@@ -13,6 +13,7 @@ import (
 
 var KubeconfigFile string
 var client *kubernetes.Clientset
+var waitingForFileSpinner ui.UiSpinner
 
 func init() {
 	KubeconfigFile = environment.ServerHome + "/config/kubeconfig-admin.yaml"
@@ -21,7 +22,6 @@ func init() {
 func Client() *kubernetes.Clientset {
 
 	if client == nil {
-		var spinner ui.UiSpinner
 		for true {
 			_, err := os.Stat(KubeconfigFile)
 
@@ -31,15 +31,18 @@ func Client() *kubernetes.Clientset {
 			} else {
 				if os.IsNotExist(err) {
 					ui.VPrintf("%s does not exist yet", KubeconfigFile)
-					spinner = ui.StartProgressf("Waiting for client connection details")
+					if waitingForFileSpinner == nil {
+						waitingForFileSpinner = ui.StartProgressf("Waiting for client connection details")
+					}
 					time.Sleep(time.Second * 5)
 				} else {
 					ui.Fatalf("cannot open %s: %s", KubeconfigFile, err)
 				}
 			}
 		}
-		if spinner != nil {
-			spinner.Stop()
+		if waitingForFileSpinner != nil {
+			waitingForFileSpinner.Stop()
+			waitingForFileSpinner = nil
 		}
 
 		config, err := clientcmd.BuildConfigFromFlags("", KubeconfigFile)

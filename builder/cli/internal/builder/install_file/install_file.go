@@ -73,6 +73,13 @@ func StartCreation(installerPath string, compressionLevel int) (*InstallFile, er
 					AdminGroupReadable: true,
 					AdminGroupWritable: true,
 				},
+				"data/web": {
+					AdminGroupReadable: true,
+					AdminGroupWritable: false,
+				},
+				"data/**": {
+					PreservePermissions: true,
+				},
 				"tmp/*": {
 					AdminGroupReadable: true,
 					AdminGroupWritable: true,
