@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"fmt"
+	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/server"
 	"github.com/spf13/cobra"
@@ -15,7 +17,13 @@ func init() {
 		},
 		Short: "Shuts down " + environment.PackageConfig.Name,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return server.Stop(force)
+			defaultValue := false
+			if ui.PromptForBoolean("Shut down the running server?", &defaultValue) {
+				return server.Stop(force)
+			} else {
+				return fmt.Errorf("shutdown cancelled")
+			}
+
 		},
 	}
 
