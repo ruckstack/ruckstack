@@ -76,10 +76,10 @@ dockerfileServices:
         configMapName: config_name
         configMapKey: config_key
     mount:
-      - name: postgres_dir
+      - name: postgres-dir
         secretName: postgresql
         path: /path/to/pg
-      - name: config_files
+      - name: config-files
         configMapName: myConfig
         path: /path/to/config
 
@@ -133,11 +133,11 @@ manifestServices:
 	assert.Equal(t, "config_key", project.DockerfileServices[1].Env[1].ConfigMapKey)
 
 	assert.Equal(t, 2, len(project.DockerfileServices[1].Mount))
-	assert.Equal(t, "postgres_dir", project.DockerfileServices[1].Mount[0].Name)
+	assert.Equal(t, "postgres-dir", project.DockerfileServices[1].Mount[0].Name)
 	assert.Equal(t, "postgresql", project.DockerfileServices[1].Mount[0].SecretName)
 	assert.Equal(t, "/path/to/pg", project.DockerfileServices[1].Mount[0].Path)
 
-	assert.Equal(t, "config_files", project.DockerfileServices[1].Mount[1].Name)
+	assert.Equal(t, "config-files", project.DockerfileServices[1].Mount[1].Name)
 	assert.Equal(t, "myConfig", project.DockerfileServices[1].Mount[1].ConfigMapName)
 	assert.Equal(t, "/path/to/config", project.DockerfileServices[1].Mount[1].Path)
 

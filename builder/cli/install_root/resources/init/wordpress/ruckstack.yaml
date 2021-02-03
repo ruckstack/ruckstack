@@ -1,0 +1,9 @@
+id: wordpress
+name: Wordpress
+version: 1.0.0
+
+helmServices:
+  - id: postgresql
+    chart: bitnami/wordpress
+    version: 10.4.7
+

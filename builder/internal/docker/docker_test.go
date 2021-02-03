@@ -119,6 +119,7 @@ func TestRunContainer(t *testing.T) {
 				nil,
 				containerName,
 				tt.args.removeWhenDone,
+				false,
 			)
 			assert.NoError(t, err)
 

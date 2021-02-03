@@ -49,19 +49,18 @@ func TestBuild(t *testing.T) {
 
 					assert.NoError(t, global_util.UnzipFile(environment.OutPath("example_1.0.5.installer"), unzipPath))
 
-					assert.FileExists(t, filepath.Join(unzipPath, ".project.config"))
 					assert.FileExists(t, filepath.Join(unzipPath, "config/system.config"))
 					assert.FileExists(t, filepath.Join(unzipPath, "bin/example-manager"))
 					assert.FileExists(t, filepath.Join(unzipPath, "lib/helm"))
 					assert.FileExists(t, filepath.Join(unzipPath, "data/agent/images/images.untar/repositories"))
 					assert.FileExists(t, filepath.Join(unzipPath, "data/agent/images/k3s.untar/repositories"))
-					assert.FileExists(t, filepath.Join(unzipPath, "data/server/manifests/cart.yaml"))
-					assert.FileExists(t, filepath.Join(unzipPath, "data/server/manifests/homepage.yaml"))
-					assert.FileExists(t, filepath.Join(unzipPath, "data/server/manifests/mariadb.yaml"))
+					assert.FileExists(t, filepath.Join(unzipPath, "data/server/manifests/frontend.yaml"))
+					assert.FileExists(t, filepath.Join(unzipPath, "data/server/manifests/backend.yaml"))
+					assert.FileExists(t, filepath.Join(unzipPath, "data/server/manifests/postgresql.yaml"))
 					assert.FileExists(t, filepath.Join(unzipPath, "data/server/manifests/traefik.yaml"))
-					assert.FileExists(t, filepath.Join(unzipPath, "data/server/static/charts/cart.tgz"))
-					assert.FileExists(t, filepath.Join(unzipPath, "data/server/static/charts/homepage.tgz"))
-					assert.FileExists(t, filepath.Join(unzipPath, "data/server/static/charts/mariadb.tgz"))
+					assert.FileExists(t, filepath.Join(unzipPath, "data/server/static/charts/frontend.tgz"))
+					assert.FileExists(t, filepath.Join(unzipPath, "data/server/static/charts/backend.tgz"))
+					assert.FileExists(t, filepath.Join(unzipPath, "data/server/static/charts/postgresql.tgz"))
 					assert.FileExists(t, filepath.Join(unzipPath, "data/web/site-down.html"))
 
 					//installer is executable

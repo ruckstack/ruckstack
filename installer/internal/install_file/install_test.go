@@ -1,6 +1,7 @@
 package install_file
 
 import (
+	"github.com/ruckstack/ruckstack/common/config"
 	"github.com/ruckstack/ruckstack/common/test_util"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -15,6 +16,10 @@ func TestInstallFile_Install(t *testing.T) {
 
 	installFile, err := Parse(installerPackagePath)
 	assert.NoError(t, err)
+
+	installFile.SystemConfig = &config.SystemConfig{
+		ManagerFilename: "test",
+	}
 
 	err = installFile.Install(InstallOptions{
 		AdminGroup:  test_util.GetCurrentUserGroup(t).Name,

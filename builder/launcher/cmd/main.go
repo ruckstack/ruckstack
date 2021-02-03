@@ -172,7 +172,7 @@ func main() {
 		}
 	}
 
-	if err := docker.ContainerRun(containerConfig, hostConfig, nil, fmt.Sprintf("ruckstack_cli_%d", time.Now().Unix()), true); err != nil {
+	if err := docker.ContainerRun(containerConfig, hostConfig, nil, fmt.Sprintf("ruckstack_cli_%d", time.Now().Unix()), true, true); err != nil {
 		exitWithError(err)
 	}
 }

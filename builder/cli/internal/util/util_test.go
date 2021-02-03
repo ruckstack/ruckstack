@@ -193,7 +193,7 @@ func TestCopyDir(t *testing.T) {
 				assert.NoError(t, err)
 				assert.FileExists(t, filepath.Join(targetDir, "empty/ruckstack.yaml"))
 				assert.FileExists(t, filepath.Join(targetDir, "example/ruckstack.yaml"))
-				assert.FileExists(t, filepath.Join(targetDir, "example/cart/Dockerfile"))
+				assert.FileExists(t, filepath.Join(targetDir, "example/frontend/Dockerfile"))
 			} else {
 				assert.Error(t, err)
 				assert.Equal(t, tt.wantErr, err.Error())
