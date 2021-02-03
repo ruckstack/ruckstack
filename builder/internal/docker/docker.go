@@ -55,7 +55,7 @@ func ImageList(options types.ImageListOptions) ([]types.ImageSummary, error) {
 	return dockerClient.ImageList(context.Background(), options)
 }
 
-func ContainerRun(containerConfig *container.Config, hostConfig *container.HostConfig, networkConfig *network.NetworkingConfig, containerName string, removeWhenDone bool) error {
+func ContainerRun(containerConfig *container.Config, hostConfig *container.HostConfig, networkConfig *network.NetworkingConfig, containerName string, removeWhenDone bool, streamOuptut bool) error {
 	ctx := context.Background()
 
 	containerConfig.Tty = false
@@ -84,7 +84,7 @@ func ContainerRun(containerConfig *container.Config, hostConfig *container.HostC
 	}
 
 	containerResponse, err := dockerClient.ContainerAttach(ctx, createdContainer.ID, types.ContainerAttachOptions{
-		Stream: true,
+		Stream: streamOuptut,
 		Stdout: true,
 		Stdin:  false,
 		Stderr: true,
@@ -120,6 +120,7 @@ func SaveImages(outputPath string, imageRefs ...string) error {
 		return err
 	}
 
+	ui.VPrintf("exporting %s to %s", strings.Join(imageRefs, ", "), outputPath)
 	tarStream, err := dockerClient.ImageSave(context.Background(), imageRefs)
 	if err != nil {
 		return fmt.Errorf("Error saving images %s: %s", strings.Join(imageRefs, ", "), cleanErrorMessage(err))

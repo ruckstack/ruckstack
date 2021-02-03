@@ -3,20 +3,29 @@ name: Example Project
 version: 1.0.5
 managerFilename: example-manager
 
+proxy:
+  - serviceName: postgresql
+    port: 5432
+
 dockerfileServices:
-  - id: homepage
-    dockerfile: homepage/Dockerfile
+  - id: backend
+    dockerfile: backend/Dockerfile
     http:
       port: 8080
+      pathPrefix: /api/
+    env:
+      - name: postgres_password
+        secretName: postgresql
+        secretKey: postgresql-password
+
+  - id: frontend
+    dockerfile: frontend/Dockerfile
+    http:
+      port: 80
       pathPrefix: /
 
-  - id: cart
-    dockerfile: cart/Dockerfile
-    http:
-      port: 8080
-      pathPrefix: /cart
-
 helmServices:
-  - id: mariadb
-    chart: stable/mariadb
-    version: 7.3.9
+  - id: postgresql
+    chart: bitnami/postgresql
+    version: 10.2.1
+

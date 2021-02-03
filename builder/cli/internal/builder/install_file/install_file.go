@@ -377,6 +377,7 @@ func (installFile *InstallFile) saveDockerImages() error {
 	ui.Printf("Collecting containers...")
 	if len(installFile.dockerImages) > 0 {
 		imagesTarPath := environment.TempPath("images-*.tar")
+		ui.VPrintf("Including %s in %s", strings.Join(allTags, ", "), imagesTarPath)
 		if err := docker.SaveImages(imagesTarPath, allTags...); err != nil {
 			return fmt.Errorf("error collecting containers: %s", err)
 		}
