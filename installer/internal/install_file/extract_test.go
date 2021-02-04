@@ -35,7 +35,7 @@ func TestExtract(t *testing.T) {
 		assert.NoFileExists(t, serverHome+"/config/local.config")   //created by install, not packaged
 		assert.FileExists(t, serverHome+"/lib/helm")
 		assert.FileExists(t, serverHome+"/data/server/manifests/traefik.yaml")
-		assert.FileExists(t, serverHome+"/data/server/static/charts/cart.tgz")
+		assert.NoFileExists(t, serverHome+"/data/server/static/charts/cart.tgz") //actual filename contains hash
 		assert.FileExists(t, serverHome+"/data/web/site-down.html")
 
 		assert.NoFileExists(t, serverHome+"/data/agent/images/images.tar")
