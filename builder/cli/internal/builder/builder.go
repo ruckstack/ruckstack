@@ -1,7 +1,6 @@
 package builder
 
 import (
-	"compress/flate"
 	"fmt"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/builder/install_file"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
@@ -13,7 +12,7 @@ import (
 	"path/filepath"
 )
 
-func Build() error {
+func Build(compressionLevel int) error {
 	projectConfig, err := project.Parse(environment.ProjectDir + "/ruckstack.yaml")
 	if err != nil {
 		return fmt.Errorf("error parsing project: %s", err)
@@ -27,7 +26,7 @@ func Build() error {
 		return err
 	}
 
-	installFile, err := install_file.StartCreation(installerPath, flate.BestCompression)
+	installFile, err := install_file.StartCreation(installerPath, compressionLevel)
 	if err != nil {
 		return err
 	}
