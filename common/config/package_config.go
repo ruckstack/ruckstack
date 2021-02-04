@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type PackageConfig struct {
@@ -61,6 +62,20 @@ func (packageConfig *PackageConfig) Save(serverHome string, localConfig *LocalCo
 		return err
 	}
 	if err := packageConfig.CheckFilePermissions(".package.config", localConfig, serverHome); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (packageConfig *PackageConfig) SaveBackup(serverHome string) error {
+	packageConfigFile, err := os.OpenFile(fmt.Sprintf("%s/.package.config.bak.%d", serverHome, time.Now().Unix()), os.O_CREATE|os.O_RDWR, 0644)
+	if err != nil {
+		return err
+	}
+
+	packageConfigEncoder := yaml.NewEncoder(packageConfigFile)
+	if err := packageConfigEncoder.Encode(packageConfig); err != nil {
 		return err
 	}
 

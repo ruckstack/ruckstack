@@ -1,6 +1,6 @@
 id: wordpress
 name: Wordpress
-version: 1.0.0
+version: 5.6.1-0
 
 helmRepos:
   - name: bitnami

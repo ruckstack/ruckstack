@@ -14,6 +14,7 @@ import (
 	"github.com/ruckstack/ruckstack/builder/cli/internal/util"
 	"github.com/ruckstack/ruckstack/builder/internal/docker"
 	"github.com/ruckstack/ruckstack/common/config"
+	"github.com/ruckstack/ruckstack/common/global_util"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"gopkg.in/yaml.v2"
 	"helm.sh/helm/v3/pkg/chart"
@@ -302,6 +303,12 @@ func (installFile *InstallFile) AddFileData(data io.Reader, installerPath string
 }
 
 func (installFile *InstallFile) AddHelmChart(chartFile string, chartId string) error {
+	chartFileHash, err := global_util.HashFile(chartFile)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(chartFileHash)
 	manifest := map[string]interface{}{
 		"apiVersion": "helm.cattle.io/v1",
 		"kind":       "HelmChart",
@@ -310,7 +317,7 @@ func (installFile *InstallFile) AddHelmChart(chartFile string, chartId string) e
 			"namespace": "kube-system",
 		},
 		"spec": map[string]interface{}{
-			"chart":           "https://%{KUBERNETES_API}%/static/charts/" + chartId + ".tgz",
+			"chart":           "https://%{KUBERNETES_API}%/static/charts/" + chartId + "-" + chartFileHash + ".tgz",
 			"targetNamespace": "default",
 		},
 	}
@@ -324,7 +331,7 @@ func (installFile *InstallFile) AddHelmChart(chartFile string, chartId string) e
 		return err
 	}
 
-	if err := installFile.AddFile(chartFile, "data/server/static/charts/"+chartId+".tgz"); err != nil {
+	if err := installFile.AddFile(chartFile, "data/server/static/charts/"+chartId+"-"+chartFileHash+".tgz"); err != nil {
 		return err
 	}
 

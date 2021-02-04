@@ -58,9 +58,9 @@ func TestBuild(t *testing.T) {
 					assert.FileExists(t, filepath.Join(unzipPath, "data/server/manifests/backend.yaml"))
 					assert.FileExists(t, filepath.Join(unzipPath, "data/server/manifests/postgresql.yaml"))
 					assert.FileExists(t, filepath.Join(unzipPath, "data/server/manifests/traefik.yaml"))
-					assert.FileExists(t, filepath.Join(unzipPath, "data/server/static/charts/frontend.tgz"))
-					assert.FileExists(t, filepath.Join(unzipPath, "data/server/static/charts/backend.tgz"))
-					assert.FileExists(t, filepath.Join(unzipPath, "data/server/static/charts/postgresql.tgz"))
+					assert.NoFileExists(t, filepath.Join(unzipPath, "data/server/static/charts/frontend.tgz"))   //saved with hash
+					assert.NoFileExists(t, filepath.Join(unzipPath, "data/server/static/charts/backend.tgz"))    //saved with hash
+					assert.NoFileExists(t, filepath.Join(unzipPath, "data/server/static/charts/postgresql.tgz")) //saved with hash
 					assert.FileExists(t, filepath.Join(unzipPath, "data/web/site-down.html"))
 
 					//installer is executable

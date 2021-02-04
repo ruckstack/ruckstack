@@ -28,8 +28,43 @@ func (installFile *InstallFile) Upgrade(installOptions InstallOptions) error {
 		return err
 	}
 
+	originalPackageConfig, err := config.LoadPackageConfig(installOptions.TargetDir)
+	if err != nil {
+		return err
+	}
+
+	if err := originalPackageConfig.SaveBackup(installOptions.TargetDir); err != nil {
+		return err
+	}
+
 	if err := installFile.Extract(installOptions.TargetDir, localConfig); err != nil {
 		return err
+	}
+
+	newPackageConfig, err := config.LoadPackageConfig(installOptions.TargetDir)
+	if err != nil {
+		return err
+	}
+
+	for originalFile, _ := range originalPackageConfig.Files {
+		keepFile := false
+		for currentFile, _ := range newPackageConfig.Files {
+			if currentFile == originalFile {
+				keepFile = true
+				break
+			}
+		}
+
+		if keepFile {
+			ui.VPrintf("Keeping %s: still a packaged file", originalFile)
+		} else {
+			ui.VPrintf("Deleting %s: outdated file", originalFile)
+			err := os.Remove(filepath.Join(installOptions.TargetDir, originalFile))
+			if err != nil {
+				ui.Printf("Cannot delete %s: %s", originalFile, err)
+			}
+		}
+
 	}
 
 	ui.Println("\n\nUpgrade complete")

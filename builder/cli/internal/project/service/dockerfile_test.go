@@ -97,7 +97,7 @@ func TestDockerfileService_Build(t *testing.T) {
 				unzipPath := testDir + "/unzip"
 				assert.NoError(t, global_util.UnzipFile(outFile, unzipPath))
 
-				assert.FileExists(t, unzipPath+"/data/server/static/charts/test-service.tgz")
+				assert.NoFileExists(t, unzipPath+"/data/server/static/charts/test-service.tgz") //saved with hash
 
 				assert.FileExists(t, unzipPath+"/data/server/manifests/test-service.yaml")
 
