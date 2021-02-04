@@ -10,7 +10,7 @@ import (
 
 func AddRepository(repoName string, repoUrl string, username string, password string) error {
 	ui.StartProgressf("Adding new Helm repository %s", repoName)
-	ui.VPrintf("Indexing new helm repository %s as %s", repoUrl, repoName)
+	ui.VPrintf("Adding helm repository %s as %s", repoUrl, repoName)
 	newEntry := &repo.Entry{
 		Name:     repoName,
 		URL:      repoUrl,
@@ -24,7 +24,7 @@ func AddRepository(repoName string, repoUrl string, username string, password st
 	}
 
 	if repoConfig.Has(repoName) {
-		ui.Fatalf("Repository %s is already configured", repoName)
+		return fmt.Errorf("repository %s is already configured", repoName)
 	}
 
 	repoConfig.Add(newEntry)

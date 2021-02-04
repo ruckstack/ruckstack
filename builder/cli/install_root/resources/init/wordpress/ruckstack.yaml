@@ -2,6 +2,10 @@ id: wordpress
 name: Wordpress
 version: 1.0.0
 
+helmRepos:
+  - name: bitnami
+    url: https://charts.bitnami.com/bitnami
+
 helmServices:
   - id: postgresql
     chart: bitnami/wordpress

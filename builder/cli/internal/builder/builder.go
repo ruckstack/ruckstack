@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/builder/install_file"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
+	"github.com/ruckstack/ruckstack/builder/cli/internal/helm"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/project"
 	"github.com/ruckstack/ruckstack/common/config"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func Build(compressionLevel int) error {
@@ -90,6 +92,16 @@ func Build(compressionLevel int) error {
 	}
 	if err := installFile.AddDownloadedFile(fmt.Sprintf("https://github.com/k3s-io/k3s/releases/download/v%s/k3s-airgap-images-amd64.tar", url.PathEscape(projectConfig.K3sVersion)), "data/agent/images/k3s.tar"); err != nil {
 		return err
+	}
+
+	for _, helmConfig := range projectConfig.HelmRepos {
+		if err := helm.AddRepository(helmConfig.Name, helmConfig.Url, helmConfig.Username, helmConfig.Password); err != nil {
+			if strings.Contains(err.Error(), "is already configured") {
+				ui.VPrintf(err.Error())
+			} else {
+				return err
+			}
+		}
 	}
 
 	for _, serviceConfig := range projectConfig.GetServices() {

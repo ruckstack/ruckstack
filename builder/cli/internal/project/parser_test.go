@@ -56,6 +56,9 @@ proxy:
   - serviceName: other
     port: 8888
 
+helmRepos:
+  - name: bitnami
+    url: https://charts.bitnami.com/bitnami
 
 dockerfileServices:
   - id: test_dockerfile
@@ -102,6 +105,9 @@ manifestServices:
 	assert.Equal(t, "1.0.5", project.Version)
 	assert.NotEmpty(t, project.K3sVersion)
 	assert.NotEmpty(t, project.HelmVersion)
+
+	assert.Equal(t, "bitnami", project.HelmRepos[0].Name)
+	assert.Equal(t, "https://charts.bitnami.com/bitnami", project.HelmRepos[0].Url)
 
 	assert.Equal(t, 4, len(project.GetServices()))
 

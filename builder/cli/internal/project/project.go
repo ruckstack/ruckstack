@@ -16,6 +16,8 @@ type Project struct {
 	K3sVersion      string
 	ManagerFilename string `yaml:"managerFilename"`
 
+	HelmRepos []HelmRepoConfig `yaml:"helmRepos"`
+
 	Proxy []ProxyConfig `yaml:"proxy"`
 
 	ManifestServices   []service.ManifestService   `yaml:"manifestServices"`
@@ -83,4 +85,11 @@ type ProxyConfig struct {
 	ServiceName string `yaml:"serviceName" validate:"required"`
 	ServicePort int    `yaml:"servicePort"`
 	Port        int    `yaml:"port" validate:"required"`
+}
+
+type HelmRepoConfig struct {
+	Name     string `validate:"required"`
+	Url      string `validate:"required"`
+	Username string
+	Password string
 }
