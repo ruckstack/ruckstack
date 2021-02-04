@@ -87,7 +87,6 @@ func Start(ctx context.Context) error {
 		k3sArgs = append(k3sArgs,
 			"--cluster-init",
 			"--bind-address", environment.LocalConfig.BindAddress,
-			"--no-deploy", "traefik",
 			"--default-local-storage-path", environment.ServerHome+"/data/local-storage",
 			"--write-kubeconfig", kube.KubeconfigFile,
 			"--write-kubeconfig-mode", "640",

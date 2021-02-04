@@ -207,9 +207,9 @@
 
                         container.appendChild(postDiv);
                     })
+                } else {
+                    alert("Error reading notes: " + this.statusText)
                 }
-            } else {
-                alert("Error reading notes: " + this.statusText)
             }
         };
         xhr.send();

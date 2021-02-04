@@ -14,10 +14,11 @@ import (
 )
 
 var (
-	logger       *log.Logger
-	verbose      bool
-	inputScanner *bufio.Scanner
-	IsTerminal   bool
+	logger        *log.Logger
+	verbose       bool
+	inputScanner  *bufio.Scanner
+	spinnerActive bool
+	IsTerminal    bool
 )
 
 var NotDirectoryCheck = func(input string) error {
@@ -211,18 +212,24 @@ func PromptForBoolean(prompt string, defaultValue *bool) bool {
 }
 
 func StartProgressf(format string, a ...interface{}) UiSpinner {
-	if IsTerminal && !IsVerbose() {
+	if !spinnerActive && IsTerminal && !IsVerbose() {
+		spinnerActive = true
+
 		progressMonitor := spinner.New(spinner.CharSets[11], 100*time.Millisecond, spinner.WithWriter(os.Stderr))
 		progressMonitor.Suffix = fmt.Sprintf(" "+format+"...", a...)
 		progressMonitor.FinalMSG = fmt.Sprintf(format+"...DONE\n", a...)
 		progressMonitor.Start()
 
-		return progressMonitor
+		return &wrappedUiSpinner{delegate: progressMonitor}
 	} else {
 		progressMonitor := &batchUiSpinner{
 			message: fmt.Sprintf(format, a...),
 		}
-		Println(progressMonitor.message + "...")
+		if spinnerActive {
+			Println(progressMonitor.message + "...")
+		} else {
+			VPrintln(progressMonitor.message + "...")
+		}
 
 		return progressMonitor
 	}
@@ -236,6 +243,19 @@ type batchUiSpinner struct {
 	message string
 }
 
+type wrappedUiSpinner struct {
+	delegate *spinner.Spinner
+}
+
 func (spinner *batchUiSpinner) Stop() {
-	Printf("%s...DONE", spinner.message)
+	if spinnerActive {
+		VPrintf("%s...DONE", spinner.message)
+	} else {
+		Printf("%s...DONE", spinner.message)
+	}
+}
+
+func (spinner *wrappedUiSpinner) Stop() {
+	spinnerActive = false
+	spinner.delegate.Stop()
 }
