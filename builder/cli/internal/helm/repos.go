@@ -9,7 +9,7 @@ import (
 )
 
 func AddRepository(repoName string, repoUrl string, username string, password string) error {
-	ui.StartProgressf("Adding new Helm repository %s", repoName)
+	defer ui.StartProgressf("Adding new Helm repository %s", repoName).Stop()
 	ui.VPrintf("Adding helm repository %s as %s", repoUrl, repoName)
 	newEntry := &repo.Entry{
 		Name:     repoName,
