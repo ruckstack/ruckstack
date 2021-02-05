@@ -18,6 +18,8 @@ type HelmService struct {
 	//Unique Fields
 	Chart   string `validate:"required"`
 	Version string `validate:"required"`
+
+	Parameters map[string]interface{}
 }
 
 var defaultRepoUrl = "https://charts.helm.sh/stable"
@@ -61,7 +63,7 @@ func (service *HelmService) Build(installFile *install_file.InstallFile) error {
 		return err
 	}
 
-	if err := installFile.AddHelmChart(chartFile, service.Id); err != nil {
+	if err := installFile.AddHelmChart(chartFile, service.Id, service.Parameters); err != nil {
 		return err
 	}
 

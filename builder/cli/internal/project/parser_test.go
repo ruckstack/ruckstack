@@ -64,13 +64,13 @@ dockerfileServices:
   - id: test_dockerfile
     dockerfile: Dockerfile
     http:
-        port: 8080
-        pathPrefix: /
+      port: 8080
+      pathPrefix: /
   - id: test_dockerfile2
     dockerfile: Dockerfile2
     http:
-        port: 8082
-        pathPrefix: /2
+      port: 8082
+      pathPrefix: /2
     env:
       - name: postgres_password
         secretName: postgresql
@@ -90,6 +90,15 @@ helmServices:
   - id: test_helm
     chart: stable/helm-test
     version: 7.3.9
+    parameters:
+      image:
+        tag: master
+      env:
+        GF_EXPLORE_ENABLED: true
+      adminUser: admin
+      sidecar:
+        datasources:
+          enabled: true
 
 manifestServices:
   - id: test_manifest
@@ -151,6 +160,8 @@ manifestServices:
 	assert.Equal(t, "helm", project.HelmServices[0].GetType())
 	assert.Equal(t, "stable/helm-test", project.HelmServices[0].Chart)
 	assert.Equal(t, "7.3.9", project.HelmServices[0].Version)
+	assert.Equal(t, "admin", project.HelmServices[0].Parameters["adminUser"])
+	assert.Equal(t, "master", project.HelmServices[0].Parameters["image"].(map[interface{}]interface{})["tag"])
 
 	assert.Equal(t, "test_manifest", project.ManifestServices[0].Id)
 	assert.Equal(t, "manifest", project.ManifestServices[0].GetType())

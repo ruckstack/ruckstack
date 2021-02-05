@@ -302,13 +302,12 @@ func (installFile *InstallFile) AddFileData(data io.Reader, installerPath string
 	return nil
 }
 
-func (installFile *InstallFile) AddHelmChart(chartFile string, chartId string) error {
+func (installFile *InstallFile) AddHelmChart(chartFile string, chartId string, overrideParameters map[string]interface{}) error {
 	chartFileHash, err := global_util.HashFile(chartFile)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(chartFileHash)
 	manifest := map[string]interface{}{
 		"apiVersion": "helm.cattle.io/v1",
 		"kind":       "HelmChart",
@@ -322,10 +321,20 @@ func (installFile *InstallFile) AddHelmChart(chartFile string, chartId string) e
 		},
 	}
 
+	if overrideParameters != nil && len(overrideParameters) > 0 {
+		valuesString, err := yaml.Marshal(overrideParameters)
+		if err != nil {
+			return err
+		}
+		manifest["spec"].(map[string]interface{})["valuesContent"] = string(valuesString)
+	}
+
 	manifestData, err := yaml.Marshal(manifest)
 	if err != nil {
 		return err
 	}
+
+	manifestData = []byte(strings.ReplaceAll(string(manifestData), "valuesContent: |\n", "valuesContent: |-\n"))
 
 	if err := installFile.AddFileData(bytes.NewReader(manifestData), "data/server/manifests/"+chartId+".yaml", time.Now()); err != nil {
 		return err

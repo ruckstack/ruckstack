@@ -26,6 +26,7 @@ func TestHelmService_Build(t *testing.T) {
 	type args struct {
 		chart   string
 		version string
+		values  map[string]interface{}
 	}
 	tests := []struct {
 		name    string
@@ -37,6 +38,22 @@ func TestHelmService_Build(t *testing.T) {
 			args: args{
 				chart:   "stable/tomcat",
 				version: "0.4.1",
+			},
+		},
+		{
+			name: "Takes values",
+			args: args{
+				chart:   "stable/tomcat",
+				version: "0.4.1",
+				values: map[string]interface{}{
+					"image": map[string]interface{}{
+						"tag": "master",
+					},
+					"env": map[string]interface{}{
+						"GF_EXPLORE_ENABLED": "true",
+					},
+					"adminUser": "admin",
+				},
 			},
 		},
 		{
@@ -75,6 +92,7 @@ func TestHelmService_Build(t *testing.T) {
 				ProjectVersion: "1.2.3",
 				Chart:          tt.args.chart,
 				Version:        tt.args.version,
+				Parameters:     tt.args.values,
 			}
 
 			installFile, err := install_file.StartCreation(outFile, flate.BestSpeed)
@@ -101,6 +119,13 @@ func TestHelmService_Build(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Contains(t, string(savedContents), "chart: https://%{KUBERNETES_API}%/static/charts/test-service-")
 
+				if service.Parameters == nil {
+					assert.NotContains(t, string(savedContents), "valuesContent:")
+				} else {
+					assert.Contains(t, string(savedContents), "valuesContent: |-")
+					assert.Contains(t, string(savedContents), "tag: master")
+				}
+
 				helmContent, err := ioutil.ReadFile(filepath.Join(unzipPath, "data/agent/images/images.untar/manifest.json"))
 				assert.NoError(t, err)
 				assert.Contains(t, string(helmContent), strings.Split(tt.args.chart, "/")[1])
@@ -108,4 +133,5 @@ func TestHelmService_Build(t *testing.T) {
 			}
 		})
 	}
+
 }

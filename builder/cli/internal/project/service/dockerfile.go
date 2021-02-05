@@ -149,7 +149,7 @@ func (service *DockerfileService) Build(app *install_file.InstallFile) error {
 		return err
 	}
 
-	if err := app.AddHelmChart(chart, service.Id); err != nil {
+	if err := app.AddHelmChart(chart, service.Id, nil); err != nil {
 		return err
 	}
 
