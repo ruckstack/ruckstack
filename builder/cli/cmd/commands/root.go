@@ -16,6 +16,8 @@ var RootCmd = &cobra.Command{
 	Short:            "Ruckstack CLI",
 	Long:             "Ruckstack CLI",
 	Version:          global_util.RuckstackVersion,
+	SilenceUsage:     true,
+	SilenceErrors:    true,
 	TraverseChildren: true,
 }
 

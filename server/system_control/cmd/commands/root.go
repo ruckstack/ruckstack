@@ -22,6 +22,8 @@ var profileMemory bool
 
 var rootCmd = &cobra.Command{
 	TraverseChildren: true,
+	SilenceUsage:     true,
+	SilenceErrors:    true,
 
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if cmd.Annotations[RequiresRoot] == "true" {

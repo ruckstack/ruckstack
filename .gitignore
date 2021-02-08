@@ -12,3 +12,6 @@ TODO.txt
 builder/cli/install_root/resources/installer
 builder/cli/install_root/resources/system-control
 builder/cli/install_root/resources/install_dir/lib
+
+#test license
+license.txt

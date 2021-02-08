@@ -33,6 +33,14 @@ var NotDirectoryCheck = func(input string) error {
 	return nil
 }
 
+var NotEmptyCheck = func(input string) error {
+	if strings.TrimSpace(input) == "" {
+		return fmt.Errorf("no value entered")
+	}
+
+	return nil
+}
+
 func init() {
 	logger = log.New(os.Stdout, "", 0)
 
