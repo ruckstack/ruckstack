@@ -3,7 +3,7 @@ package project
 import (
 	"fmt"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 	"io"
 	"os"
 	"regexp"
@@ -23,7 +23,7 @@ func Parse(projectPath string) (*Project, error) {
 
 func ParseData(data io.Reader, projectPath string) (*Project, error) {
 	decoder := yaml.NewDecoder(data)
-	decoder.SetStrict(true)
+	decoder.KnownFields(true)
 
 	projectConfig := Project{
 		K3sVersion:  environment.PackagedK3sVersion,

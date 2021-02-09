@@ -161,7 +161,7 @@ manifestServices:
 	assert.Equal(t, "stable/helm-test", project.HelmServices[0].Chart)
 	assert.Equal(t, "7.3.9", project.HelmServices[0].Version)
 	assert.Equal(t, "admin", project.HelmServices[0].Parameters["adminUser"])
-	assert.Equal(t, "master", project.HelmServices[0].Parameters["image"].(map[interface{}]interface{})["tag"])
+	assert.Equal(t, "master", project.HelmServices[0].Parameters["image"].(map[string]interface{})["tag"])
 
 	assert.Equal(t, "test_manifest", project.ManifestServices[0].Id)
 	assert.Equal(t, "manifest", project.ManifestServices[0].GetType())

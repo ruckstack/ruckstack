@@ -8,7 +8,7 @@ import (
 	"github.com/ruckstack/ruckstack/builder/internal/docker"
 	"github.com/ruckstack/ruckstack/common/global_util"
 	"github.com/ruckstack/ruckstack/common/ui"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
 	"path"

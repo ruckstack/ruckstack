@@ -2,7 +2,7 @@ package config
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 	"io"
 	"net"
 	"os"
@@ -11,7 +11,7 @@ import (
 type LocalConfig struct {
 	AdminGroup           string `yaml:"adminGroup"`
 	BindAddress          string `yaml:"bindAddress"`
-	BindAddressInterface string
+	BindAddressInterface string // `yaml:"bindAddressInterface"`
 	Join                 struct {
 		Server string `yaml:"server"`
 		Token  string `yaml:"token"`

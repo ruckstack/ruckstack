@@ -64,39 +64,30 @@ func Start(ctx context.Context) error {
 		return fmt.Errorf("cannot find network interface with IP %s", environment.LocalConfig.BindAddress)
 	}
 
-	k3sCommand := "server"
-	if environment.LocalConfig.Join.Server != "" {
-		log.Printf("Joining server %s", environment.LocalConfig.Join.Server)
-		k3sCommand = "agent"
-	}
-
 	k3sArgs := []string{
-		k3sCommand,
+		"server",
 		"--log", logFile,
 		"--node-external-ip", environment.LocalConfig.BindAddress,
 		"--data-dir", environment.ServerHome + "/data",
 		"--kubelet-arg", "root-dir=" + environment.ServerHome + "/data/kubelet",
 		//"--flannel-conf", util.InstallDir() + "/config/flannel.env",
 		"--flannel-iface", bindAddressIface,
+		"--bind-address", environment.LocalConfig.BindAddress,
+		"--default-local-storage-path", environment.ServerHome + "/data/local-storage",
+		"--write-kubeconfig", kube.KubeconfigFile,
+		"--write-kubeconfig-mode", "640",
 	}
+
 	if ui.IsVerbose() {
 		k3sArgs = append(k3sArgs, "--debug")
 	}
 
 	if environment.LocalConfig.Join.Server == "" {
-		k3sArgs = append(k3sArgs,
-			"--cluster-init",
-			"--bind-address", environment.LocalConfig.BindAddress,
-			"--default-local-storage-path", environment.ServerHome+"/data/local-storage",
-			"--write-kubeconfig", kube.KubeconfigFile,
-			"--write-kubeconfig-mode", "640",
-		)
+		k3sArgs = append(k3sArgs, "--cluster-init")
 	} else {
-		k3sArgs = append(k3sArgs,
-			"--server", "https://"+environment.LocalConfig.Join.Server+":6443",
-			"--token", environment.LocalConfig.Join.Token,
-			"--node-ip", environment.LocalConfig.BindAddress,
-		)
+		log.Printf("Joining server %s", environment.LocalConfig.Join.Server)
+		k3sArgs = append(k3sArgs, "--token", environment.LocalConfig.Join.Token)
+		k3sArgs = append(k3sArgs, "--server", "https://"+environment.LocalConfig.Join.Server+":6443")
 	}
 
 	_, _ = k3sLog.WriteString(fmt.Sprintf("Running k3s %s\n", strings.Join(k3sArgs, " ")))

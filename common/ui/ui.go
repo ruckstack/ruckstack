@@ -161,13 +161,13 @@ func MarkFlagsDirname(command *cobra.Command, dirnameFlags ...string) {
 }
 
 func PromptForString(prompt string, defaultValue string, matchers ...func(string) error) string {
-	prompt += ": "
+	finalPrompt := prompt + ": "
 
 	if defaultValue != "" {
-		prompt += "(Default '" + defaultValue + "')"
+		finalPrompt += "(Default '" + defaultValue + "')"
 	}
 
-	Println(prompt)
+	Println(finalPrompt)
 	inputScanner.Scan()
 	input := inputScanner.Text()
 

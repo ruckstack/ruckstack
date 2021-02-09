@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/ruckstack/ruckstack/common/config"
 	"github.com/ruckstack/ruckstack/common/ui"
-	"io/ioutil"
 	"net"
 	"os"
 	"os/user"
@@ -14,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type InstallOptions struct {
@@ -98,12 +97,6 @@ func (installFile *InstallFile) Install(installOptions InstallOptions) error {
 		return err
 	}
 
-	if addNodeToken != nil {
-		if err := ioutil.WriteFile(installOptions.TargetDir+"/config/kubeconfig-admin.yaml", []byte(addNodeToken.KubeConfig), 0640); err != nil {
-			return err
-		}
-	}
-
 	ui.Println("\n\nInstallation complete")
 	ui.Printf("To start the server, run `%s/bin/%s start`\n\n", installOptions.TargetDir, installFile.SystemConfig.ManagerFilename)
 
@@ -149,9 +142,14 @@ func joinCluster(joinToken string, installFile *InstallFile) (*config.AddNodeTok
 	addNodeToken := &config.AddNodeToken{}
 
 	var parseTokenCheck = func(token string) error {
-		joinTokenYaml, err := base64.StdEncoding.DecodeString(joinToken)
+		token = strings.TrimSpace(token)
+		joinTokenYaml, err := base64.StdEncoding.DecodeString(token)
 		if err != nil {
 			return fmt.Errorf("error parsing token: %s", err)
+		}
+
+		if len(joinTokenYaml) == 0 {
+			return fmt.Errorf("could not read data in token")
 		}
 
 		tokenDecoder := yaml.NewDecoder(bytes.NewReader(joinTokenYaml))
@@ -163,7 +161,7 @@ func joinCluster(joinToken string, installFile *InstallFile) (*config.AddNodeTok
 	}
 
 	if joinToken == "" {
-		joinToken = ui.PromptForString(fmt.Sprintf("Run `%s cluster add-node` on the primary machine in the cluster and enter the token here:", installFile.SystemConfig.ManagerFilename), "", parseTokenCheck)
+		joinToken = ui.PromptForString(fmt.Sprintf("Run `%s cluster add-node` on the primary machine in the cluster and enter the token here", installFile.SystemConfig.ManagerFilename), "", parseTokenCheck)
 	}
 
 	timeout := time.Second
