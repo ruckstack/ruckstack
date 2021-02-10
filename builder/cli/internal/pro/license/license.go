@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
-	"encoding/hex"
 	"encoding/pem"
 	"fmt"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
@@ -58,7 +57,7 @@ func init() {
 			ui.VPrintf("Error reading license.txt: %s", err)
 		}
 
-		ActiveLicense, err = parse(string(licenseText))
+		ActiveLicense, err = parse(strings.TrimSpace(string(licenseText)))
 
 		if err != nil {
 			ui.VPrintf("Error parsing license: %s", err)
@@ -74,6 +73,8 @@ func init() {
 
 func SetLicense(licenseText string) error {
 	var err error
+
+	licenseText = strings.TrimSpace(licenseText)
 
 	ActiveLicense, err = parse(licenseText)
 	if err != nil {
@@ -124,28 +125,26 @@ func parse(licenseText string) (*License, error) {
 		return nil, nil
 	}
 
-	licenseText = strings.TrimSpace(licenseText)
+	version := licenseText[0:2]
+	licenseText = licenseText[2:]
 
-	decodedLicense, err := base64.StdEncoding.DecodeString(licenseText)
-	if err != nil {
-		return nil, fmt.Errorf("cannot parse license: %s", err)
+	splitLicense := strings.SplitN(licenseText, "-", 2)
+	if len(splitLicense) != 2 {
+		ui.VPrintf("invalid license format")
+		return nil, fmt.Errorf("invalid license: data corrupted")
 	}
 
-	splitLicense := strings.SplitN(string(decodedLicense), ":", 3)
-	if len(splitLicense) != 3 {
-		return nil, fmt.Errorf("invalid license format")
-	}
-
-	version := splitLicense[0]
 	ui.VPrintf("License version: %s", version)
 
-	signature, err := hex.DecodeString(splitLicense[1])
+	signature, err := base64.StdEncoding.DecodeString(splitLicense[0])
 	if err != nil {
-		return nil, fmt.Errorf("cannot parse license version: %s", err)
+		ui.VPrintf("cannot parse license validation: %s", err)
+		return nil, fmt.Errorf("invalid license: data corrupted")
 	}
-	contentRaw, err := hex.DecodeString(splitLicense[2])
+	contentRaw, err := base64.StdEncoding.DecodeString(splitLicense[1])
 	if err != nil {
-		return nil, fmt.Errorf("cannot parse license content: %s", err)
+		ui.VPrintf("cannot parse license content: %s", err)
+		return nil, fmt.Errorf("invalid license: data corrupted")
 	}
 	ui.VPrintf("License content: %s", contentRaw)
 
