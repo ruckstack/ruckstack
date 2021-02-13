@@ -14,7 +14,6 @@ func init() {
 	}
 
 	initLicenseSet(parentCommand)
-	initLicenseShow(parentCommand)
 	initLicenseRemove(parentCommand)
 
 	RootCmd.AddCommand(parentCommand)
@@ -52,20 +51,6 @@ func initLicenseRemove(parent *cobra.Command) {
 
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return license.RemoveLicense()
-		},
-	}
-
-	parent.AddCommand(cmd)
-}
-
-func initLicenseShow(parent *cobra.Command) {
-
-	var cmd = &cobra.Command{
-		Use:   "show",
-		Short: "Shows the active license",
-
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return license.ShowLicense()
 		},
 	}
 

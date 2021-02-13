@@ -8,12 +8,9 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
-	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
+	"github.com/ruckstack/ruckstack/builder/cli/internal/settings"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"gopkg.in/yaml.v3"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 )
@@ -28,7 +25,6 @@ var ActiveLicense *License
 
 var validateKeyText = "LS0tLS1CRUdJTiBSU0EgUFVCTElDIEtFWS0tLS0tCk1JSUNJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBZzhBTUlJQ0NnS0NBZ0VBemhrbG01OFZEdUJlV1hlZEYraHcKQnRFVkV2UzFMSzVzWDIwa0p1MkhlWVFweVpoaEZiVDlxVWVTTDl3MEFyWkNFSHEyQm4yQ01CUkhnNFREVFFKYgpxODRmWXg3ck14Qi9TVWJZWmF6SE1wbDRyVGJLWk1OUkhaK0NPQWM2a2grT25CWW9sQlByNUNxclIvbUtsUzNSCjZXeXYrcFpYVGZ5U0tRZ0RZWnpkMGwzVTRxc2dpaGhIbWVveUFuWXBFVHU1T1Z5RjFaR0cwNXpqczBjNno4YXIKdS83eURDbUVRSS85REtTeHRTZzdOQzE0WkM2YUU2MWtta29jL2M1b0ZuZGxkUEo5SzlHa2lZUVFsQzVjRTdVbAo5bGdYQnpGRDdLeithYUxWQ0xsdVNsWElOQ01vdDlmUE1WME9LRjd2SHFpd2lNc2wzc2swRDFEQlpjTitzTWdoCjJQWU1iVmVjWjhjT0NZdWFaU00yZExUeGVySnFlbzZ4elU2Tmo3WHlTR2VyTHhsZEkrOVAzZCs0TkJINWhzOEMKQUZvQ1ZuMVVxRlIxcWs4QlJKdDZqUXplVURpRGtFQng1bCtHWlVPV1dmR21kTXFLVWJTQVQ5KzhIUDg5VWhKdwpvSEIwTzN2cmdtOGZNd2IwcTdoME1Ca0s0WHFobnl2b3RIQzBnejN5NkEzTS91T1BGOWhzelJCTUliZHNJVWM5Ck9ZS0VmOEFJcE0vcTU5d1RnaFR4NjJmSHhhNndhcGpCWTdlV1pLSFFaT0hla1hWcXhOOUY4c0VpSzVkZHNPL2EKT29DdUVydmZBaFB4bzZkV0c3U0srLzkzK3Bsb1NvUENNM09qcDJQblVqU1ZtQ1R4c1BrYXg5MUxWUFJwVyt4SApmYTBySzhGSVRONy92bzdYSnNRR1dnTUNBd0VBQVE9PQotLS0tLUVORCBSU0EgUFVCTElDIEtFWS0tLS0t"
 var validateKey *rsa.PublicKey
-var licenseFilePath = filepath.Join(environment.RuckstackHome, "license.txt")
 
 func init() {
 	decodedText, err := base64.StdEncoding.DecodeString(validateKeyText)
@@ -50,25 +46,16 @@ func init() {
 
 	validateKey = validateKeyInterface.(*rsa.PublicKey)
 
-	_, err = os.Stat(licenseFilePath)
-	if err == nil {
-		licenseText, err := ioutil.ReadFile(licenseFilePath)
-		if err != nil {
-			ui.VPrintf("Error reading license.txt: %s", err)
-		}
-
-		ActiveLicense, err = parse(strings.TrimSpace(string(licenseText)))
-
+	if settings.Settings.LicenseKey != "" {
+		ActiveLicense, err = parse(settings.Settings.LicenseKey)
 		if err != nil {
 			ui.VPrintf("Error parsing license: %s", err)
 		}
-	} else {
-		if os.IsExist(err) {
-			ui.VPrintf("No license.txt found")
-		} else {
-			ui.VPrintf("Error checking license.txt: %s", err)
-		}
 	}
+
+	_ = ShowLicense()
+	fmt.Println()
+
 }
 
 func SetLicense(licenseText string) error {
@@ -81,9 +68,9 @@ func SetLicense(licenseText string) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(licenseFilePath, []byte(licenseText), 0600)
-	if err != nil {
-		return fmt.Errorf("error writing to %s: %s", licenseFilePath, err)
+	settings.Settings.LicenseKey = licenseText
+	if err = settings.Settings.Save(); err != nil {
+		return fmt.Errorf("error saving license: %s", err)
 	}
 
 	return ShowLicense()
@@ -91,8 +78,7 @@ func SetLicense(licenseText string) error {
 
 func ShowLicense() error {
 	if ActiveLicense == nil {
-		ui.Println("No active license. Running free version, no support.")
-		ui.Println("For more information on licensing, visit https://ruckstack.com/pro")
+		ui.Println("No active Ruckstack Pro license. Running free version. For more information, visit https://ruckstack.com/pro")
 	} else {
 		ui.Printf("Licensed to %s (%s) until %s", ActiveLicense.Name, ActiveLicense.Email, time.Unix(ActiveLicense.Expires, 0).Format("02 Jan 2006"))
 		ui.Println("To contact support, visit https://ruckstack.com/support")
@@ -102,15 +88,15 @@ func ShowLicense() error {
 }
 
 func RemoveLicense() error {
-	err := os.Remove(licenseFilePath)
-	if err == nil {
-		ui.Println("License was removed")
+	if settings.Settings.LicenseKey == "" {
+		ui.Println("No license file was found, no license to remove")
 	} else {
-		if os.IsNotExist(err) {
-			ui.Println("No license file was found, no license to remove")
-		} else {
-			return fmt.Errorf("error removing license: %s", err)
+		settings.Settings.LicenseKey = ""
+		if err := settings.Settings.Save(); err != nil {
+			return fmt.Errorf("error saving license: %s", err)
 		}
+
+		ui.Println("License was removed")
 	}
 
 	ActiveLicense = nil
@@ -124,6 +110,7 @@ func parse(licenseText string) (*License, error) {
 		ui.VPrintf("No license specified")
 		return nil, nil
 	}
+	licenseText = strings.TrimSpace(licenseText)
 
 	version := licenseText[0:2]
 	licenseText = licenseText[2:]

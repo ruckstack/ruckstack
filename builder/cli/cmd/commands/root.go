@@ -2,6 +2,7 @@ package commands
 
 import (
 	"github.com/pkg/profile"
+	"github.com/ruckstack/ruckstack/builder/cli/internal/analytics"
 	"github.com/ruckstack/ruckstack/builder/cli/internal/environment"
 	"github.com/ruckstack/ruckstack/common/global_util"
 	"github.com/ruckstack/ruckstack/common/ui"
@@ -19,6 +20,18 @@ var RootCmd = &cobra.Command{
 	SilenceUsage:     true,
 	SilenceErrors:    true,
 	TraverseChildren: true,
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		command := cmd.Name()
+		parent := cmd.Parent()
+		for parent != nil {
+			command = parent.Name() + " " + command
+			parent = parent.Parent()
+		}
+
+		analytics.TrackCommand(command)
+
+		return nil
+	},
 }
 
 var (
@@ -66,5 +79,16 @@ func Execute(args []string) error {
 	}
 
 	RootCmd.SetArgs(args)
-	return RootCmd.Execute()
+
+	analytics.Ask()
+
+	err := RootCmd.Execute()
+
+	if err != nil {
+		analytics.TrackError(err)
+	}
+
+	analytics.WaitGroup.Wait()
+
+	return err
 }
