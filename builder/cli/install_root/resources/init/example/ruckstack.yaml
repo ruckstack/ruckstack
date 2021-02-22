@@ -16,7 +16,7 @@ dockerfileServices:
   - id: backend
     dockerfile: backend/Dockerfile
     http:
-      port: 8080
+      containerPort: 8080
       pathPrefix: /api/
     env:
       - name: postgres_password
@@ -26,7 +26,7 @@ dockerfileServices:
   - id: frontend
     dockerfile: frontend/Dockerfile
     http:
-      port: 80
+      containerPort: 80
       pathPrefix: /
 
 helmServices:

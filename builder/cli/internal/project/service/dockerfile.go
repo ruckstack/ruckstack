@@ -34,7 +34,7 @@ type DockerfileService struct {
 }
 
 type DockerfileServiceHttp struct {
-	Port            int
+	ContainerPort   int    `yaml:"containerPort"`
 	PathPrefix      string `yaml:"pathPrefix"`
 	PathPrefixStrip bool   `yaml:"pathPrefixStrip"`
 }
@@ -274,7 +274,7 @@ func (service *DockerfileService) writeDaemonSet() error {
 							"name":  service.Id,
 							"image": "build.local/" + service.ProjectId + "/" + service.Id + ":" + service.ServiceVersion,
 							"ports": []map[string]int{
-								{"containerPort": service.Http.Port},
+								{"containerPort": service.Http.ContainerPort},
 							},
 							"env":          envDef,
 							"volumeMounts": volumeMounts,
@@ -315,7 +315,7 @@ func (service *DockerfileService) writeService() error {
 			"ports": []map[string]interface{}{
 				{
 					"protocol": "TCP",
-					"port":     service.Http.Port,
+					"port":     service.Http.ContainerPort,
 				},
 			},
 		},
@@ -358,7 +358,7 @@ func (service *DockerfileService) writeIngress() error {
 								"path": service.Http.PathPrefix,
 								"backend": map[string]interface{}{
 									"serviceName": service.Id,
-									"servicePort": service.Http.Port,
+									"servicePort": service.Http.ContainerPort,
 								},
 							},
 						},

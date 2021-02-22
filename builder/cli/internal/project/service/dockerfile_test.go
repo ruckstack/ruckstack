@@ -70,8 +70,8 @@ func TestDockerfileService_Build(t *testing.T) {
 			service := &DockerfileService{
 				Id: "test-service",
 				Http: DockerfileServiceHttp{
-					Port:       8000,
-					PathPrefix: "/my-url",
+					ContainerPort: 8000,
+					PathPrefix:    "/my-url",
 				},
 				ProjectId:      "test-project",
 				ProjectVersion: "1.2.3",

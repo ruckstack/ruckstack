@@ -7,6 +7,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -20,6 +21,14 @@ var tid = "UA-47553716-7"
 var WaitGroup sync.WaitGroup
 
 func Ask() {
+	if os.Getenv("RUCKSTACK_ANALYTICS") == "false" {
+		return
+	}
+
+	if global_util.IsRunningTests() {
+		return
+	}
+
 	if !ui.IsTerminal {
 		return
 	}

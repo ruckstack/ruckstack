@@ -26,7 +26,7 @@ func init() {
 	if err == nil {
 		settingsFile, err := os.OpenFile(settingsFilePath, os.O_RDONLY, 0644)
 		if err != nil {
-			ui.Fatal("Cannot open settings file: %s", err)
+			ui.Fatalf("Cannot open settings file: %s", err)
 		}
 		defer settingsFile.Close()
 

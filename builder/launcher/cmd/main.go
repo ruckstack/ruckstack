@@ -78,6 +78,7 @@ func main() {
 
 	containerConfig.Env = append(containerConfig.Env, "RUCKSTACK_DOCKERIZED=true")
 	containerConfig.Env = append(containerConfig.Env, fmt.Sprintf("RUCKSTACK_TERMINAL=%t", ui.IsTerminal))
+	containerConfig.Env = append(containerConfig.Env, "RUCKSTACK_ANALYTICS="+os.Getenv("RUCKSTACK_ANALYTICS"))
 
 	useVersion := parsedArgs["--launch-version"]
 	if useVersion == "" {

@@ -12,7 +12,7 @@ version: 0.0.1 # Overall version of the project
 #  - id: your_id
 #    dockerFile: ./path/to/your/Dockerfile # Path to the dockerfile to use
 #    http:
-#      port: 8080 # Exposed port in your container your http service is running on
+#      containerPort: 8080 # Exposed port in your container your http service is running on
 #      pathPrefix: / # URL base this http-based service should be served under
 
 

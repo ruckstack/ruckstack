@@ -2,6 +2,8 @@
 
 set -e
 
+export RUCKSTACK_ANALYTICS=false
+
 ##Ideally this comes from $(out/linux/bin/ruckstack --version)
 VERSION=1.0.0
 export RUCKSTACK_TEMP_DIR="$(pwd)/tmp"

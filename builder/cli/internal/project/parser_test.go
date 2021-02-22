@@ -16,7 +16,7 @@ dockerfileServices:
   - id: test_dockerfile
     dockerfile: Dockerfile
     http:
-        port: 8080
+        containerPort: 8080
         pathPrefix: /
 `), "in-memory")
 
@@ -36,7 +36,7 @@ dockerfileServices:
 
 	assert.Equal(t, "test_dockerfile", project.DockerfileServices[0].Id)
 	assert.Equal(t, "dockerfile", project.DockerfileServices[0].GetType())
-	assert.Equal(t, 8080, project.DockerfileServices[0].Http.Port)
+	assert.Equal(t, 8080, project.DockerfileServices[0].Http.ContainerPort)
 	assert.Equal(t, "Dockerfile", project.DockerfileServices[0].Dockerfile)
 	assert.Equal(t, "", project.DockerfileServices[0].ServiceVersion)
 	assert.Equal(t, "/", project.DockerfileServices[0].Http.PathPrefix)
@@ -64,12 +64,12 @@ dockerfileServices:
   - id: test_dockerfile
     dockerfile: Dockerfile
     http:
-      port: 8080
+      containerPort: 8080
       pathPrefix: /
   - id: test_dockerfile2
     dockerfile: Dockerfile2
     http:
-      port: 8082
+      containerPort: 8082
       pathPrefix: /2
     env:
       - name: postgres_password
@@ -127,14 +127,14 @@ manifestServices:
 
 	assert.Equal(t, "test_dockerfile", project.DockerfileServices[0].Id)
 	assert.Equal(t, "dockerfile", project.DockerfileServices[0].GetType())
-	assert.Equal(t, 8080, project.DockerfileServices[0].Http.Port)
+	assert.Equal(t, 8080, project.DockerfileServices[0].Http.ContainerPort)
 	assert.Equal(t, "Dockerfile", project.DockerfileServices[0].Dockerfile)
 	assert.Equal(t, "", project.DockerfileServices[0].ServiceVersion)
 	assert.Equal(t, "/", project.DockerfileServices[0].Http.PathPrefix)
 	assert.Equal(t, false, project.DockerfileServices[0].Http.PathPrefixStrip)
 
 	assert.Equal(t, "test_dockerfile2", project.DockerfileServices[1].Id)
-	assert.Equal(t, 8082, project.DockerfileServices[1].Http.Port)
+	assert.Equal(t, 8082, project.DockerfileServices[1].Http.ContainerPort)
 	assert.Equal(t, "Dockerfile2", project.DockerfileServices[1].Dockerfile)
 	assert.Equal(t, "/2", project.DockerfileServices[1].Http.PathPrefix)
 
