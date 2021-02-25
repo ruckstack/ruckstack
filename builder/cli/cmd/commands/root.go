@@ -52,7 +52,7 @@ func init() {
 	RootCmd.Flags().BoolVar(&profileCpu, "profile-cpu", false, "Track cpu usage")
 	RootCmd.Flags().BoolVar(&profileMemory, "profile-memory", false, "Track memory usage")
 	RootCmd.Flags().StringVar(&launchVersion, "launch-version", "v"+global_util.RuckstackVersion, "Specify the version of the Ruckstack CLI to launch")
-	RootCmd.Flags().StringVar(&launchImage, "launch-image", "ruckstack/ruckstack", "Specify the Ruckstack CLI image to launch")
+	RootCmd.Flags().StringVar(&launchImage, "launch-image", "ghcr.io/ruckstack/ruckstack", "Specify the Ruckstack CLI image to launch")
 	RootCmd.Flags().BoolVar(&launchForcePull, "launch-force-pull", false, "Force the Ruckstack CLI to re-download the image to launch")
 }
 
@@ -80,9 +80,23 @@ func Execute(args []string) error {
 
 	RootCmd.SetArgs(args)
 
-	analytics.Ask()
+	askAnalytics := true
+	for _, flag := range args {
+		if flag == "--help" {
+			askAnalytics = false
+		}
+	}
 
-	err := RootCmd.Execute()
+	foundCommand, _, err := RootCmd.Find(args)
+	if err != nil || foundCommand.Parent() == nil {
+		askAnalytics = false
+	}
+
+	if askAnalytics {
+		analytics.Ask()
+	}
+
+	err = RootCmd.Execute()
 
 	if err != nil {
 		analytics.TrackError(err)

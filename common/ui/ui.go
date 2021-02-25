@@ -14,11 +14,12 @@ import (
 )
 
 var (
-	logger        *log.Logger
-	verbose       bool
-	inputScanner  *bufio.Scanner
-	spinnerActive bool
-	IsTerminal    bool
+	logger           *log.Logger
+	verbose          bool
+	inputScanner     *bufio.Scanner
+	spinnerActive    bool
+	IsTerminalOutput bool
+	IsTerminalInput  bool
 )
 
 var NotDirectoryCheck = func(input string) error {
@@ -50,19 +51,35 @@ func init() {
 
 	inputScanner = bufio.NewScanner(os.Stdin)
 
-	if os.Getenv("RUCKSTACK_TERMINAL") == "true" {
-		IsTerminal = true
-	} else if os.Getenv("RUCKSTACK_TERMINAL") == "false" {
-		IsTerminal = false
+	if os.Getenv("RUCKSTACK_TERMINAL_OUTPUT") == "true" {
+		IsTerminalOutput = true
+	} else if os.Getenv("RUCKSTACK_TERMINAL_OUTPUT") == "false" {
+		IsTerminalOutput = false
 	} else {
 		if fileInfo, _ := os.Stdout.Stat(); (fileInfo.Mode() & os.ModeCharDevice) != 0 {
-			IsTerminal = true
+			IsTerminalOutput = true
 		} else {
-			IsTerminal = false
+			IsTerminalOutput = false
 		}
 	}
 
-	VPrintf("Running in a terminal: %t", IsTerminal)
+	VPrintf("Running with terminal output: %t", IsTerminalOutput)
+
+	if os.Getenv("RUCKSTACK_TERMINAL_INPUT") == "true" {
+		IsTerminalInput = true
+	} else if os.Getenv("RUCKSTACK_TERMINAL_INPUT") == "false" {
+		IsTerminalInput = false
+	} else {
+		fileInfo, _ := os.Stdin.Stat()
+		if (fileInfo.Mode() & os.ModeCharDevice) != 0 {
+			IsTerminalInput = true
+		} else {
+			IsTerminalInput = false
+		}
+	}
+
+	VPrintf("Running with terminal input: %t", IsTerminalInput)
+
 }
 
 func SetVerbose(value bool) {
@@ -161,6 +178,10 @@ func MarkFlagsDirname(command *cobra.Command, dirnameFlags ...string) {
 }
 
 func PromptForString(prompt string, defaultValue string, matchers ...func(string) error) string {
+	if !IsTerminalInput {
+		Fatalf("cannot prompt without a terminal")
+	}
+
 	finalPrompt := prompt + ": "
 
 	if defaultValue != "" {
@@ -187,6 +208,10 @@ func PromptForString(prompt string, defaultValue string, matchers ...func(string
 }
 
 func PromptForBoolean(prompt string, defaultValue *bool) bool {
+	if !IsTerminalInput {
+		Fatalf("cannot prompt without a terminal")
+	}
+
 	yString := "y"
 	nString := "n"
 	if defaultValue != nil {
@@ -220,7 +245,7 @@ func PromptForBoolean(prompt string, defaultValue *bool) bool {
 }
 
 func StartProgressf(format string, a ...interface{}) UiSpinner {
-	if !spinnerActive && IsTerminal && !IsVerbose() {
+	if !spinnerActive && IsTerminalOutput && !IsVerbose() {
 		spinnerActive = true
 
 		progressMonitor := spinner.New(spinner.CharSets[11], 100*time.Millisecond, spinner.WithWriter(os.Stderr))

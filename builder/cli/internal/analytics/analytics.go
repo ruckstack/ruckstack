@@ -29,7 +29,7 @@ func Ask() {
 		return
 	}
 
-	if !ui.IsTerminal {
+	if !ui.IsTerminalInput {
 		return
 	}
 

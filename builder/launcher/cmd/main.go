@@ -77,7 +77,8 @@ func main() {
 	}
 
 	containerConfig.Env = append(containerConfig.Env, "RUCKSTACK_DOCKERIZED=true")
-	containerConfig.Env = append(containerConfig.Env, fmt.Sprintf("RUCKSTACK_TERMINAL=%t", ui.IsTerminal))
+	containerConfig.Env = append(containerConfig.Env, fmt.Sprintf("RUCKSTACK_TERMINAL_OUTPUT=%t", ui.IsTerminalOutput))
+	containerConfig.Env = append(containerConfig.Env, fmt.Sprintf("RUCKSTACK_TERMINAL_INPUT=%t", ui.IsTerminalInput))
 	containerConfig.Env = append(containerConfig.Env, "RUCKSTACK_ANALYTICS="+os.Getenv("RUCKSTACK_ANALYTICS"))
 
 	useVersion := parsedArgs["--launch-version"]
@@ -91,7 +92,7 @@ func main() {
 
 	imageName := parsedArgs["--launch-image"]
 	if imageName == "" {
-		imageName = "ruckstack/ruckstack"
+		imageName = "ghcr.io/ruckstack/ruckstack"
 	}
 
 	_, forcePull := parsedArgs["--launch-force-pull"]
