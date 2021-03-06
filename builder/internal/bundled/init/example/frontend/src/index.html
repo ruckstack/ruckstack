@@ -1,0 +1,261 @@
+<html>
+<head>
+    <title>Ruckstack Example</title>
+    <link href="http://fonts.googleapis.com/css?family=Abel" rel="stylesheet" type="text/css"/>
+    <link href="style.css" rel="stylesheet" type="text/css" media="screen"/>
+</head>
+<body>
+<div id="page">
+    <div id="page-bgtop">
+        <div id="page-bgbtm">
+            <div id="content">
+                <div class="post">
+                    <h2 class="title">Welcome to Ruckstack</h2>
+                    <div class="entry">
+                        <p><b>Congratulations on building, installing, and starting the example project!</b></p>
+                    </div>
+                </div>
+                <div class="post">
+                    <h2 class="title"><a name="explore">Explore Your Server</a></h2>
+                    <div class="entry">
+                        <p>
+                            The <b>example-manager</b> application you used to start your server is the interface
+                            for all interactions with the system.
+                        </p>
+                        <ul>
+                            <li>
+                                You can check the status of your system by running <b>example-manager status
+                                nodes</b> or <b>example-manager status services</b>
+                            </li>
+                            <li>
+                                You can check the logs of a service by running <b>example-manager logs service
+                                backend</b> or <b>example-manager logs service frontend</b>
+                            </li>
+                            <li>
+                                And when you are done, you can shut down the server with <b>example-manager stop</b>
+                                and uninstall it with <b>example-manager uninstall</b>
+                            </li>
+                            <li>See what else you can do with <b>example-manager --help</b> or see <a
+                                    href="https://ruckstack.org/docs/server/" target="_blank">the Ruckstack docs</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="post">
+                    <h2 class="title"><a name="how">How Did It Work?</a></h2>
+                    <div class="entry">
+                        <p>
+                            In the directory you ran <b>ruckstack init</b> in, it set up a new Ruckstack project for
+                            you.
+                            Every Ruckstack project starts with a <b>ruckstack.yaml file</b> which describes all the
+                            services
+                            in your server.
+                        </p>
+                        <p>
+                            This server is made up of three services: a static HTML frontend, a NodeJS backend, and a
+                            PostgreSQL database.
+                        </p>
+                        <p>
+                            The frontend and backend are Dockerfile services, so each have a directory with a Dockerfile
+                            that packages them into a container as well as metadata defined in the ruckstack.yaml file.
+                        </p>
+                        <p>
+                            The PostgreSQL service uses the pre-built <a
+                                href="https://artifacthub.io/packages/helm/bitnami/postgresql" target="_blank">Postgresql
+                            Helm Chart</a>
+                        </p>
+                        <p>
+                            For more information on how to set up your project, <a
+                                href="https://ruckstack.org/docs/cli/" target="_blank">visit the Builder CLI docs</a>
+                        </p>
+                    </div>
+                </div>
+                <div class="post">
+                    <h2 class="title"><a name="next-steps">Next Steps</a></h2>
+                    <div class="entry">
+                        <p>
+                            Now that you have the example site going, it's time to Ruckstack-ify your application.
+                        </p>
+                        <p>
+                            If you are new to containerization, a <a
+                                href="https://ruckstack.org/docs/cli/dockerfile-services">Dockerfile-based</a> approach
+                            is the best way to start.
+                            Start by creating a Dockerfile to contain your service(s), using the <a
+                                href="https://docs.docker.com/engine/reference/commandline/build/">docker build</a> and
+                            <a href="https://docs.docker.com/engine/reference/commandline/run/">docker run</a> commands
+                            to build and test your container.
+                            Once it is working correctly, add it to your ruckstack.yaml file and build your installer.
+                        </p>
+                        <p>
+                            If you have already configured your application to run within standard Kubernetes systems,
+                            you can use your existing configurations
+                            as a <a href="https://ruckstack.org/docs/cli/helm-services">helm service</a> or a <a
+                                href="https://ruckstack.org/docs/cli/manifest-services">manifest service</a>.
+                            This allows you to easily take your clould-native application "on-prem" without
+                            re-architecting it.
+                        </p>
+                    </div>
+                </div>
+                <div class="post">
+                    <h2 class="title"><a name="notes">Note To Self...</a></h2>
+                    <div class="entry">
+                        <p>
+                            This example system includes not just the application code, but also the database.
+                        </p>
+
+                        <p>
+                            Feel free to add notes to yourself on what you learn and we will store them for you in the
+                            embedded database.
+                        </p>
+                        <form onsubmit="saveNotes()">
+                            <p>
+                                <b>Title:</b><br>
+                                <input id="new-note-title" type="text" size="60">
+                            </p>
+
+                            <p>
+                                <b>Notes:</b><br>
+                                <textarea id="new-note-content" cols="62" rows="8" wrap="virtual"></textarea>
+                            </p>
+                            <input type="submit" value="Save">
+                        </form>
+
+                        <hr style="margin-top: 30px">
+                        <p><b>Like Ruckstack?</b> Give our repo a star:</p>
+                        <p style="margin-left: 30px">
+                            <a class="github-button" href="https://github.com/ruckstack/ruckstack"
+                               data-color-scheme="no-preference: dark; light: dark; dark: dark;" data-size="large"
+                               aria-label="Star ruckstack/ruckstack on GitHub">Star</a>
+                        </p>
+
+                    </div>
+                </div>
+
+                <div id="added-notes">
+
+                </div>
+            </div>
+
+            <div id="sidebar">
+                <div id="header-wrapper">
+                    <div id="header">
+                        <div id="logo">
+                            <h1><a href="#">SUCCESS!</a></h1>
+                        </div>
+                    </div>
+                </div>
+
+                <ul>
+                    <li>
+                        <ul>
+                            <li><a href="#explore">Explore Your Server</a></li>
+                            <li><a href="#how">How Did It Work?</a></li>
+                            <li><a href="#next-steps">Next Steps</a></li>
+                            <li><a href="#notes">Note To Self</a></li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <ul>
+                    <li>
+                        <h2>Links</h2>
+                        <ul>
+                            <li><a href="https://ruckstack.org" target="_blank">Ruckstack.org</a></li>
+                            <li><a href="https://github.com/ruckstack/ruckstack" target="_blank">Github</a></li>
+                            <li><a href="https://twitter.com/ruckstack" target="_blank">Twitter</a></li>
+                            <li><a href="mailto:ruckstack@hour23.com" target="_blank">Email</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div style="clear: both;">&nbsp;</div>
+        </div>
+    </div>
+</div>
+
+<!-- Place this tag in your head or just before your close body tag. -->
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+<script>
+    function loadNotes() {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", '/api/notes', true);
+
+        xhr.onreadystatechange = function () {
+            if (this.readyState === XMLHttpRequest.DONE) {
+                if (this.status === 200) {
+                    var container = document.getElementById("added-notes");
+                    container.innerHTML = '';
+
+                    var notes = JSON.parse(this.responseText);
+                    notes.forEach(function (note, index) {
+                        var postDiv = document.createElement('div');
+                        postDiv.className = "post";
+
+                        var h2 = document.createElement("h2");
+                        h2.className = "title"
+                        h2.innerText = note.title
+                        postDiv.appendChild(h2)
+
+                        var entryDiv = document.createElement('div');
+                        entryDiv.className = "entry";
+                        postDiv.appendChild(entryDiv);
+
+                        var p = document.createElement("p");
+                        p.innerText = note.content;
+                        entryDiv.appendChild(p)
+
+                        container.appendChild(postDiv);
+                    })
+                } else {
+                    alert("Error reading notes: " + this.statusText)
+                }
+            }
+        };
+        xhr.send();
+
+    }
+
+    document.addEventListener('DOMContentLoaded', (event) => {
+        loadNotes();
+    })
+
+    function saveNotes() {
+        let title = document.getElementById("new-note-title").value;
+        let content = document.getElementById("new-note-content").value;
+        if (!title) {
+            alert("Title is required");
+            return false
+        }
+        if (!content) {
+            alert("Content is required");
+            return false
+        }
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", '/api/notes', true);
+
+        xhr.setRequestHeader("Content-Type", "application/json");
+
+        xhr.onreadystatechange = function () {
+            if (this.readyState === XMLHttpRequest.DONE) {
+                if (this.status === 200) {
+                    loadNotes();
+                    document.getElementById("new-note-title").value = "";
+                    document.getElementById("new-note-content").value = "";
+                } else {
+                    alert("Error saving note: " + this.statusText);
+                }
+            }
+        };
+
+        xhr.send(JSON.stringify({
+            "title": title,
+            "content": content
+        }))
+    }
+
+
+</script>
+</body>
+</html>

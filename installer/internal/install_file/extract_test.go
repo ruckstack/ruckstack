@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/ruckstack/ruckstack/common/config"
 	"github.com/ruckstack/ruckstack/common/test_util"
+	"github.com/ruckstack/ruckstack/installer/internal/environment"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/sys/unix"
 	"os"
@@ -15,7 +16,7 @@ func TestExtract(t *testing.T) {
 		t.Skip("--short doesn't extract files")
 	}
 
-	serverHome := test_util.TempPath("server-home-*")
+	serverHome := environment.TempPath("server-home-*")
 
 	currentUserGroup := test_util.GetCurrentUserGroup(t)
 

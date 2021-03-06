@@ -1,9 +1,9 @@
 module github.com/ruckstack/ruckstack
 
-go 1.15
+go 1.16
 
 require (
-	github.com/briandowns/spinner v1.11.1
+	github.com/briandowns/spinner v1.12.0
 	github.com/containerd/cgroups v0.0.0-20201109155418-13abef5d31ec // indirect
 	github.com/containerd/containerd v1.4.0
 	github.com/docker/docker v20.10.1+incompatible
@@ -30,7 +30,6 @@ require (
 	google.golang.org/genproto v0.0.0-20200806141610-86f49bd18e98 // indirect
 	google.golang.org/grpc v1.31.1
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
-	gopkg.in/yaml.v2 v2.2.8
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	gotest.tools/v3 v3.0.3 // indirect
 	helm.sh/helm/v3 v3.4.2

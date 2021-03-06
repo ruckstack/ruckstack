@@ -2,7 +2,7 @@ Copyright (c) 2019-present Hour 23, LLC
 
 Portions of this software are licensed as follows:
 
-* All content that resides under a "pro/" directory of this repository, such as builder/cli/internal/pro, is licensed under the license defined in the corresponding "pro/LICENSE" file.
+* All content that resides under a "pro/" directory of this repository, such as builder/internal/pro, is licensed under the license defined in the corresponding "pro/LICENSE" file.
 * Content outside of the above mentioned directories is available under the "Apache 2.0" license as defined below.
 
 -----------------------------------------------------------------------------------

@@ -1,21 +1,17 @@
 package docker
 
 import (
-	"archive/zip"
 	"context"
 	"fmt"
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/filters"
-	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/jsonmessage"
-	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/docker/pkg/term"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"io"
-	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -51,66 +47,6 @@ func ImagePull(imageRef string) error {
 
 	return nil
 }
-func ImageList(options types.ImageListOptions) ([]types.ImageSummary, error) {
-	return dockerClient.ImageList(context.Background(), options)
-}
-
-func ContainerRun(containerConfig *container.Config, hostConfig *container.HostConfig, networkConfig *network.NetworkingConfig, containerName string, removeWhenDone bool, streamOuptut bool) error {
-	ctx := context.Background()
-
-	containerConfig.Tty = false
-	containerConfig.AttachStdin = false
-	containerConfig.AttachStdout = true
-	containerConfig.AttachStderr = true
-	containerConfig.OpenStdin = false
-
-	createdContainer, err := dockerClient.ContainerCreate(
-		ctx,
-		containerConfig,
-		hostConfig,
-		networkConfig,
-		nil,
-		containerName)
-	if err != nil {
-		return fmt.Errorf("cannot create CLI container: %s", cleanErrorMessage(err))
-	}
-
-	if removeWhenDone {
-		defer ContainerRemove(createdContainer.ID)
-	}
-
-	if err := dockerClient.ContainerStart(ctx, createdContainer.ID, types.ContainerStartOptions{}); err != nil {
-		return fmt.Errorf("cannot start CLI container: %s", cleanErrorMessage(err))
-	}
-
-	containerResponse, err := dockerClient.ContainerAttach(ctx, createdContainer.ID, types.ContainerAttachOptions{
-		Stream: streamOuptut,
-		Stdout: true,
-		Stdin:  false,
-		Stderr: true,
-	})
-
-	if err != nil {
-		return fmt.Errorf("cannot attach to container: %s", cleanErrorMessage(err))
-	}
-
-	_, err = stdcopy.StdCopy(ui.GetOutput(), os.Stderr, containerResponse.Reader)
-	if err != nil {
-		return fmt.Errorf("error reading docker output: %s", cleanErrorMessage(err))
-	}
-
-	waitOk, errCh := dockerClient.ContainerWait(ctx, createdContainer.ID, container.WaitConditionNotRunning)
-	select {
-	case err := <-errCh:
-		if err != nil {
-			return fmt.Errorf("error running CLI container: %s", cleanErrorMessage(err))
-		}
-	case <-waitOk:
-		//ran correctly
-	}
-
-	return nil
-}
 
 func SaveImages(outputPath string, imageRefs ...string) error {
 	defer ui.StartProgressf("Exporting images").Stop()
@@ -134,50 +70,10 @@ func SaveImages(outputPath string, imageRefs ...string) error {
 	return nil
 }
 
-func ImageLoad(tarFile *zip.File) error {
-	tarStream, err := tarFile.Open()
-	if err != nil {
-		return err
-	}
-	reader, err := dockerClient.ImageLoad(context.Background(), tarStream, false)
-
-	if err != nil {
-		return cleanErrorMessage(err)
-	}
-
-	defer reader.Body.Close()
-
-	sendOutputToUi(reader.Body)
-
-	return nil
-}
-
-func GetImageId(ref string) (string, error) {
-	inspect, _, err := dockerClient.ImageInspectWithRaw(context.Background(), ref)
-	if err != nil {
-		if client.IsErrNotFound(err) {
-			return "", nil
-		}
-		return "", err
-	}
-	return inspect.ID, nil
-}
-
 func cleanErrorMessage(err error) error {
 	errMsg := err.Error()
 	errMsg = strings.Replace(errMsg, "Error response from daemon: ", "", 1)
 	return fmt.Errorf(errMsg)
-}
-
-func ImageRemove(imageId string) error {
-	_, err := dockerClient.ImageRemove(context.Background(), imageId, types.ImageRemoveOptions{
-		Force: true,
-	})
-	if err != nil {
-		return fmt.Errorf("error removing image %s: %s", imageId, cleanErrorMessage(err))
-	}
-
-	return err
 }
 
 func sendOutputToUi(output io.ReadCloser) {
@@ -185,46 +81,40 @@ func sendOutputToUi(output io.ReadCloser) {
 	jsonmessage.DisplayJSONMessagesStream(output, ui.GetOutput(), termFd, isTerm, nil)
 }
 
-func discardOutput(output io.ReadCloser) {
-	termFd, isTerm := term.GetFdInfo(ioutil.Discard)
-	jsonmessage.DisplayJSONMessagesStream(output, ioutil.Discard, termFd, isTerm, nil)
-}
+func ImageBuild(dockerfile string, tags []string, labels map[string]string) error {
+	dockerfile, err := filepath.Abs(dockerfile)
+	if err != nil {
+		return err
+	}
 
-func GetContainerId(containerName string) (string, error) {
+	stat, err := os.Stat(dockerfile)
+	if os.IsNotExist(err) {
+		return fmt.Errorf("cannot find file %s", dockerfile)
+	}
+	if err != nil {
+		return err
+	}
+	if stat.IsDir() {
+		return fmt.Errorf("dockerfile %s is a directory", dockerfile)
+	}
 
-	listFilters := filters.NewArgs()
-	listFilters.Add("name", containerName)
+	buildContext, _ := archive.TarWithOptions(filepath.Dir(dockerfile), &archive.TarOptions{})
 
-	containerList, err := dockerClient.ContainerList(context.Background(), types.ContainerListOptions{
-		All:     true,
-		Filters: listFilters,
+	resp, err := dockerClient.ImageBuild(context.Background(), buildContext, types.ImageBuildOptions{
+		//Version: types.BuilderBuildKit,
+		Dockerfile:  filepath.Base(dockerfile),
+		Tags:        tags,
+		Labels:      labels,
+		Remove:      true,
+		ForceRemove: true,
 	})
-	if err != nil {
-		return "", fmt.Errorf("error finding container %s: %s", containerName, cleanErrorMessage(err))
-	}
-
-	if len(containerList) == 0 {
-		return "", nil
-	} else if len(containerList) > 1 {
-		return "", fmt.Errorf("found %d containers matching %s", len(containerList), containerName)
-	}
-
-	return containerList[0].ID, nil
-}
-
-func ContainerRemove(containerId string) error {
-	err := dockerClient.ContainerRemove(
-		context.Background(),
-		containerId,
-		types.ContainerRemoveOptions{
-			Force:         true,
-			RemoveVolumes: true,
-		},
-	)
 
 	if err != nil {
-		return fmt.Errorf("error cleaning up docker container: %s", cleanErrorMessage(err))
+		return fmt.Errorf("cannot build image: %s", cleanErrorMessage(err))
 	}
+	defer resp.Body.Close()
+
+	sendOutputToUi(resp.Body)
 
 	return nil
 }

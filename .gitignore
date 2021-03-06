@@ -9,9 +9,9 @@ TODO.txt
 **/node_modules
 
 #Compiled binaries
-builder/cli/install_root/resources/installer
-builder/cli/install_root/resources/system-control
-builder/cli/install_root/resources/install_dir/lib
+builder/internal/bundled/installer
+builder/internal/bundled/system-control
+builder/internal/bundled/install_dir/lib
 
 #test settings
 settings.yaml

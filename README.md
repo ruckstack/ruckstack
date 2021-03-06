@@ -21,8 +21,6 @@ All generated and compiled files can be cleared out with `BUILD.sh clean`
 The `cmd` directory contains the source for the command line interfaces. There are separate sub-directories for each CLI we have.
 Most of the actual logic for these CLIs live in the `internal` directory, which also has subdirectories for each section we have.
 
-We use bindata for packaging file resources into our executables. Any bindata managed files are contained in a `resources` directory.
-
 The `dist` directory contains files that will be bundled into the ruckstack tgz/zip
 
 All compiled code goes to the `out` directory 
@@ -41,17 +39,11 @@ Because [k3s](http://k3s.io) can only run on Linux, Ruckstack development works 
 
 When working on the Ruckstack Builder, it is fastest to compile and run the ruckstack binary on its own. 
 
-However: you will have to run ./BUILD.sh to package the bindata resources into bindata.go files, but this only needs to be ran
-when you make changes to the bundled resources. Any other changes simply require running the go compiler against cmd/ruckstack/ruckstack.go
-
 #### System-Control
 
 System-Control is the internal name for the CLI that runs and manages the installed system. It will be renamed during the packaging process based on project configuration.
    
 When working on system-control, it is fastest to compile and run the system-control binary on its own. 
-
-However: you will have to run ./BUILD.sh to package the bindata resources into bindata.go files, but this only needs to be ran
-when you make changes to the bundled resources. Any other changes simply require running the go compiler against cmd/system-control/system-control.go
 
 Because system-control runs as part of a server installation, you will need to have SOME version of a ruckstack-built system installed locally.
 But, by running the built system-control binary with a `RUCKSTACK_HOME=/path/to/local/install` environment variable, your development system-control binary will 

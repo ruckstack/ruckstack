@@ -6,58 +6,37 @@ export RUCKSTACK_ANALYTICS=false
 
 ##Ideally this comes from $(out/linux/bin/ruckstack --version)
 VERSION=1.0.0
-export RUCKSTACK_TEMP_DIR="$(pwd)/tmp"
-export RUCKSTACK_CACHE_DIR="$(pwd)/cache"
+export RUCKSTACK_WORK_DIR="$(pwd)/tmp/build_work"
 
 build_all() {
+  compile
   fast
   test
-}
-
-fast() {
-  compile
   build_docker
-  finish_artifacts
+  build_artifacts
 }
 
 compile() {
   echo "Building ruckstack ${VERSION}..."
 
   echo "Compiling system-control..."
-  (export GOOS=linux && go build -o builder/cli/install_root/resources/system-control server/system_control/cmd/main.go)
+  (export GOOS=linux && go build -o builder/internal/bundled/system-control server/system_control/cmd/main.go)
 
   echo "Compiling installer..."
-  (export GOOS=linux && go build -o builder/cli/install_root/resources/installer installer/cmd/main.go)
+  (export GOOS=linux && go build -o builder/internal/bundled/installer installer/cmd/main.go)
 
   echo "Compiling builder..."
-  (export GOOS=linux && export CGO_ENABLED=0 && go build -o out/builder_image/bin/ruckstack builder/cli/cmd/main.go)
+  echo "Compiling builder...Linux..."
+  (export GOOS=linux && export CGO_ENABLED=0 && go build -o out/artifacts/linux/ruckstack builder/cmd/main.go)
 
-  echo "Compiling builder launcher..."
-  rm -rf out/artifacts/linux
-  rm -rf out/artifacts/win
-  rm -rf out/artifacts/mac
+  echo "Compiling builder...Windows..."
+  (export GOOS=windows && go build -o out/artifacts/win/ruckstack.exe builder/cmd/main.go)
 
-  echo "Compiling builder launcher...Linux..."
-  (export GOOS=linux && go build -o out/artifacts/linux/ruckstack.launcher builder/launcher/cmd/main.go)
+  echo "Compiling builder...Mac..."
+  (export GOOS=darwin && go build -o out/artifacts/mac/ruckstack builder/cmd/main.go)
 
-  echo "Compiling builder launcher...Windows..."
-  (export GOOS=windows && go build -o out/artifacts/win/ruckstack.launcher.exe builder/launcher/cmd/main.go)
-
-  echo "Compiling builder launcher...Mac..."
-  (export GOOS=darwin && go build -o out/artifacts/mac/ruckstack.launcher builder/launcher/cmd/main.go)
-  chmod 755 out/artifacts/linux/ruckstack.launcher
-  chmod 755 out/artifacts/mac/ruckstack.launcher
-
-  echo "Creating ruckstack distribution..."
-  cp ./LICENSE out/builder_image
-  cp -r builder/cli/install_root/.dockerignore out/builder_image
-  cp -r builder/cli/install_root/* out/builder_image
-  chmod 755 out/builder_image/bin/ruckstack
-  rm -rf out/builder_image/tmp
-  rm -rf out/builder_image/resources/cache/helm
-
-  echo "Compiling file_join..."
-  (export GOOS=linux && go build -o tmp/build_utils/file_join build_utils/file_join/file_join.go)
+  chmod 755 out/artifacts/linux/ruckstack
+  chmod 755 out/artifacts/mac/ruckstack
 }
 
 test() {
@@ -74,6 +53,7 @@ test() {
     ADMIN_GROUP=$(id -gn)
     tmp/test-installer/out/example_1.0.5.installer --extract-only --install-path tmp/test-installer/extracted --admin-group ${ADMIN_GROUP}
   fi
+
   echo "Running tests..."
   go test ./...
 }
@@ -81,23 +61,11 @@ test() {
 build_docker() {
   echo "Building docker image..."
   mkdir -p out/artifacts/docker
-  docker build -t ghcr.io/ruckstack/ruckstack:v${VERSION} out/builder_image
+  docker build -t ghcr.io/ruckstack/ruckstack:v${VERSION} .
   docker save ghcr.io/ruckstack/ruckstack:v${VERSION} --output out/artifacts/docker/ruckstack.image.tar
 }
 
-finish_artifacts() {
-  echo "Appending packaged containers to launcher..."
-  cp out/artifacts/linux/ruckstack.launcher out/artifacts/linux/ruckstack
-  cp out/artifacts/win/ruckstack.launcher.exe out/artifacts/win/ruckstack.exe
-  cp out/artifacts/mac/ruckstack.launcher out/artifacts/mac/ruckstack
-
-  tmp/build_utils/file_join out/artifacts/linux/ruckstack out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:v${VERSION})
-  tmp/build_utils/file_join out/artifacts/win/ruckstack.exe out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:v${VERSION})
-  tmp/build_utils/file_join out/artifacts/mac/ruckstack out/artifacts/docker/ruckstack.image.tar $(docker image inspect --format "{{.Id}}"  ghcr.io/ruckstack/ruckstack:v${VERSION})
-
-  chmod 755 out/artifacts/linux/ruckstack
-  chmod 755 out/artifacts/mac/ruckstack
-
+build_artifacts() {
   echo "Building release archives..."
   (cd out/artifacts/linux && tar -czf ruckstack-linux-${VERSION}.tar.gz ruckstack)
   (cd out/artifacts/mac && tar -czf ruckstack-mac-${VERSION}.tar.gz ruckstack)
@@ -111,8 +79,9 @@ push_docker() {
 clean() {
   echo "Cleaning..."
   rm -rf out
-  rm -f builder/cli/install_root/resources/system-control
-  rm -f builder/cli/install_root/resources/installer
+
+  rm -f builder/internal/bundled/system-control
+  rm -f builder/internal/bundled/installer
   echo "Done"
 }
 

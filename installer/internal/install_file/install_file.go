@@ -36,5 +36,13 @@ func Parse(installPackagePath string) (*InstallFile, error) {
 		}
 	}
 
+	if installFile.PackageConfig == nil {
+		ui.Fatalf("Cannot find package.config file")
+	}
+
+	if installFile.SystemConfig == nil {
+		ui.Fatalf("Cannot find system.config file")
+	}
+
 	return &installFile, nil
 }

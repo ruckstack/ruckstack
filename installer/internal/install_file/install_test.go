@@ -3,6 +3,7 @@ package install_file
 import (
 	"github.com/ruckstack/ruckstack/common/config"
 	"github.com/ruckstack/ruckstack/common/test_util"
+	"github.com/ruckstack/ruckstack/installer/internal/environment"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -12,7 +13,7 @@ func TestInstallFile_Install(t *testing.T) {
 		t.Skip("--short doesn't install files")
 	}
 
-	serverHome := test_util.TempPath("server-home-*")
+	serverHome := environment.TempPath("server-home-*")
 
 	installFile, err := Parse(installerPackagePath)
 	assert.NoError(t, err)
