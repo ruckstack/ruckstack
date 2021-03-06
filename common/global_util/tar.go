@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func TarDirectory(sourceDir string, targetFilename string, compress bool) error {
@@ -32,9 +33,14 @@ func TarDirectory(sourceDir string, targetFilename string, compress bool) error 
 			return nil
 		}
 
-		relativePath, err := filepath.Rel(sourceDir, path)
+		savePath, err := filepath.Rel(sourceDir, path)
 		if err != nil {
 			return err
+		}
+
+		savePath = strings.ReplaceAll(savePath, "\\", "/")
+		if !strings.HasPrefix(savePath, "/") {
+			savePath = "/" + savePath
 		}
 
 		file, err := os.Open(path)
@@ -45,7 +51,7 @@ func TarDirectory(sourceDir string, targetFilename string, compress bool) error 
 		defer file.Close()
 
 		header := &tar.Header{
-			Name:    "/" + relativePath,
+			Name:    savePath,
 			Size:    info.Size(),
 			ModTime: info.ModTime(),
 			Mode:    0644,
@@ -115,6 +121,7 @@ func UntarFile(sourceFilePath string, targetDir string, compressed bool) error {
 			}
 
 		case tar.TypeReg:
+			os.MkdirAll(filepath.Dir(target), 0755)
 			f, err := os.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
 			if err != nil {
 				return err

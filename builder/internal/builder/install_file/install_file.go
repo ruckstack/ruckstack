@@ -262,6 +262,7 @@ Adds the given file to the installer
 */
 func (installFile *InstallFile) AddFile(file fs.File, targetPath string) error {
 	//standardize targetPath
+	targetPath = strings.ReplaceAll(targetPath, "\\", "/")
 	targetPath = regexp.MustCompile("^/").ReplaceAllString(targetPath, "")
 
 	fileInfo, err := file.Stat()
@@ -304,6 +305,7 @@ func (installFile *InstallFile) AddFileData(data io.Reader, installerPath string
 	hashBytes := hash.Sum(nil)[:20]
 	dataHash := hex.EncodeToString(hashBytes)
 
+	installerPath = strings.ReplaceAll(installerPath, "\\", "/")
 	installerPath = regexp.MustCompile("^.?/").ReplaceAllString(installerPath, "")
 
 	uncompressedSize := uint64(len(dataBytes))
