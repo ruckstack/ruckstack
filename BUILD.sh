@@ -73,7 +73,7 @@ build_docker() {
 }
 
 build_and_push_docker() {
-  build_docker
+  build_docker ${1}
   docker push ghcr.io/ruckstack/ruckstack:${1}
 }
 
