@@ -10,7 +10,6 @@ export RUCKSTACK_WORK_DIR="$(pwd)/tmp/build_work"
 
 build_all() {
   compile
-  fast
   test
   build_docker
   build_artifacts
