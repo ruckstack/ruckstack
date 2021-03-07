@@ -8,11 +8,12 @@ export RUCKSTACK_ANALYTICS=false
 VERSION=1.0.0
 export RUCKSTACK_WORK_DIR="$(pwd)/tmp/build_work"
 
-build_all() {
+full_build() {
+  clean
   compile
-  fast
   test
   build_artifacts
+  build_docker
 }
 
 compile() {
@@ -86,7 +87,7 @@ clean() {
 }
 
 if [ $# -eq 0 ]; then
-  build_all
+  full_build
 else
   "$@"
 fi
