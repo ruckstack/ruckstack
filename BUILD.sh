@@ -10,8 +10,8 @@ export RUCKSTACK_WORK_DIR="$(pwd)/tmp/build_work"
 
 build_all() {
   compile
+  fast
   test
-  build_docker
   build_artifacts
 }
 
@@ -57,13 +57,6 @@ test() {
   go test ./...
 }
 
-build_docker() {
-  echo "Building docker image..."
-  mkdir -p out/artifacts/docker
-  docker build -t ghcr.io/ruckstack/ruckstack:v${VERSION} .
-  docker save ghcr.io/ruckstack/ruckstack:v${VERSION} --output out/artifacts/docker/ruckstack.image.tar
-}
-
 build_artifacts() {
   echo "Building release archives..."
   (cd out/artifacts/linux && tar -czf ruckstack-linux-${VERSION}.tar.gz ruckstack)
@@ -71,7 +64,15 @@ build_artifacts() {
   (cd out/artifacts/win && zip -q ruckstack-windows-${VERSION}.zip ruckstack.exe)
 }
 
-push_docker() {
+build_docker() {
+  echo "Building docker image ${1}..."
+  mkdir -p out/artifacts/docker
+  docker build -t ghcr.io/ruckstack/ruckstack:${1} .
+  docker save ghcr.io/ruckstack/ruckstack:${1} --output out/artifacts/docker/ruckstack.image.tar
+}
+
+build_and_push_docker() {
+  build_docker
   docker push ghcr.io/ruckstack/ruckstack:${1}
 }
 
