@@ -113,7 +113,7 @@ func TestImageBuild(t *testing.T) {
 	output := new(bytes.Buffer)
 	ui.SetOutput(output)
 
-	dockerfile := global_util.GetSourceRoot() + "/builder/install_root/Dockerfile"
+	dockerfile := global_util.GetSourceRoot() + "/Dockerfile"
 
 	type args struct {
 		dockerfile string

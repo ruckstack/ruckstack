@@ -1,7 +1,6 @@
 package global_util
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
@@ -26,7 +25,7 @@ func TestTarAndUntar(t *testing.T) {
 		{
 			name: "compress dir",
 			args: args{
-				sourceDir:      filepath.Join(GetSourceRoot(), "builder", "cmd"),
+				sourceDir:      filepath.Join(GetSourceRoot(), "builder", "internal", "bundled", "install_dir", "data"),
 				targetFilename: filepath.Join(GetSourceRoot(), "tmp", "tar_test", "compress_dir.tgz"),
 			},
 		},
@@ -46,7 +45,7 @@ func TestTarAndUntar(t *testing.T) {
 
 					err := UntarFile(tt.args.targetFilename, uncompressedPath, tt.args.compress)
 					if assert.NoError(t, err) {
-						fmt.Println("no err still")
+						assert.FileExists(t, filepath.Join(uncompressedPath, "kubectl", "README.txt"))
 					}
 
 				}
