@@ -13,7 +13,6 @@ full_build() {
   compile
   test
   build_artifacts
-  build_docker
 }
 
 compile() {
