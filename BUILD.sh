@@ -72,8 +72,7 @@ build_docker() {
   docker save ghcr.io/ruckstack/ruckstack:${1} --output out/artifacts/docker/ruckstack.image.tar
 }
 
-build_and_push_docker() {
-  build_docker ${1}
+push_docker() {
   docker push ghcr.io/ruckstack/ruckstack:${1}
 }
 

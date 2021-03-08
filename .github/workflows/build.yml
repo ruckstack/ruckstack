@@ -72,5 +72,7 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.PACKAGE_PAT }}
 
-      - name: Docker Build & Push
-        run: bash BUILD.sh build_and_push_docker snapshot-${{ env.BRANCH_NAME }}
+      - name: Docker Build
+        run: bash BUILD.sh build_docker snapshot-${{ env.BRANCH_NAME }}
+      - name: Docker Push
+        run: bash BUILD.sh push_docker snapshot-${{ env.BRANCH_NAME }}
