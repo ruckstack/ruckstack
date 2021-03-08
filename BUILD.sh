@@ -6,7 +6,7 @@ export RUCKSTACK_ANALYTICS=false
 
 ##Ideally this comes from $(out/linux/bin/ruckstack --version)
 VERSION=1.0.0
-export RUCKSTACK_WORK_DIR="$(pwd)/tmp/build_work"
+export RUCKSTACK_WORK_DIR="$(pwd)/tmp/work_dir"
 
 full_build() {
   clean
@@ -65,7 +65,7 @@ build_artifacts() {
 }
 
 build_docker() {
-  echo "Building docker image ${1}..."
+  echo "Building docker image '${1}'..."
   mkdir -p out/artifacts/docker
   docker build -t ghcr.io/ruckstack/ruckstack:${1} .
   docker save ghcr.io/ruckstack/ruckstack:${1} --output out/artifacts/docker/ruckstack.image.tar

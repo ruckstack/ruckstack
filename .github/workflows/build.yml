@@ -36,7 +36,7 @@ jobs:
       - name: Cache Ruckstack Cache
         uses: actions/cache@v2
         with:
-          path: ~/go/src/github.com/ruckstack/ruckstack/cache
+          path: ~/go/src/github.com/ruckstack/ruckstack/tmp/work_dir/cache
           key: ${{ runner.os }}-ruckstack-cache
 
       - name: Cache Docker layers
