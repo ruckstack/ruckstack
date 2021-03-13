@@ -5,7 +5,7 @@ set -e
 export RUCKSTACK_ANALYTICS=false
 
 ##Ideally this comes from $(out/linux/bin/ruckstack --version)
-VERSION=1.0.0
+VERSION=1.1.0
 export RUCKSTACK_WORK_DIR="$(pwd)/tmp/work_dir"
 
 full_build() {
