@@ -8,8 +8,9 @@ require (
 	github.com/containerd/containerd v1.4.0
 	github.com/docker/docker v20.10.1+incompatible
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
+	github.com/gin-gonic/gin v1.6.3
 	github.com/go-playground/assert/v2 v2.0.1
-	github.com/go-playground/validator/v10 v10.1.0
+	github.com/go-playground/validator/v10 v10.2.0
 	github.com/gogo/googleapis v1.4.0 // indirect
 	github.com/inetaf/tcpproxy v0.0.0-20200125044825-b6bb9b5b8252
 	github.com/mattn/go-colorable v0.1.4 // indirect

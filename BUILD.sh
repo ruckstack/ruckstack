@@ -15,6 +15,11 @@ full_build() {
   build_artifacts
 }
 
+fast() {
+  compile
+  build_artifacts
+}
+
 compile() {
   echo "Building ruckstack ${VERSION}..."
 
