@@ -41,6 +41,8 @@ func Start(ctx context.Context) error {
 	logger.Println("Starting webserver")
 	ui.Println("Starting webserver...")
 
+	gin.SetMode(gin.ReleaseMode)
+
 	router := gin.New()
 	router.Use(gin.Recovery())
 	router.Use(gin.LoggerWithConfig(gin.LoggerConfig{

@@ -2,6 +2,7 @@ package webserver
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -14,9 +15,11 @@ import (
 )
 
 type ServiceProxy struct {
-	Namespace   string
-	ServiceName string
-	ModifyUrl   func(string) string
+	Namespace     string
+	ServiceName   string
+	Protocol      string
+	ModifyUrl     func(string) string
+	ModifyRequest func(request *http.Request)
 
 	reverseProxy *httputil.ReverseProxy
 }
@@ -33,6 +36,10 @@ func (proxy *ServiceProxy) RequestHandler(ctx *gin.Context) {
 }
 
 func (proxy *ServiceProxy) Start(ctx context.Context) {
+	if proxy.Protocol == "" {
+		proxy.Protocol = "http"
+	}
+
 	k3s.WatchService(k3s.ServiceWatcher{
 		Namespace:   proxy.Namespace,
 		ServiceName: proxy.ServiceName,
@@ -44,12 +51,19 @@ func (proxy *ServiceProxy) Start(ctx context.Context) {
 				return
 			}
 
-			internalUrl, err := url.Parse(fmt.Sprintf("http://%s", newIp))
+			internalUrl, err := url.Parse(fmt.Sprintf("%s://%s", proxy.Protocol, newIp))
 			if err != nil {
 				logger.Printf("ERROR: %s", err)
 			}
 
 			proxy.reverseProxy = httputil.NewSingleHostReverseProxy(internalUrl)
+
+			proxy.reverseProxy.Transport = &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			}
+
 			proxy.reverseProxy.ErrorHandler = func(response http.ResponseWriter, request *http.Request, err error) {
 				if err.Error() == "Gateway Error" {
 					if err := showSiteDownPage(response); err != nil {
@@ -63,20 +77,23 @@ func (proxy *ServiceProxy) Start(ctx context.Context) {
 					return
 				}
 
+				finalPath := request.URL.Path
 				if proxy.ModifyUrl != nil {
-					modifiedUrl := proxy.ModifyUrl(request.URL.Path)
-					modifiedUrl = strings.ReplaceAll(modifiedUrl, "//", "/")
-					request.URL, err = internalUrl.Parse(modifiedUrl)
+					finalPath = proxy.ModifyUrl(finalPath)
+					finalPath = strings.ReplaceAll(finalPath, "//", "/")
+				}
+
+				if strings.HasPrefix(finalPath, "http") {
+					request.URL.Path = finalPath
+				} else {
+					request.URL, err = internalUrl.Parse(finalPath)
 					if err != nil {
 						panic(err)
 					}
 				}
 
-				if !strings.HasPrefix(request.URL.Path, "http") {
-					request.URL, err = internalUrl.Parse(request.URL.Path)
-					if err != nil {
-						panic(err)
-					}
+				if proxy.ModifyRequest != nil {
+					proxy.ModifyRequest(request)
 				}
 			}
 
