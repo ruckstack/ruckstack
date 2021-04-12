@@ -38,6 +38,7 @@ func (plugin *KubeDashboardPlugin) Start(router *gin.Engine, ctx context.Context
 	go proxy.Start(ctx)
 	go watchSecret(ctx)
 
+	router.Any("ops/kube", proxy.RequestHandler)
 	router.Any("ops/kube/*url", proxy.RequestHandler)
 }
 

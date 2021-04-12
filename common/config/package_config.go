@@ -21,6 +21,7 @@ type PackageConfig struct {
 
 	FilePermissions map[string]PackagedFileConfig `yaml:"filePermissions"`
 	Files           map[string]string
+	Support         []string
 }
 
 type PackagedFileConfig struct {

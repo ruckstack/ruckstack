@@ -5,6 +5,12 @@ name: My Project # Name of the project. Used in CLI help and other end-user faci
 version: 0.0.1 # Overall version of the project
 #managerFilename: other-filename # Name of the "manager" file in SERVER_HOME/bin. Default's to the project "id"
 
+### List support information to provide in-app to the customer
+#support:
+#  - Support Team
+#  - support@example.com
+#  - 555-123-4567
+
 ### Every project is made up of at least one service running within it
 ### Services correspond (more or less) to a process running in your stack
 ### Service are defined as `[service-THE_SERVICE_ID]` where THE_SERVICE_ID like the project id, but for the service

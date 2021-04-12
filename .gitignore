@@ -12,6 +12,7 @@ TODO.txt
 builder/internal/bundled/installer
 builder/internal/bundled/system-control
 builder/internal/bundled/install_dir/lib
+server/system_control/internal/server/webserver/ops
 
 #test settings
 settings.yaml

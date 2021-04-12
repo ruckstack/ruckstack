@@ -15,6 +15,7 @@ var logger *log.Logger
 
 var ServerStatus = struct {
 	SystemReady bool
+	Trackers    []PersistedTracker
 }{}
 
 var trackers = []*Tracker{}
@@ -82,6 +83,8 @@ func saveMonitorStatus() {
 			CurrentWarnings: tracker.currentWarnings,
 		})
 	}
+
+	ServerStatus.Trackers = saveData
 
 	monitorStatusFile, err := os.OpenFile(environment.ServerHome+"/logs/monitor.status", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {

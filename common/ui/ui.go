@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"github.com/briandowns/spinner"
 	"github.com/spf13/cobra"
+	"golang.org/x/crypto/ssh/terminal"
 	"io"
 	"log"
 	"os"
 	"runtime/debug"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -21,6 +23,9 @@ var (
 	IsTerminalOutput bool
 	IsTerminalInput  bool
 )
+
+var FalseBoolean = false
+var TrueBoolean = false
 
 var NotDirectoryCheck = func(input string) error {
 	stat, err := os.Stat(input)
@@ -205,6 +210,32 @@ func PromptForString(prompt string, defaultValue string, matchers ...func(string
 		return defaultValue
 	}
 	return input
+}
+
+func PromptForPassword(prompt string, matchers ...func(string) error) string {
+	if !IsTerminalInput {
+		Fatalf("cannot prompt without a terminal")
+	}
+
+	finalPrompt := prompt + ": "
+
+	Println(finalPrompt)
+	bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
+	if err != nil {
+		Fatalf("Error reading password: %s", err)
+	}
+
+	input := string(bytePassword)
+
+	for _, matcher := range matchers {
+		err := matcher(input)
+		if err != nil {
+			Println(err.Error())
+			return PromptForPassword(prompt, matchers...)
+		}
+	}
+
+	return strings.TrimSpace(input)
 }
 
 func PromptForBoolean(prompt string, defaultValue *bool) bool {

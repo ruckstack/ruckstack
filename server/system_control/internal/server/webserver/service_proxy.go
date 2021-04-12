@@ -92,6 +92,8 @@ func (proxy *ServiceProxy) Start(ctx context.Context) {
 					}
 				}
 
+				request.Header.Del("Authorization")
+
 				if proxy.ModifyRequest != nil {
 					proxy.ModifyRequest(request)
 				}
@@ -100,6 +102,9 @@ func (proxy *ServiceProxy) Start(ctx context.Context) {
 			proxy.reverseProxy.ModifyResponse = func(response *http.Response) error {
 				if response.StatusCode == 502 || response.StatusCode == 503 || response.StatusCode == 504 {
 					return errors.New("Gateway Error")
+				}
+				if response.StatusCode == 401 {
+					response.StatusCode = 500
 				}
 				return nil
 			}

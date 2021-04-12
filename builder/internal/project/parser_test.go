@@ -48,6 +48,10 @@ func TestParse_FullProject(t *testing.T) {
 id: test
 name: Test Full Project
 version: 1.0.5
+support:
+  - "Support line 1"
+  - "Support line 2"
+  - "Support line 3"
 
 proxy:
   - serviceName: firstService
@@ -112,6 +116,9 @@ manifestServices:
 	assert.Equal(t, "test", project.ManagerFilename)
 	assert.Equal(t, "Test Full Project", project.Name)
 	assert.Equal(t, "1.0.5", project.Version)
+	assert.Equal(t, "Support line 1", project.Support[0])
+	assert.Equal(t, "Support line 2", project.Support[1])
+	assert.Equal(t, "Support line 3", project.Support[2])
 	assert.NotEmpty(t, project.K3sVersion)
 	assert.NotEmpty(t, project.HelmVersion)
 

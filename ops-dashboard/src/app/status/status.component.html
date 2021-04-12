@@ -1,0 +1,33 @@
+<mat-card>
+  <h1>
+    Status:
+    <span *ngIf="healthy" style="color: green; font-weight: bold; margin-left: 5px">
+        Healthy
+      </span>
+    <span *ngIf="!healthy" style="color: red; font-weight: bold; margin-left: 5px">
+        Unhealthy
+      </span>
+  </h1>
+  <mat-divider></mat-divider>
+  <div *ngIf="supportInfo.length > 0" style="margin-top: 30px">
+    <h2>Support</h2>
+    <div style="margin-left: 20px">
+      <div *ngFor="let supportLine of supportInfo">{{ supportLine }}<br></div>
+    </div>
+  </div>
+
+  <div style="margin-top: 30px">
+    <h2>System Information</h2>
+    <div style="margin-left: 20px">
+      {{productName}} {{version}}<br>
+      Built {{buildDate | date:'yyyy-MM-dd'}}
+    </div>
+  </div>
+
+  <div style="margin-top: 30px">
+    <h2>More Details</h2>
+    <div style="margin-left: 20px">
+      System administrators can find more information at the <a routerLink="/dashboard">ops dashboard</a>
+    </div>
+  </div>
+</mat-card>
