@@ -2,7 +2,7 @@ package commands
 
 import (
 	"fmt"
-	"github.com/ruckstack/ruckstack/builder/internal/pro/license"
+	"github.com/ruckstack/ruckstack/builder/internal/license"
 	"github.com/ruckstack/ruckstack/common/ui"
 	"github.com/spf13/cobra"
 )

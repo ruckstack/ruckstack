@@ -1,0 +1,87 @@
+<table style="margin-right:20px">
+  <tr>
+    <td style="width: 95%; vertical-align: top;">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Overall:
+            <span *ngIf="healthy" style="color: green; font-weight: bold; margin-left: 5px">
+        Healthy
+      </span>
+            <span *ngIf="!healthy" style="color: red; font-weight: bold; margin-left: 5px">
+        Unhealthy
+      </span>
+          </mat-card-title>
+        </mat-card-header>
+        <mat-divider></mat-divider>
+        <mat-card-content>
+          <mat-list>
+            <mat-list-item *ngFor="let tracker of trackers">
+              <div matLine>
+                {{tracker.Name}}
+                <span *ngIf="!tracker.CurrentProblems.size && !tracker.CurrentWarnings.size"
+                      style="color: green; font-weight: bold; margin-left: 5px">
+          Healthy
+        </span>
+                <span *ngIf="tracker.CurrentProblems.size || tracker.CurrentWarnings.size"
+                      style="color: red; font-weight: bold; margin-left: 5px">
+          Unhealthy
+        </span>
+              </div>
+              <div *ngIf="tracker.CurrentProblems.size" matLine>
+                <b>Detected Problems:</b>
+                <ul>
+                  <li *ngFor="let entity of tracker.CurrentProblems | keyvalue">{{entity.key}}: {{entity.value}}</li>
+                </ul>
+              </div>
+              <div *ngIf="tracker.CurrentWarnings.size" matLine>
+                <b>Warnings:</b>
+                <ul>
+                  <li *ngFor="let entity of tracker.CurrentWarnings | keyvalue">{{entity.key}}: {{entity.value}}</li>
+                </ul>
+              </div>
+            </mat-list-item>
+          </mat-list>
+        </mat-card-content>
+      </mat-card>
+    </td>
+    <td style="vertical-align: top; white-space: nowrap">
+      <mat-card *ngIf="supportInfo.length > 0" style="width:90%">
+        <mat-card-header>
+          <mat-card-title>Support</mat-card-title>
+        </mat-card-header>
+        <mat-divider></mat-divider>
+
+        <mat-card-content>
+          <div *ngFor="let supportLine of supportInfo">{{ supportLine }}<br></div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card style="margin-top: 30px; width:90%">
+        <mat-card-header>
+          <mat-card-title>System Information</mat-card-title>
+        </mat-card-header>
+        <mat-divider></mat-divider>
+        <mat-card-content>
+          {{productName}} {{version}}<br>
+          Built {{buildDate | date:'yyyy-MM-dd'}}
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card style="margin-top: 30px; width:90%">
+        <mat-card-header>
+          <mat-card-title>Component Dashboards</mat-card-title>
+        </mat-card-header>
+        <mat-divider></mat-divider>
+        <mat-card-content>
+          The top navigation allows access to component-level dashboards
+          <ul style="margin-top: 20px">
+            <li><b>Dashboard</b> brings you back to this page</li>
+            <li><b>Kubernetes</b> provides both read and re-configuration access to the underlying Kubernetes engine
+            </li>
+            <li><b>Router</b> gives status information on the internal HTTP router (Traefik)</li>
+          </ul>
+        </mat-card-content>
+      </mat-card>
+    </td>
+  </tr>
+</table>

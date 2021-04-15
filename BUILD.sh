@@ -10,12 +10,23 @@ export RUCKSTACK_WORK_DIR="$(pwd)/tmp/work_dir"
 
 full_build() {
   clean
-  compile
+  compile_ops
+  compile_go
   test
   build_artifacts
 }
 
-compile() {
+fast() {
+  compile_go
+  build_artifacts
+}
+
+compile_ops() {
+  echo "Building /ops..."
+  (cd ops-dashboard && npm run-script build)
+}
+
+compile_go() {
   echo "Building ruckstack ${VERSION}..."
 
   echo "Compiling system-control..."
@@ -81,6 +92,7 @@ clean() {
 
   rm -f builder/internal/bundled/system-control
   rm -f builder/internal/bundled/installer
+  rm -rf server/system_control/internal/server/webserver/ops
   echo "Done"
 }
 

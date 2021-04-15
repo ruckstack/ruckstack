@@ -2,6 +2,10 @@ id: example
 name: Example Project
 version: 1.0.5
 managerFilename: example-manager
+support:
+  - Support Team
+  - support@example.com
+  - 555-123-4567
 
 proxy:
   - serviceName: postgresql

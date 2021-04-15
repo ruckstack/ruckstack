@@ -52,7 +52,7 @@ func Start() error {
 
 		stopErr := Stop(false)
 		if stopErr != nil {
-			ui.Printf("error stopping server: %s", err)
+			ui.Printf("error stopping server: %s", stopErr)
 		}
 
 		os.Exit(0)

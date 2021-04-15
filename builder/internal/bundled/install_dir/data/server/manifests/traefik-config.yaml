@@ -7,6 +7,11 @@ spec:
   valuesContent: |-
     fullnameOverride: traefik
     imagePullPolicy: Never
+    serviceType: ClusterIP
+    externalTrafficPolicy: ""
+    dashboard:
+      enabled: true
+      serviceType: ClusterIP
     proxyProtocol:
       enabled: true
       trustedIPs:
@@ -16,6 +21,4 @@ spec:
       trustedIPs:
         - 10.0.0.0/8
     ssl:
-      enabled: false
-    dashboard:
       enabled: false

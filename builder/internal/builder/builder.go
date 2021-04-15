@@ -36,6 +36,7 @@ func Build(compressionLevel int) error {
 	installFile.PackageConfig.Id = projectConfig.Id
 	installFile.PackageConfig.Name = projectConfig.Name
 	installFile.PackageConfig.Version = projectConfig.Version
+	installFile.PackageConfig.Support = projectConfig.Support
 
 	installFile.SystemConfig.ManagerFilename = projectConfig.ManagerFilename
 

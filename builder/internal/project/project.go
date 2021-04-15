@@ -11,6 +11,7 @@ type Project struct {
 	Id      string `validate:"required"`
 	Name    string `validate:"required"`
 	Version string `validate:"required"`
+	Support []string
 
 	HelmVersion     string
 	K3sVersion      string

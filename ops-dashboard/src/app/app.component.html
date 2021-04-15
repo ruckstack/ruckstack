@@ -1,0 +1,25 @@
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav-content>
+    <mat-toolbar style="border-bottom: 2px dashed;">
+      <a mat-button routerLink="/status" style="font-weight: bold; font-size: 20px">{{ productName }}</a>
+
+      <div class="topnav-container" *ngIf="username | async">
+        <a mat-button routerLink="/dashboard">Dashboard</a>
+        <a mat-button routerLink="/dashboard/kubernetes">Kubernetes</a>
+        <a mat-button routerLink="/dashboard/traefik">Router</a>
+      </div>
+      <div style="flex: 1 1 auto;"></div>
+      <div style="border-left: 1px solid #00b140;">
+        <button mat-button [matMenuTriggerFor]="menu" style="font-weight: bold" *ngIf="username | async">{{username | async}}</button>
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item (click)="doLogout()">Log Out</button>
+        </mat-menu>
+
+        <button mat-button (click)="doLogin()" style="font-weight: bold" *ngIf="!(username | async)">Log In</button>
+      </div>
+    </mat-toolbar>
+    <router-outlet></router-outlet>
+  </mat-sidenav-content>
+</mat-sidenav-container>
+
+
