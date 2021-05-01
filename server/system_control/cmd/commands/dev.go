@@ -13,7 +13,7 @@ func init() {
 		Short: "Enable Development Mode",
 	}
 
-	if environment.ClusterConfig.DevModeEnabled {
+	if environment.ClusterConfig != nil && environment.ClusterConfig.DevModeEnabled {
 		initDevModeDisable(devCmd)
 		initDevModeReroute(devCmd)
 		initDevModeShowRoutes(devCmd)
