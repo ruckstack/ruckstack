@@ -1,22 +1,25 @@
 package commands
 
 import (
+	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/ops"
 	"github.com/spf13/cobra"
 )
 
 func init() {
-	var opsCmd = &cobra.Command{
-		Use:   "ops",
-		Short: "Configures the /ops site",
+	if environment.PackageConfig.LicenseLevel > 0 {
+
+		var opsCmd = &cobra.Command{
+			Use:   "ops",
+			Short: "Configures the /ops site",
+		}
+
+		initOpsUsersList(opsCmd)
+		initOpsUserAdd(opsCmd)
+		initOpsUserDelete(opsCmd)
+
+		rootCmd.AddCommand(opsCmd)
 	}
-
-	initOpsUsersList(opsCmd)
-	initOpsUserAdd(opsCmd)
-	initOpsUserDelete(opsCmd)
-
-	rootCmd.AddCommand(opsCmd)
-
 }
 
 func initOpsUsersList(parent *cobra.Command) {

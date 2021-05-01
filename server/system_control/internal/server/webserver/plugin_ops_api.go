@@ -35,6 +35,7 @@ func getStatus(ctx *gin.Context) {
 		"version":   environment.PackageConfig.Version,
 		"support":   environment.PackageConfig.Support,
 		"buildTime": environment.PackageConfig.BuildTime,
+		"level":     environment.PackageConfig.LicenseLevel,
 	})
 }
 
@@ -46,6 +47,7 @@ func getDetailedStatus(ctx *gin.Context) {
 		"support":   environment.PackageConfig.Support,
 		"buildTime": environment.PackageConfig.BuildTime,
 		"trackers":  monitor.ServerStatus.Trackers,
+		"level":     environment.PackageConfig.LicenseLevel,
 	})
 }
 

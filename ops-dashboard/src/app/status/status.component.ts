@@ -18,6 +18,7 @@ export class StatusComponent implements OnInit {
   productName: string = "";
   buildDate: Date = new Date();
   version: string = "";
+  level: number = 0;
 
   constructor(public statusService: StatusService) {
   }
@@ -30,6 +31,7 @@ export class StatusComponent implements OnInit {
         this.productName = model.name;
         this.version = model.version;
         this.buildDate = model.buildDate;
+        this.level = model.level;
       })
     ).subscribe()
   }

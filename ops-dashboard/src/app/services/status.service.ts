@@ -19,6 +19,7 @@ export class StatusService {
     support: [],
     version: "",
     buildDate: new Date(),
+    level: 0,
   });
 
   constructor(private http: HttpClient, private userService: UserService) {

@@ -5,6 +5,7 @@ export interface StatusModel {
   version: string;
   buildTime: number;
   buildDate: Date;
+  level: number;
 }
 
 export interface StatusDetailedModel extends StatusModel {

@@ -13,6 +13,7 @@ import (
 	"github.com/ruckstack/ruckstack/builder/internal/bundled"
 	"github.com/ruckstack/ruckstack/builder/internal/docker"
 	"github.com/ruckstack/ruckstack/builder/internal/environment"
+	"github.com/ruckstack/ruckstack/builder/internal/license"
 	"github.com/ruckstack/ruckstack/builder/internal/util"
 	"github.com/ruckstack/ruckstack/common/config"
 	"github.com/ruckstack/ruckstack/common/global_util"
@@ -104,6 +105,9 @@ func StartCreation(installerPath string, compressionLevel int) (*InstallFile, er
 		SystemConfig: &config.SystemConfig{},
 		dockerImages: map[string]bool{},
 		addedFiles:   map[string]bool{},
+	}
+	if license.ActiveLicense != nil {
+		installFile.PackageConfig.LicenseLevel = 1
 	}
 
 	ui.Printf("Building %s...", filepath.Base(installerPath))

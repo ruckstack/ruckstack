@@ -19,6 +19,8 @@ type PackageConfig struct {
 	Version   string
 	BuildTime int64 `yaml:"buildTime"`
 
+	LicenseLevel int `yaml:"level"`
+
 	FilePermissions map[string]PackagedFileConfig `yaml:"filePermissions"`
 	Files           map[string]string
 	Support         []string

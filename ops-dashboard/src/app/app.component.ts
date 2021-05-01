@@ -13,15 +13,18 @@ import {Title} from "@angular/platform-browser";
 export class AppComponent {
 
   productName: string;
-  username: Observable<string>
+  username: Observable<string>;
+  level: number;
 
   constructor(private statusService: StatusService, private userService: UserService, private titleService: Title) {
-    this.productName = "Ops Dashboard"
+    this.productName = "Ops Dashboard";
+    this.level = 0;
     this.statusService.status$.pipe(
       tap(data => {
         if (data.name) {
           this.productName = data.name;
-          this.titleService.setTitle(this.productName+" Ops")
+          this.titleService.setTitle(this.productName+" Ops");
+          this.level = data.level;
         }
       })
     ).subscribe()

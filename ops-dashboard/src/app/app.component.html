@@ -9,7 +9,7 @@
         <a mat-button routerLink="/dashboard/traefik">Router</a>
       </div>
       <div style="flex: 1 1 auto;"></div>
-      <div style="border-left: 1px solid #00b140;">
+      <div style="border-left: 1px solid #00b140;" *ngIf="level > 0">
         <button mat-button [matMenuTriggerFor]="menu" style="font-weight: bold" *ngIf="username | async">{{username | async}}</button>
         <mat-menu #menu="matMenu">
           <button mat-menu-item (click)="doLogout()">Log Out</button>
