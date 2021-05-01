@@ -66,10 +66,10 @@ func StartCreation(installerPath string, compressionLevel int) (*InstallFile, er
 				".package.config": {
 					AdminGroupReadable: true,
 				},
-				"config/*": {
+				"config/**": {
 					AdminGroupReadable: true,
 				},
-				"logs/*": {
+				"logs/**": {
 					AdminGroupReadable: true,
 				},
 				"data/kubectl": {
@@ -83,11 +83,11 @@ func StartCreation(installerPath string, compressionLevel int) (*InstallFile, er
 				"data/**": {
 					PreservePermissions: true,
 				},
-				"tmp/*": {
+				"tmp/**": {
 					AdminGroupReadable: true,
 					AdminGroupWritable: true,
 				},
-				"bin/*": {
+				"bin/**": {
 					AdminGroupReadable: true,
 					Executable:         true,
 				},

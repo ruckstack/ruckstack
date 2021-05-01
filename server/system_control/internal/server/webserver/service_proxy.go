@@ -21,11 +21,12 @@ type ServiceProxy struct {
 	ModifyUrl     func(string) string
 	ModifyRequest func(request *http.Request)
 
-	reverseProxy *httputil.ReverseProxy
+	reverseProxy  *httputil.ReverseProxy
+	AllowWhenDown bool
 }
 
 func (proxy *ServiceProxy) RequestHandler(ctx *gin.Context) {
-	if proxy.reverseProxy != nil && monitor.ServerStatus.SystemReady {
+	if proxy.reverseProxy != nil && (monitor.ServerStatus.SystemReady || proxy.AllowWhenDown) {
 		proxy.reverseProxy.ServeHTTP(ctx.Writer, ctx.Request)
 	} else {
 		err := showSiteDownPage(ctx.Writer)

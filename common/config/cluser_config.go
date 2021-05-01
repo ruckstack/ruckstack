@@ -8,6 +8,7 @@ import (
 )
 
 type ClusterConfig struct {
+	DevModeEnabled bool
 }
 
 func ReadClusterConfig(content io.ReadCloser) (*ClusterConfig, error) {

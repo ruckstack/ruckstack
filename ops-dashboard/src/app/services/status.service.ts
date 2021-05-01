@@ -35,11 +35,29 @@ export class StatusService {
     );
   }
 
-  private checkStatus() {
+  public checkStatus() {
     if (this.userService.isLoggedIn()) {
       this.http.get<StatusDetailedModel>("/ops/api/status/detailed").subscribe((data: StatusDetailedModel) => {
         data.buildDate = new Date(data.buildTime * 1000);
         this.knowStatus = true;
+
+
+        //fix up maps that come back as not actual maps
+        data.trackers.forEach(tracker => {
+          let map = new Map<string, string>();
+          Object.entries(tracker.CurrentProblems).forEach((keyValue) => {
+            map.set(keyValue[0], keyValue[1])
+          })
+          tracker.CurrentProblems = map;
+
+
+          map = new Map<string, string>();
+          Object.entries(tracker.CurrentWarnings).forEach((keyValue) => {
+            map.set(keyValue[0], keyValue[1])
+          })
+          tracker.CurrentWarnings = map;
+        })
+
         this.status.next(data);
       })
     } else {

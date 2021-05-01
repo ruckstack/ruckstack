@@ -16,8 +16,9 @@ func (plugin *TraefikDashboardPlugin) Name() string {
 
 func (plugin *TraefikDashboardPlugin) Start(router *gin.Engine, ctx context.Context) {
 	proxy := &ServiceProxy{
-		Namespace:   "kube-system",
-		ServiceName: "traefik-dashboard",
+		Namespace:     "kube-system",
+		ServiceName:   "traefik-dashboard",
+		AllowWhenDown: true,
 		ModifyUrl: func(originalUrl string) string {
 			return strings.Replace(originalUrl, "ops/traefik", "", 1)
 		},

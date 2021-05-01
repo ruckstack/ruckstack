@@ -113,6 +113,7 @@ func (packageConfig *PackageConfig) CheckFilePermissions(filePath string, localC
 	for fileConfigPath, fileConfig := range packageConfig.FilePermissions {
 		if strings.HasSuffix(fileConfigPath, "/**") {
 			fileConfigPathBase := serverHome + "/" + strings.Replace(fileConfigPath, "/**", "/", 1)
+			fileConfigPathBase = strings.ReplaceAll(fileConfigPathBase, "//", "/")
 			if fullFilePath == fileConfigPath || strings.HasPrefix(fullFilePath, fileConfigPathBase) {
 				if isBetterFileMatch(fileConfigPath, foundFileConfigPath) {
 					foundFileConfig = fileConfig

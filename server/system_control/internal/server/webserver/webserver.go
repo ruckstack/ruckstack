@@ -122,6 +122,7 @@ func serveLocalFile(res http.ResponseWriter, url string) error {
 	siteDownFile, err := os.Open(environment.ServerHome + "/data/web" + url)
 	if err == nil {
 		defer siteDownFile.Close()
+		res.WriteHeader(200)
 
 		_, err = io.Copy(res, siteDownFile)
 		if err != nil {

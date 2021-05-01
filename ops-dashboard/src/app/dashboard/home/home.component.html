@@ -14,33 +14,28 @@
         </mat-card-header>
         <mat-divider></mat-divider>
         <mat-card-content>
-          <mat-list>
-            <mat-list-item *ngFor="let tracker of trackers">
-              <div matLine>
-                {{tracker.Name}}
-                <span *ngIf="!tracker.CurrentProblems.size && !tracker.CurrentWarnings.size"
-                      style="color: green; font-weight: bold; margin-left: 5px">
-          Healthy
-        </span>
-                <span *ngIf="tracker.CurrentProblems.size || tracker.CurrentWarnings.size"
-                      style="color: red; font-weight: bold; margin-left: 5px">
-          Unhealthy
-        </span>
-              </div>
-              <div *ngIf="tracker.CurrentProblems.size" matLine>
-                <b>Detected Problems:</b>
-                <ul>
-                  <li *ngFor="let entity of tracker.CurrentProblems | keyvalue">{{entity.key}}: {{entity.value}}</li>
-                </ul>
-              </div>
-              <div *ngIf="tracker.CurrentWarnings.size" matLine>
-                <b>Warnings:</b>
-                <ul>
-                  <li *ngFor="let entity of tracker.CurrentWarnings | keyvalue">{{entity.key}}: {{entity.value}}</li>
-                </ul>
-              </div>
-            </mat-list-item>
-          </mat-list>
+          <h2>Detected Problems</h2>
+          <ul>
+            <li *ngFor="let item of currentProblems">{{item}}</li>
+            <li *ngIf="currentProblems.length == 0">NONE</li>
+          </ul>
+
+          <h2 style="margin-top:30px">Detected Warnings</h2>
+          <ul>
+            <li *ngFor="let item of currentWarnings">{{item}}</li>
+            <li *ngIf="currentWarnings.length == 0">NONE</li>
+          </ul>
+
+          <h2 style="margin-top:30px">Healthy</h2>
+          <ul>
+            <li *ngFor="let item of currentHealthy">{{item}}</li>
+            <li *ngIf="currentHealthy.length == 0">NONE</li>
+          </ul>
+
+          <mat-divider></mat-divider>
+          <p style="margin-top: 30px">
+            For additional troubleshooting, visit the <a routerLink="/dashboard/kubernetes">Kubernetes Dashboard</a>
+          </p>
         </mat-card-content>
       </mat-card>
     </td>

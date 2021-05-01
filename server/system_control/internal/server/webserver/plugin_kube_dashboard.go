@@ -23,8 +23,9 @@ func (plugin *KubeDashboardPlugin) Name() string {
 
 func (plugin *KubeDashboardPlugin) Start(router *gin.Engine, ctx context.Context) {
 	proxy := &ServiceProxy{
-		Namespace:   "ops",
-		ServiceName: "kubernetes-dashboard",
+		Namespace:     "ops",
+		ServiceName:   "kubernetes-dashboard",
+		AllowWhenDown: true,
 		ModifyUrl: func(originalUrl string) string {
 			return strings.Replace(originalUrl, "ops/kube", "", 1)
 		},

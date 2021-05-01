@@ -33,6 +33,11 @@ func serveOpsPage(ctx *gin.Context) {
 		path = "ops/index.html"
 	}
 
+	if isOverridablePage(path) {
+		_ = serveLocalFile(ctx.Writer, "/"+path)
+		return
+	}
+
 	file, err := embeddedOpsFiles.Open(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -70,6 +75,10 @@ func serveOpsPage(ctx *gin.Context) {
 
 		}
 	}
+}
+
+func isOverridablePage(path string) bool {
+	return path == "ops/site-down" || path == "ops/public/img/site-down.png"
 }
 
 type OpsPlugin struct {
