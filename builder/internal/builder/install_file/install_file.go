@@ -589,6 +589,10 @@ func (installFile *InstallFile) AddImagesInManifest(descriptorContent []byte) er
 
 		obj, groupVersionKind, err := scheme.Codecs.UniversalDeserializer().Decode(output.Bytes(), nil, nil)
 		if err != nil {
+			if strings.Contains(err.Error(), "no kind") {
+				//must be a CRD
+				return nil
+			}
 			return err
 		}
 
