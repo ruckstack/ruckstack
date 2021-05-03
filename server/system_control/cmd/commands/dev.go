@@ -73,9 +73,9 @@ func initDevModeReroute(parent *cobra.Command) {
 		},
 	}
 
-	cmd.Flags().StringVar(&serviceName, "service", "", "Service to replace")
-	cmd.Flags().StringVar(&targetHost, "targetHost", "localhost", "Host to proxy requests to")
-	cmd.Flags().IntVar(&targetPort, "targetPort", 80, "Port to proxy requests to")
+	cmd.Flags().StringVar(&serviceName, "service", "", "Service to re-route")
+	cmd.Flags().StringVar(&targetHost, "target-host", "localhost", "Host to proxy requests to")
+	cmd.Flags().IntVar(&targetPort, "target-port", 80, "Port to proxy requests to")
 
 	ui.MarkFlagsRequired(cmd, "service")
 
