@@ -63,7 +63,7 @@ export class StatusService {
       })
     } else {
       this.http.get<StatusModel>("/ops/api/status").subscribe((data: StatusModel) => {
-        data.buildDate = new Date(data.buildTime * 100);
+        data.buildDate = new Date(data.buildTime * 1000);
         this.knowStatus = true;
         this.status.next(data);
       })
