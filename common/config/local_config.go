@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/ruckstack/ruckstack/common/ui"
 	"gopkg.in/yaml.v3"
 	"io"
 	"net"
@@ -56,7 +57,7 @@ func ReadLocalConfig(content io.ReadCloser) (*LocalConfig, error) {
 	}
 
 	if localConfig.BindAddressInterface == "" {
-		panic(fmt.Sprintf("Cannot find network interface with IP %s", localConfig.BindAddress))
+		ui.Printf("WARNING: Cannot find network interface with IP %s", localConfig.BindAddress)
 	}
 
 	return localConfig, nil

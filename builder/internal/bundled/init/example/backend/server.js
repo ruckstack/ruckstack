@@ -13,10 +13,15 @@ process.on('SIGINT', () => {
     process.exit(0)
 })
 
+let dbHost = process.env.POSTGRES_HOST;
+if (!dbHost) {
+    dbHost = 'postgresql';
+}
+
 const Pool = require('pg').Pool
 const pool = new Pool({
     user: 'postgres',
-    host: 'postgresql',
+    host: dbHost,
     database: 'postgres',
     password: process.env.POSTGRES_PASSWORD,
     port: 5432,

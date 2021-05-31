@@ -12,10 +12,10 @@ import (
 func Uninstall() error {
 	packageConfig := environment.PackageConfig
 
-	defaultValue := false
-	if !ui.PromptForBoolean(fmt.Sprintf("Uninstall %s from %s", packageConfig.Name, environment.ServerHome), &defaultValue) {
-		return fmt.Errorf("uninstall cancelled")
-	}
+	//defaultValue := false
+	//if !ui.PromptForBoolean(fmt.Sprintf("Uninstall %s from %s", packageConfig.Name, environment.ServerHome), &defaultValue) {
+	//	return fmt.Errorf("uninstall cancelled")
+	//}
 
 	ui.Println("\nUninstalling " + packageConfig.Name + "...")
 

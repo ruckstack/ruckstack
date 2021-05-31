@@ -17,9 +17,9 @@ func Enable() error {
 	ui.Println("WARNING: It is NOT intended for production systems and may impact performance and/or security.")
 	ui.Println("")
 
-	//if !ui.PromptForBoolean("Enable Development Mode", &ui.FalseBoolean) {
-	//	return nil
-	//}
+	if !ui.PromptForBoolean("Enable Development Mode", &ui.FalseBoolean) {
+		return nil
+	}
 
 	ctx := context.Background()
 
@@ -28,6 +28,11 @@ func Enable() error {
 	if err != nil {
 		return fmt.Errorf("cannot read current dev config: %s", err)
 	}
+
+	if config.Data == nil {
+		config.Data = map[string]string{}
+	}
+
 	enabled := config.Data["enabled"]
 	if enabled == "true" {
 		ui.Println("Development mode already enabled")
@@ -62,9 +67,9 @@ func SaveDevMode(newMode bool) error {
 }
 
 func Disable() error {
-	//if !ui.PromptForBoolean("Disable Development Mode", &ui.FalseBoolean) {
-	//	return nil
-	//}
+	if !ui.PromptForBoolean("Disable Development Mode", &ui.FalseBoolean) {
+		return nil
+	}
 
 	ctx := context.Background()
 

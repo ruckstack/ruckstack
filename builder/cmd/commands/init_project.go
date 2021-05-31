@@ -25,7 +25,7 @@ func init() {
 		},
 	}
 
-	cmd.Flags().StringVar(&newProjectTemplate, "template", "empty", "Type of project to create. Possible values: empty or example")
+	cmd.Flags().StringVar(&newProjectTemplate, "template", "empty", "Type of project to create. Possible values: empty, example, or wordpress")
 	cmd.Flags().StringVar(&newProjectOut, "out", ".", "Directory to create project in. Defaults to current directory")
 
 	ui.MarkFlagsDirname(cmd, "out")
