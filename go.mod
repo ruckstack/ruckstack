@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/briandowns/spinner v1.12.0
 	github.com/containerd/cgroups v0.0.0-20201109155418-13abef5d31ec // indirect
-	github.com/containerd/containerd v1.4.0
+	github.com/containerd/containerd v1.4.12
 	github.com/docker/docker v20.10.1+incompatible
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
 	github.com/gin-gonic/gin v1.6.3
