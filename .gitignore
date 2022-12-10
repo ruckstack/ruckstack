@@ -1,0 +1,18 @@
+/.idea
+/*.iml
+/out
+/tmp
+/cache
+TODO.txt
+**/__debug_bin
+/workspace
+**/node_modules
+
+#Compiled binaries
+#builder/internal/bundled/installer
+#builder/internal/bundled/system-control
+#builder/internal/bundled/install_dir/lib
+#server/system_control/internal/server/webserver/ops
+
+#test settings
+#settings.yaml
