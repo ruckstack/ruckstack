@@ -7,12 +7,12 @@ import (
 	"os"
 )
 
-type ClusterConfig struct {
+type ClusterConfigType struct {
 	DevModeEnabled bool
 }
 
-func ReadClusterConfig(content io.ReadCloser) (*ClusterConfig, error) {
-	clusterConfig := new(ClusterConfig)
+func ReadClusterConfig(content io.ReadCloser) (*ClusterConfigType, error) {
+	clusterConfig := new(ClusterConfigType)
 
 	decoder := yaml.NewDecoder(content)
 
@@ -23,7 +23,7 @@ func ReadClusterConfig(content io.ReadCloser) (*ClusterConfig, error) {
 	return clusterConfig, nil
 }
 
-func LoadClusterConfig(serverHome string) (*ClusterConfig, error) {
+func LoadClusterConfig(serverHome string) (*ClusterConfigType, error) {
 	file, err := os.Open(serverHome + "/config/cluster.config")
 	if err != nil {
 		return nil, err
@@ -32,12 +32,12 @@ func LoadClusterConfig(serverHome string) (*ClusterConfig, error) {
 	return ReadClusterConfig(file)
 }
 
-func (clusterConfig *ClusterConfig) Save(serverHome string, packageConfig *PackageConfig, localConfig *LocalConfig) error {
-	if err := os.MkdirAll(serverHome+"/config", 0755); err != nil {
+func (clusterConfig *ClusterConfigType) Save() error {
+	if err := os.MkdirAll(ServerHome+"/config", 0755); err != nil {
 		return err
 	}
 
-	clusterConfigFile, err := os.OpenFile(serverHome+"/config/cluster.config", os.O_CREATE|os.O_RDWR, 0644)
+	clusterConfigFile, err := os.OpenFile(ServerHome+"/config/cluster.config", os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
 		return err
 	}
@@ -46,9 +46,9 @@ func (clusterConfig *ClusterConfig) Save(serverHome string, packageConfig *Packa
 	if err := clusterConfigEncoder.Encode(clusterConfig); err != nil {
 		return err
 	}
-	if err := packageConfig.CheckFilePermissions("config/cluster.config", localConfig, serverHome); err != nil {
-		return err
-	}
+	//if err := packageConfig.CheckFilePermissions("config/cluster.config", localConfig, serverHome); err != nil {
+	//	return err
+	//}
 
 	return nil
 }

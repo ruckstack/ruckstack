@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/pkg/profile"
 	"github.com/ruckstack/ruckstack/common/pkg/ui"
-	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/config"
 	"github.com/ruckstack/ruckstack/server/system_control/internal/util"
 	"github.com/spf13/cobra"
 	"os"
@@ -27,7 +27,7 @@ var rootCmd = &cobra.Command{
 
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if cmd.Annotations[RequiresRoot] == "true" {
-			if !environment.IsRunningAsRoot {
+			if !config.IsRunningAsRoot {
 				return fmt.Errorf("command %s must be run as sudo or root", cmd.Name())
 			}
 
@@ -45,9 +45,9 @@ func init() {
 
 	rootCmd.Use = executable
 
-	//packageConfig := environment.PackageConfig
-	rootCmd.Short = "System Control" //TODO packageConfig.Name + " System Control"
-	rootCmd.Version = "0.1"          //TODO packageConfig.Version
+	packageConfig := config.PackageConfig
+	rootCmd.Short = packageConfig.Name + " System Control"
+	rootCmd.Version = packageConfig.Version
 
 	var serverHome string
 
@@ -68,10 +68,10 @@ func initConfig() {
 func Execute(args []string) error {
 	for _, arg := range args {
 		if arg == "--profile-cpu" {
-			defer profile.Start(profile.ProfilePath(fmt.Sprintf("%s/data/profile/cpu-%d", environment.ServerHome, time.Now().Unix()))).Stop()
+			defer profile.Start(profile.ProfilePath(fmt.Sprintf("%s/data/profile/cpu-%d", config.ServerHome, time.Now().Unix()))).Stop()
 		}
 		if arg == "--profile-memory" {
-			defer profile.Start(profile.MemProfile, profile.ProfilePath(fmt.Sprintf("%s/data/profile/memory-%d", environment.ServerHome, time.Now().Unix()))).Stop()
+			defer profile.Start(profile.MemProfile, profile.ProfilePath(fmt.Sprintf("%s/data/profile/memory-%d", config.ServerHome, time.Now().Unix()))).Stop()
 		}
 	}
 

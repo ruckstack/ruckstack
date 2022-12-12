@@ -3,7 +3,7 @@ package util
 import (
 	"fmt"
 	"github.com/ruckstack/ruckstack/common/pkg/ui"
-	"github.com/ruckstack/ruckstack/server/system_control/internal/environment"
+	"github.com/ruckstack/ruckstack/server/system_control/internal/config"
 	"github.com/shirou/gopsutil/v3/process"
 	"io/ioutil"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,7 +23,7 @@ func ExpectNoError(err error) {
 
 func ExecBash(bashCommand string) {
 	command := exec.Command("bash", "-c", bashCommand)
-	command.Dir = environment.ServerHome
+	command.Dir = config.ServerHome
 	command.Stdout = ui.GetOutput()
 	command.Stderr = ui.GetOutput()
 	if err := command.Run(); err != nil {

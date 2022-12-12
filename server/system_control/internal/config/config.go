@@ -1,11 +1,11 @@
-package environment
+package config
 
 import (
-	"github.com/ruckstack/ruckstack/common/pkg/config"
 	"github.com/ruckstack/ruckstack/common/pkg/ui"
 	"math/rand"
 	"os"
 	"os/user"
+	"path/filepath"
 	"time"
 )
 
@@ -16,10 +16,10 @@ var (
 	CurrentUser     *user.User
 	IsRunningAsRoot bool
 
-	PackageConfig *config.PackageConfig
-	ClusterConfig *config.ClusterConfig
-	LocalConfig   *config.LocalConfig
-	SystemConfig  *config.SystemConfig
+	PackageConfig *PackageConfigType
+	//ClusterConfig *config.ClusterConfig
+	LocalConfig *LocalConfigType
+	//SystemConfig  *config.SystemConfig
 
 	NodeName string
 )
@@ -44,29 +44,36 @@ func init() {
 
 	for i, val := range os.Args {
 		if val == "--server-home" && i < (len(os.Args)-1) {
-			ServerHome = os.Args[i+1] + "/"
+			ServerHome = filepath.FromSlash(os.Args[i+1] + "/")
+			break
 		}
 	}
 
-	//TODO: set server home
-	//if ServerHome == "" {
-	//	....
-	//}
-	//_, err = os.Stat(ServerHome)
-	//if err != nil {
-	//	if os.IsNotExist(err) {
-	//		ui.Fatalf("Server home %s does not exist", ServerHome)
-	//		return
-	//	} else {
-	//		ui.VPrintf("Error checking server home %s: %s", ServerHome, err)
-	//		return
-	//	}
-	//}
-	//ui.VPrintf("Server home: %s", ServerHome)
+	if ServerHome == "" {
+		executable, err := os.Executable()
+		if err != nil {
+			ui.Fatalf("Cannot determine executable: %s", err)
+		}
+
+		exPath := filepath.Dir(executable)
+		ServerHome = filepath.Dir(exPath)
+	}
+
+	_, err = os.Stat(ServerHome)
+	if err != nil {
+		if os.IsNotExist(err) {
+			ui.Fatalf("Server home %s does not exist", ServerHome)
+			return
+		} else {
+			ui.VPrintf("Error checking server home %s: %s", ServerHome, err)
+			return
+		}
+	}
+	ui.VPrintf("Server home: %s", ServerHome)
 
 	tempDir = os.Getenv("RUCKSTACK_TEMP_DIR")
 	if tempDir == "" {
-		tempDir = ServerHome + "/tmp"
+		tempDir = filepath.FromSlash(ServerHome + "/tmp")
 	}
 
 	if err := os.MkdirAll(tempDir, 0755); err != nil {
@@ -96,20 +103,24 @@ func init() {
 	//		ManagerFilename: "test-control",
 	//	}
 	//} else {
-	//PackageConfig, err = config.LoadPackageConfig(ServerHome)
-	//if err != nil {
-	//	ui.Fatal(err)
-	//}
+	PackageConfig, err = LoadPackageConfig(ServerHome)
+	if err != nil {
+		ui.Fatal(err)
+	}
 	//
 	//SystemConfig, err = config.LoadSystemConfig(ServerHome)
 	//if err != nil {
 	//	ui.Fatal(err)
 	//}
 	//
-	//LocalConfig, err = config.LoadLocalConfig(ServerHome)
-	//if err != nil {
-	//	ui.Fatal(err)
-	//}
+	LocalConfig, err = LoadLocalConfig(ServerHome)
+	if err != nil {
+		if os.IsNotExist(err) {
+			//not set up yet
+		} else {
+			ui.Fatal(err)
+		}
+	}
 	//
 	//ClusterConfig, err = config.LoadClusterConfig(ServerHome)
 	//if err != nil {

@@ -6,15 +6,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	installOptions server.InstallOptions
+)
+
 func init() {
 	var cmd = &cobra.Command{
-		Use: "start",
+		Use: "setup",
 		//Annotations: map[string]string{
 		//	RequiresRoot: "true",
 		//},
-		Short: "Starts " + config.PackageConfig.Name,
+		Short: "Setup " + config.PackageConfig.Name,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return server.Start()
+			return server.Setup(installOptions)
 		},
 	}
 
