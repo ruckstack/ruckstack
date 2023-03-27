@@ -1,0 +1,15 @@
+Abandoning due to instability in restart
+---------------------------------------
+After rebooting my machine which was running a single node HA system, the server fails to start up with
+errors about the etcd IP being different.
+
+It seems that being able to fully reboot a HA system (especially the control plane) has never been supported:
+- https://github.com/kubernetes-sigs/kind/issues/1689#issuecomment-654278411
+- https://github.com/k3d-io/k3d/issues/550
+
+which is something that will be very much needed.
+
+I think the root problem comes down to parts of k8s requiring static IP addresses and docker not able to provide those.
+That keeps k3d from being a workable solution.
+
+It also highlights how even physical machines where you don't know when IPs may change is going to be very difficult to maintain
